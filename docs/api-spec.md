@@ -1,8 +1,8 @@
-# 설계 문서 — API 스펙 & 아키텍처 & 리뷰
+# 설계 문서 — API 스펙 & 아키텍처
 
 > 킥오프 합의용 + 설계 결정 기록. 개발하면서 함께 업데이트한다.
-> 
-> Last Updated: 2026-03-03 (v2 — 설계 리뷰 반영)
+>
+> Last Updated: 2026-03-03 (v2 — 설계 리뷰 반영, 4개 항목 확정)
 
 ---
 
@@ -98,6 +98,8 @@ POST /api/training/score
 }
 ```
 
+**채점 정답 소스:** RAG 추출 정답과 수동 확정 정답(`tests/training_golden_answers.json`)을 병합하여 사용. 데모 시나리오는 반드시 수동 정답을 우선 적용.
+
 ---
 
 ## 2. FAQ 데이터 스키마
@@ -145,8 +147,15 @@ POST /api/training/score
 **검색 로직 (rag.py):**
 1. 사용자 질문으로 `faq_titles` 쿼리 → 상위 10건 + 점수
 2. 같은 질문으로 `faq_contents` 쿼리 → 상위 10건 + 점수
-3. 문서 ID 기준으로 점수 가중 병합 (제목 50% + 내용 50%)
+3. 문서 ID 기준으로 점수 가중 병합 (가중치는 config에서 파라미터로 관리)
 4. 병합 점수 상위 3~5건을 LLM 컨텍스트로 전달
+
+**가중치 설정 (config.py):**
+```python
+TITLE_WEIGHT = 0.5      # 기본값
+CONTENT_WEIGHT = 0.5    # 기본값
+# 3주차에 [5:5, 4:6, 3:7] 그리드 서치로 최적값 확정
+```
 
 **유사 제목(similar_titles) 처리:**
 - 인제스트 시 원본 title + similar_titles를 각각 별도 document로 저장
@@ -155,96 +164,110 @@ POST /api/training/score
 
 ---
 
-## 4. LLM 서비스 추상화 (폐쇄망 전환 대비)
+## 4. LLM 서비스 추상화
 
-PoC(GPT-4o) → 실도입(Qwen3-30B-A3B) 전환 시 코드 수정을 최소화하기 위한 인터페이스.
+PoC(GPT-4o) → 실도입(미정) 전환 시 코드 수정을 최소화하기 위한 인터페이스.
 
 ```python
+from abc import ABC, abstractmethod
+
 class LLMService(ABC):
-    @abstractmethod
-    async def generate(self, messages: list, temperature: float, response_format: dict) -> str: ...
+    """LLM 전환 대비 추상 인터페이스. 모든 LLM 구현체는 이 3개 메서드를 구현."""
 
     @abstractmethod
-    async def embed(self, texts: list[str]) -> list[list[float]]: ...
+    async def generate(self, messages: list, temperature: float = 0.1, response_format: dict | None = None) -> str:
+        """메시지 기반 텍스트 생성."""
+        ...
 
     @abstractmethod
-    def count_tokens(self, text: str) -> int: ...
+    async def embed(self, texts: list[str]) -> list[list[float]]:
+        """텍스트 배치를 벡터로 변환."""
+        ...
+
+    @abstractmethod
+    def count_tokens(self, text: str) -> int:
+        """텍스트의 토큰 수 계산."""
+        ...
 ```
 
-**전환 시 주의사항:**
-- 임베딩 차원 불일치: text-embedding-3-small(1536) → bge-m3(1024)로 전환하면 ChromaDB 컬렉션 전체 재구축 필요. 인제스트 파이프라인을 "모델 교체 → 재인제스트" 원커맨드로 실행 가능하게 설계할 것.
-- Qwen3의 JSON 구조화 출력 품질이 GPT-4o와 다를 수 있음. 특히 채점 프롬프트(`training_scorer.txt`)는 모델 전환 후 반드시 재검증.
-- OpenAI는 function calling 네이티브, Qwen3은 vLLM/Ollama 위 OpenAI-compatible API — stop token, temperature 동작, 토큰 카운팅 방식에 미묘한 차이 있음.
+**현재 구현체:** `OpenAIService(LLMService)` — PoC용
+**향후 추가:** 실도입 모델 확정 시 해당 구현체 추가 (예: `Qwen3Service`, `VLLMService` 등)
 
-**권장 액션:** 3주차에 반나절 투자하여 Qwen3 로컬 비교 테스트 실시. 동일 프롬프트로 GPT-4o vs Qwen3 출력 품질 비교표를 만들면 폐쇄망 도입 제안서 설득력 강화.
-
----
-
-## 5. 설계 리뷰 & 리스크 (2026-03-03)
-
-### 5.1 제목+내용 가중치 최적화
-
-현재 5:5로 설정. 사람인HR은 채용 FAQ(제목 정보 밀도 높음)에서 검증된 수치이나, 증권 편람은 "제42조 양도소득세 과세표준"처럼 제목이 형식적이라 정보 밀도가 낮음.
-
-→ 4:6 또는 3:7(내용 쪽 상향)이 더 나을 가능성 있음.
-→ 정확도 테스트 30개 세트 실행 시 가중치를 파라미터로 분리하여 `[5:5, 4:6, 3:7]` 그리드 서치. 반나절이면 최적값 도출 가능.
-
-### 5.2 훈련 모드 정답의 순환 의존
-
-현재 설계에서 채점 시 "편람 기반 정답"을 RAG로 추출하는데, RAG 정확도 목표가 80%이므로 정답 자체가 20% 확률로 오류 가능. 데모에서 노출되면 치명적.
-
-→ 데모 시나리오 2개에 대해 정답을 사전에 수동 확정하여 `tests/training_golden_answers.json`에 저장.
-→ 채점 시 RAG 결과와 수동 정답을 병합하여 사용.
-
-### 5.3 다중 제목과 응답 시간 트레이드오프
-
-유사 제목 2~3개 × 원래 제목 × 요약 제목 = 문서당 4~5개 임베딩. PoC 범위(FAQ + 편람 20건)에서는 문제 없으나, 확장 시 LLM 전달 컨텍스트 양이 늘어나 응답 시간 초과 우려.
-
-→ 실도입 시 검색 결과 reranking + 상위 N개만 LLM 전달하는 파이프라인 필요.
-→ 2단계 RAG(LangGraph) 도입 시점과 연계 검토.
+**전환 시 필수 체크:**
+- 임베딩 차원 변경 시 ChromaDB 컬렉션 전체 재구축 필요 → 인제스트 파이프라인을 "모델 교체 → 재인제스트" 원커맨드로 실행 가능하게 설계
+- JSON 구조화 출력(채점 프롬프트) 품질은 모델별로 편차가 큼 → 전환 후 반드시 재검증
+- stop token, temperature 동작, 토큰 카운팅 방식의 미묘한 차이 주의
 
 ---
 
-## 6. 2인 AI 개발 주의사항
+## 5. 훈련 모드 정답 관리
 
-### 6.1 코드 품질
+### 문제
 
-Cursor가 생성한 코드에서 자주 발생하는 문제: ChromaDB deprecated 메서드, 임베딩 배치 처리 비효율, 에러 핸들링 누락.
+채점 시 "편람 기반 정답"을 RAG로 추출하는데, RAG 정확도 목표가 80%이므로 정답 자체가 틀릴 수 있음.
 
-→ PR 단위를 작게(함수 1~2개), 머지 전 "이 함수가 왜 이렇게 동작하는지" 30초 구두 설명.
+### 해결: 수동 확정 정답 병합
 
-### 6.2 프롬프트 버전 관리
+```
+tests/training_golden_answers.json
+```
 
-프롬프트(`prompts/`)는 코드와 다른 속도로 변경됨. 정확도 하락 원인이 코드인지 프롬프트인지 추적 불가 방지.
+```json
+[
+  {
+    "question_id": "q-demo-001",
+    "scenario": "초급 — 계좌 개설",
+    "question": "계좌 개설하려면 어떤 서류가 필요한가요?",
+    "golden_answer": "계좌 개설에는 신분증이 필요하며, 고객확인(CDD) 서류도 함께 징구합니다. 비대면의 경우 영상통화 본인확인 절차가 추가됩니다.",
+    "required_items": ["신분증", "CDD 서류", "비대면 시 영상통화"],
+    "reference": "계좌업무편람 p.23 제5조"
+  },
+  {
+    "question_id": "q-demo-002",
+    "scenario": "고급 — 세금/수수료 복합",
+    "question": "해외주식 매도 후 세금 신고 방법과 수수료 한도도 알려주세요",
+    "golden_answer": "TODO: 편람 확인 후 작성",
+    "required_items": ["TODO"],
+    "reference": "TODO"
+  }
+]
+```
 
-→ 커밋 컨벤션에 `prompt:` 접두사 추가. 프롬프트 변경과 코드 변경을 절대 같은 커밋에 섞지 않을 것.
+**채점 로직 (scorer.py):**
+1. `question_id`로 `training_golden_answers.json`에서 수동 정답 조회
+2. 수동 정답이 있으면 → 수동 정답을 기준으로 채점
+3. 수동 정답이 없으면 → RAG 추출 정답을 기준으로 채점 (기존 방식)
+
+---
+
+## 6. 2인 AI 개발 규칙
+
+### 프롬프트 버전 관리
+
+프롬프트(`prompts/`)는 코드와 다른 속도로 변경됨. 정확도 하락 원인 추적을 위해:
 
 ```
 prompt: 챗봇 시스템 프롬프트 출처 표시 형식 변경
 prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 ```
 
-### 6.3 AI 도구 간 컨텍스트 단절
+프롬프트 변경과 코드 변경은 **절대 같은 커밋에 섞지 않는다.**
 
-팀 리드(Claude) ↔ 개발자A(Cursor) 간 AI 도구에 맥락 공유 안 됨. 각자의 AI가 서로 다른 방향으로 코드 생성하는 문제 발생.
+### AI 도구 간 컨텍스트 동기화
 
-→ **이 문서(`api-spec.md`)를 양쪽 AI 도구의 프로젝트 컨텍스트에 포함시켜 사용.** API 스펙이 single source of truth 역할.
+팀 리드(Claude) ↔ 승구리(Cursor) 간 AI 도구에 맥락이 공유되지 않음.
 
----
+→ **이 문서(`docs/api-spec.md`)를 양쪽 AI 도구의 프로젝트 컨텍스트에 포함시켜 사용.** 이 문서가 single source of truth 역할.
 
-## 7. 액션 아이템
+### 코드 품질
 
-| 순위 | 액션 | 소요 | 시점 |
-|------|------|------|------|
-| 1 | LLM 서비스 인터페이스 3개 메서드 구현 (섹션 4) | 2시간 | 1주차 |
-| 2 | 훈련 모드 데모 시나리오 2개 수동 정답 확정 | 3시간 | 3주차 |
-| 3 | 커밋 컨벤션에 `prompt:` 접두사 추가 | 30분 | 즉시 |
-| 4 | 임베딩 가중치 그리드 서치 파라미터화 | 반나절 | 3주차 |
-| 5 | Qwen3 로컬 비교 테스트 | 반나절 | 3주차 |
+- PR 단위를 작게 유지 (함수 1~2개)
+- 머지 전 "이 함수가 왜 이렇게 동작하는지" 30초 구두 설명
+- AI가 생성한 코드의 핵심 로직은 반드시 주석으로 의도 기록
 
 ---
 
-## 8. 합의 체크리스트
+## 7. 합의 체크리스트
 
 킥오프 때 아래 항목을 함께 확인하고, 이견이 있으면 이 문서에 바로 수정한다.
 
@@ -255,9 +278,11 @@ prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 □ 카테고리 목록 OK?
 □ ChromaDB 2개 컬렉션 분리 구조 OK?
 □ 유사 제목 ID 접미사 방식 OK?
-□ 검색 가중치 50:50 OK? (3주차에 그리드 서치 예정)
-□ LLM 서비스 인터페이스 OK? (섹션 4)
-□ 프롬프트 커밋 컨벤션 OK? (섹션 6.2)
+□ 검색 가중치 기본값 5:5 + 3주차 그리드 서치 OK?
+□ LLM 서비스 인터페이스 3개 메서드 OK? (섹션 4)
+□ 훈련 모드 수동 정답 병합 방식 OK? (섹션 5)
+□ 프롬프트 커밋 컨벤션(prompt:) OK? (섹션 6)
+□ 실도입 모델 "후보"로 관리, 3주차 비교 테스트 OK?
 ```
 
 ---
