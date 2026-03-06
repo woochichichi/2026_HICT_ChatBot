@@ -20,6 +20,7 @@ class Settings:
     OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o")
 
     CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "./data/chroma_db")
+    DATA_DIR: str = os.getenv("DATA_DIR", "./data")
 
     # RAG 검색 가중치 (api-spec.md 섹션 3)
     TITLE_WEIGHT: float = float(os.getenv("TITLE_WEIGHT", "0.5"))
