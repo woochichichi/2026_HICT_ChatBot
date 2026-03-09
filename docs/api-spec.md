@@ -476,4 +476,38 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
 ---
 
+## 협업 핸드오프 로그
+
+작업 완료 후 상대방이 확인해야 할 사항을 여기에 기록. 확인 완료 시 `✅` 표시.
+
+### 2026-03-09 | 우치 → 승구리 | WBS 1.5 + 1.6 완료
+
+**커밋**: `fe91692`
+
+#### 변경 요약
+- `backend/services/embedder.py` — `LLMService(ABC)` + `GeminiService`(기본) + `OpenAIService`(백업) 구현
+- `backend/services/rag.py` — ChromaDB 초기화 + `RAGService` 검색 파이프라인
+- `backend/config.py` — Google AI Studio 설정, RAG 검색 가중치 추가
+- `requirements.txt` — `google-genai`, `tiktoken` 추가
+
+#### 확인사항
+
+- [ ] **LLM이 OpenAI → Gemini로 바뀜**: OpenAI 크레딧 부족으로 전환. `.env`에 `GOOGLE_API_KEY` 필요
+- [ ] **임베딩 3072차원**: `gemini-embedding-001` 사용 (기존 OpenAI 1536차원 → 3072차원)
+- [ ] **인제스트 시 반드시 `GeminiService.embed()` 사용할 것**: 다른 모델 임베딩 시 차원 불일치 에러
+  ```python
+  from backend.services.embedder import GeminiService
+  llm = GeminiService()
+  vectors = await llm.embed(["텍스트1", "텍스트2"])  # 3072차원
+  ```
+- [ ] **ChromaDB 컬렉션 2개**: `faq_titles`(제목), `faq_contents`(본문) — `hnsw:space: cosine`
+  ```python
+  from backend.services.rag import get_chroma_client, init_collections
+  client = get_chroma_client()
+  titles_col, contents_col = init_collections(client)
+  ```
+- [ ] **패키지 재설치 필요**: `pip install -r requirements.txt`
+
+---
+
 *이 문서는 개발 진행에 따라 팀원 누구나 업데이트.*

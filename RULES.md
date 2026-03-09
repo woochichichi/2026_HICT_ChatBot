@@ -26,8 +26,8 @@
 ## 기술 스택
 
 - **Backend**: Python 3.11+, FastAPI, Uvicorn
-- **LLM**: OpenAI API (GPT-4o), 프로덕션 후보 Qwen3-30B-A3B
-- **Embedding**: text-embedding-3-small
+- **LLM**: Google Gemini (gemini-2.5-flash), 백업 OpenAI GPT-4o, 프로덕션 후보 Qwen3-30B-A3B
+- **Embedding**: gemini-embedding-001 (3072차원)
 - **Vector DB**: ChromaDB
 - **Frontend**: React (2주차부터)
 - **데이터 처리**: PyMuPDF (PDF 파싱)
