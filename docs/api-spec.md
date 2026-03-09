@@ -299,7 +299,14 @@ class LLMService(ABC):
         ...
 ```
 
-**현재 구현체:** `OpenAIService(LLMService)` — PoC용
+**현재 구현체:** `GeminiService(LLMService)` — PoC 기본 (Google AI Studio)
+- Chat: `gemini-2.5-flash`
+- Embedding: `gemini-embedding-001` (3072차원)
+- SDK: `google-genai` (sync → `asyncio.to_thread` 래핑)
+
+**백업 구현체:** `OpenAIService(LLMService)` — OpenAI 크레딧 부족으로 백업 전환
+- Chat: `gpt-4o` / Embedding: `text-embedding-3-small` (1536차원)
+
 **향후 추가:** 실도입 모델 확정 시 해당 구현체 추가 (예: `Qwen3Service`, `VLLMService` 등)
 
 **전환 시 필수 체크:**
@@ -465,6 +472,7 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 | v3 | 2026-03-03 | 구현 리뷰 1차 — 채점 Direct Fetch, Max Pooling, SSE 스트리밍, 문제 추출 로직 |
 | v4 | 2026-03-03 | 구현 리뷰 2차 — solved_content_ids 상태관리, 난이도=프롬프트 지시 확정, Max Pooling→병합 순서 명시, SSE sources 선전송 |
 | v5 | 2026-03-03 | 구현 리뷰 3차 (Gemini) — is_demo 데모/일반 모드 분기, is_reset 프론트 상태 초기화 플래그 |
+| v6 | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가 |
 
 ---
 
