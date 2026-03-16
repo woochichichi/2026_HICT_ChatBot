@@ -177,7 +177,7 @@ async def generate_training_question(
 
     return {
         "question": question,
-        "question_id": ,
+        "question_id": question_id,
         "source_content_id": selected_id,
         "difficulty": difficulty,
         "is_reset": is_reset,
