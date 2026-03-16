@@ -590,4 +590,41 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
 ---
 
+### 2026-03-16 | 승구리 → 우치 | feature/training-question 브랜치 작업
+
+**브랜치**: `feature/training-question`
+
+#### 변경 요약
+
+**백엔드 (훈련 모드 질문 생성)**
+
+- `backend/services/question_gen.py` — 업무편람 ChromaDB 기반 질문 생성 서비스 구현
+  - 데모 모드: `training_golden_answers.json`에서 직접 반환
+  - 일반 모드: ChromaDB에서 청크 선택 → LLM으로 고객 질문 생성
+- `tests/training_golden_answers.json` — 데모 모드용 golden answer 1건 추가
+
+**프론트엔드**
+
+- `frontend/` — React + Vite 프로젝트 구성, 훈련 모드 UI 기초
+  - `package.json`, `vite.config.js`, `index.html`, `src/` 구조
+  - `TrainingScreen`: 난이도·카테고리·데모 모드 선택, 질문 표시, 답변 입력 textarea
+  - `App.jsx`: 챗봇 모드 / 훈련 모드 탭 전환 (챗봇 모드는 "준비 중" 안내만)
+  - `POST /api/training/question` API 연동
+
+#### 확인사항
+
+- [ ] **프론트엔드 화면은 논의 후 다시 제작 예정**: `frontend/index.html` 일단 챗봇/훈련 모드를 탭으로 분리해 둔 상태
+- [ ] **실행 순서**: 백엔드(`uvicorn`) → 프론트(`npm run dev`), Vite proxy로 `/api` → `localhost:8000`
+
+```
+# 백엔드
+uvicorn backend.main:app --reload
+
+# 프론트엔드 (다른 터미널에서)
+cd frontend
+npm run dev
+```
+
+---
+
 _이 문서는 개발 진행에 따라 팀원 누구나 업데이트._

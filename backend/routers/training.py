@@ -1,7 +1,9 @@
 """훈련 모드 API."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+from ..services import question_gen
 
 router = APIRouter()
 
@@ -9,6 +11,8 @@ router = APIRouter()
 class QuestionRequest(BaseModel):
     difficulty: str  # beginner / intermediate / advanced
     category: str
+    solved_content_ids: list[str] = []
+    is_demo: bool = False
 
 
 class QuestionResponse(BaseModel):
@@ -16,6 +20,7 @@ class QuestionResponse(BaseModel):
     question_id: str
     source_content_id: str
     difficulty: str
+    is_reset: bool
 
 
 class ScoreRequest(BaseModel):
@@ -34,13 +39,16 @@ class ScoreResponse(BaseModel):
 
 @router.post("/question", response_model=QuestionResponse)
 async def generate_question(request: QuestionRequest):
-    # TODO: 질문 생성 서비스 연동
-    return QuestionResponse(
-        question="아직 구현되지 않았습니다.",
-        question_id="",
-        source_content_id="",
-        difficulty=request.difficulty,
-    )
+    try:
+        result = await question_gen.generate_training_question(
+            difficulty=request.difficulty,
+            category=request.category,
+            solved_content_ids=request.solved_content_ids,
+            is_demo=request.is_demo,
+        )
+        return QuestionResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/score", response_model=ScoreResponse)
