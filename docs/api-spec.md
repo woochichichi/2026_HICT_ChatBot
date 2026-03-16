@@ -553,4 +553,41 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
 ---
 
+### 2026-03-16 | 승구리 → 우치 | 업무편람 ChromaDB 인제스트 스크립트
+
+**커밋**: `9abd40c`
+
+#### 변경 요약
+
+- `scripts/ingest_manual.py` (신규) — docling 파싱 결과(`ParsedDocument`)를 ChromaDB `faq_titles`/`faq_contents` 컬렉션에 적재하는 CLI 스크립트
+- `scripts/ingest_faq.py` — 삭제 (ingest_manual.py로 대체)
+
+#### 핵심 설계
+
+- **기존 dual-collection 구조 그대로 활용** (`rag.py` 수정 없음)
+  - `faq_titles`: 블록의 heading context (`hierarchy_path` join) 저장
+  - `faq_contents`: 블록의 `canonical_text` (없으면 `text`) 저장
+  - 양쪽 동일 ID: `{doc_id}_{block_order}`
+- **블록 타입별 청킹 가이드라인 적용**:
+  - `paragraph`: 같은 `hierarchy_path` 내 연속 블록을 150~400 tokens까지 병합, 12% overlap
+  - `procedure`: 연속 블록 150~350 tokens 병합, 10% overlap
+  - `heading`, `rule`, `table`, `table_row`, `faq`, `notice`: 블록 1개 = 청크 1개 (병합 없음)
+- **토큰 추정**: `len(text) * 0.7` 휴리스틱 (한국어 근사)
+- **임베딩**: `GeminiService.embed()` 100건 배치 호출
+- **`_sim` 접미사 미사용**: `rag.py`의 Max Pooling은 identity 동작 (무해)
+
+#### 확인사항
+
+- [ ] **실행 방법**:
+  ```bash
+  python scripts/ingest_manual.py -i data/processed/<doc_id>/docling.json  # 단일 문서
+  python scripts/ingest_manual.py --all                                     # 전체 문서
+  python scripts/ingest_manual.py --clear --all                             # 컬렉션 초기화 후 재인제스트
+  ```
+- [ ] **`.env`에 `GOOGLE_API_KEY` 필요**: `GeminiService.embed()` 호출 시 API 키 없으면 `ValueError` 발생
+- [ ] **metadata 구조**: `source_document`(PDF 파일명), `source_page`(`p.{N}`), `doc_id`, `block_type`, `hierarchy_path`(JSON 문자열), `category`(빈 문자열). RAG 검색 결과에서 `category`가 비어 있으므로, 챗봇 모드에서 카테고리 필터가 필요하면 추후 협의
+- [ ] **청킹 파라미터 튜닝**: `_CHUNK_CONFIG`의 `max_tokens`, `overlap` 값은 현재 가이드라인 기준. 검색 품질 테스트 후 조정 가능
+
+---
+
 _이 문서는 개발 진행에 따라 팀원 누구나 업데이트._
