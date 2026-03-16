@@ -1,0 +1,11 @@
+[
+  {
+    "question_id": "q-demo-001",
+    "scenario": "초급 — 계좌 개설",
+    "question": "계좌 개설하려면 어떤 서류가 필요한가요?",
+    "golden_answer": "계좌 개설에는 신분증이 필요하며, 고객확인(CDD) 서류도 함께 징구합니다. 비대면의 경우 영상통화 본인확인 절차가 추가됩니다.",
+    "required_items": ["신분증", "CDD 서류", "비대면 시 영상통화"],
+    "reference": "계좌업무편람 p.23 제5조",
+    "source_content_id": "q-demo-001"
+  }
+]
