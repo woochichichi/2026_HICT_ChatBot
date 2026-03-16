@@ -1,421 +1,1066 @@
 {
   "doc_id": "aac1cac65cd94578",
   "source_path": "/Users/seunguri/workspace/2026_HICT_ChatBot/data/raw/23069750_2e3930acd3734206b6d2d36a9ee6d097-050326-1729-418.pdf",
+  "doc_type": "manual",
   "title": "23069750_2e3930acd3734206b6d2d36a9ee6d097-050326-1729-418",
+  "document_path": null,
   "page_count": 2,
   "blocks": [
     {
       "text": "3) 고객정보등록",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 1,
       "order": 0,
-      "heading_level": 1
+      "heading_level": 1,
+      "hierarchy_path": null,
+      "canonical_text": null
     },
     {
       "text": "가. 기본정보",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 1,
       "order": 1,
-      "heading_level": 1
+      "heading_level": 2,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄱ. 상품의 종류에 관계없이 모든 계좌에 공통으로 요구되는 고객정보",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 2,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄴ. 계좌개설업무에 앞서 등록하며, 계좌개설없이 등록도 가능",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 3,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄷ. 개인, 법인으로 구분 등록",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 4,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "미성년자, 일반/금융/면세법인인 경우 본인/대리인 구분 자동으로 '대리인' 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 5,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "자택 및 사업장, 직장의 정보변경시 동일 식별번호의 모든 계좌정보 변경 처리",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 6,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄹ. 고객기본정보등록 이후 추가 계좌개설시 기본정보 자동생성",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 7,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "가. 기본정보"
+      ],
+      "canonical_text": null
     },
     {
       "text": "나. 기본정보내용",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 1,
       "order": 8,
-      "heading_level": 1
+      "heading_level": 2,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄱ. 고객실명번호(식별번호)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
       "order": 9,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": null
     },
     {
       "text": "| 구              | 분              | 실 명 번 호(식 별 번 호)                                                                                    |\n|-----------------|-----------------|-------------------------------------------------------------------------------------------------------------|\n| 내국개인        | 내국개인        | 주민등록번호, 의료보호증관리번호(부랑자)                                                                    |\n| 재외국민        | 재외국민        | 국내거소신고증번호(16.7.1 이후 사용 불가), 재외국민등록번호(현재사용안함), 여권번호, 주민등록번호(재외국민) |\n| 내국민대우 개인 | 내국민대우 개인 | 외국인등록번호, 국내거소신고증번호, 영주증번호                                                              |\n| 외국개인        | 외국개인        | 투자등록증고유번호, 여권번호                                                                                |\n| 내국법인        | 사업자          | 81, 86, 87, 88 영리법인 본점                                                                                |\n| 내국법인        | 구분            | 82 비영리법인 본점 및 지점(법인으로 보는 단체포함)                                                          |\n| 내국법인        |                 | 83 국가 및 지방자치단체(면세법인)                                                                           |\n| 내국법인        |                 | 84 외국법인의 본지점 및 연락사무소                                                                          |\n| 내국법인        |                 | 85 영리법인 지점                                                                                            |\n| 외국법인        | 외국법인        | 투자등록증고유번호, LEI(식별번호)                                                                           |\n| 내국민대우 법인 | 내국민대우 법인 | 사업자등록번호                                                                                              |",
       "block_type": "table",
       "page": 1,
       "order": 10,
-      "heading_level": null
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": null
+    },
+    {
+      "text": "내국개인 | 내국개인 | 주민등록번호, 의료보호증관리번호(부랑자)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 11,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국개인의 기본정보내용는 주민등록번호, 의료보호증관리번호(부랑자)이다."
+    },
+    {
+      "text": "재외국민 | 재외국민 | 국내거소신고증번호(16.7.1 이후 사용 불가), 재외국민등록번호(현재사용안함), 여권번호, 주민등록번호(재외국민)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 12,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "재외국민의 기본정보내용는 국내거소신고증번호(16.7.1 이후 사용 불가), 재외국민등록번호(현재사용안함), 여권번호, 주민등록번호(재외국민)이다."
+    },
+    {
+      "text": "내국민대우 개인 | 내국민대우 개인 | 외국인등록번호, 국내거소신고증번호, 영주증번호",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 13,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국민대우 개인의 기본정보내용는 외국인등록번호, 국내거소신고증번호, 영주증번호이다."
+    },
+    {
+      "text": "외국개인 | 외국개인 | 투자등록증고유번호, 여권번호",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 14,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "외국개인의 기본정보내용는 투자등록증고유번호, 여권번호이다."
+    },
+    {
+      "text": "내국법인 | 사업자 | 81, 86, 87, 88 영리법인 본점",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 15,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국법인 사업자의 기본정보내용는 81, 86, 87, 88 영리법인 본점이다."
+    },
+    {
+      "text": "내국법인 | 구분 | 82 비영리법인 본점 및 지점(법인으로 보는 단체포함)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 16,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국법인 구분의 기본정보내용는 82 비영리법인 본점 및 지점(법인으로 보는 단체포함)이다."
+    },
+    {
+      "text": "내국법인 | 83 국가 및 지방자치단체(면세법인)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 17,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국법인의 기본정보내용는 83 국가 및 지방자치단체(면세법인)이다."
+    },
+    {
+      "text": "내국법인 | 84 외국법인의 본지점 및 연락사무소",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 18,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국법인의 기본정보내용는 84 외국법인의 본지점 및 연락사무소이다."
+    },
+    {
+      "text": "내국법인 | 85 영리법인 지점",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 19,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국법인의 기본정보내용는 85 영리법인 지점이다."
+    },
+    {
+      "text": "외국법인 | 외국법인 | 투자등록증고유번호, LEI(식별번호)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 20,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "외국법인의 기본정보내용는 투자등록증고유번호, LEI(식별번호)이다."
+    },
+    {
+      "text": "내국민대우 법인 | 내국민대우 법인 | 사업자등록번호",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 21,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용"
+      ],
+      "canonical_text": "내국민대우 법인의 기본정보내용는 사업자등록번호이다."
     },
     {
       "text": "ㄴ. 고객명",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 1,
-      "order": 11,
-      "heading_level": 1
+      "order": 22,
+      "heading_level": 3,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄴ. 고객명"
+      ],
+      "canonical_text": null
     },
     {
       "text": "내국개인 한글명, 법인 및 외국인은 실명확인증표상의 영문자 등록 가능",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 12,
-      "heading_level": null
+      "order": 23,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄴ. 고객명"
+      ],
+      "canonical_text": null
     },
     {
       "text": "b. 영문명: 개설신청서에 기재된 영문명 또는 여권상의 영문명 기재",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 13,
-      "heading_level": null
+      "order": 24,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄴ. 고객명"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄷ. 법인 공통사항",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 1,
-      "order": 14,
-      "heading_level": 1
+      "order": 25,
+      "heading_level": 3,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "법인등록번호, 고유/납세번호증 여부, 기업분류 선택, 비등록비영리 법인인 경우 설립목적, 상장여부 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 15,
-      "heading_level": null
+      "order": 26,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "업종, 개업년월일 입력",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 16,
-      "heading_level": null
+      "order": 27,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㄹ. 내외국인 구분 : 내국인, 재외국민, 내국민대우(외국인), 비거주 외국인",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 17,
-      "heading_level": null
+      "order": 28,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅂ. 국내거주구분 : 거주, 비거주",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 18,
-      "heading_level": null
+      "order": 29,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅅ. 외국인 관리번호 : 외국인등록번호, 여권번호, 기타등록번호",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 19,
-      "heading_level": null
+      "order": 30,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅇ  국적코드 : 투자등록증 및 여권, 법인설립증명서상의 국적 .",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 20,
-      "heading_level": null
+      "order": 31,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅈ. 거주지 국가코드 : 현재 거주하고 있는 국가의 코드(국제기구는 998선택)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 21,
-      "heading_level": null
+      "order": 32,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "거주자인 경우 대한민국",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 22,
-      "heading_level": null
+      "order": 33,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "| 구 분      | 구 분 내 용                                                                                                              |\n|------------|--------------------------------------------------------------------------------------------------------------------------|\n| 내 국 인   | 내국개인 및 내국법인                                                                                                     |\n| 재외국민   | 해외 영주권자(국적은 대한민국)                                                                                           |\n| 내국민대우 | 국내에 있는 영업소에 근무하고 있거나 국내에서 영업활동에 종사하고 있는 자                                                |\n| (외국인)   | 국내에 주된 사무소를 두고 있는 법인 또는 외국법인의 국내지점,출장소 기타의 사무소                                        |\n| 비거주     | 외국국적 보유자로서 국내에183일이상 주소 또는 거소를 두고 있지 아니한 개인 및 외국정부, 외국지방자치단체,                |\n| 외 국 인   | 외국공공기관, 외국법령에 의하여 설립된 외국기업 및 조약에 의하여 설립된 국제금융기구 기타 재정경제부령이 정하는 외국법인 |",
       "block_type": "table",
       "page": 1,
-      "order": 23,
-      "heading_level": null
+      "order": 34,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
+    },
+    {
+      "text": "내 국 인 | 내국개인 및 내국법인",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 35,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "내 국 인의 법인 공통사항는 내국개인 및 내국법인이다."
+    },
+    {
+      "text": "재외국민 | 해외 영주권자(국적은 대한민국)",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 36,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "재외국민의 법인 공통사항는 해외 영주권자(국적은 대한민국)이다."
+    },
+    {
+      "text": "내국민대우 | 국내에 있는 영업소에 근무하고 있거나 국내에서 영업활동에 종사하고 있는 자",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 37,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "내국민대우의 법인 공통사항는 국내에 있는 영업소에 근무하고 있거나 국내에서 영업활동에 종사하고 있는 자이다."
+    },
+    {
+      "text": "(외국인) | 국내에 주된 사무소를 두고 있는 법인 또는 외국법인의 국내지점,출장소 기타의 사무소",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 38,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "(외국인)의 법인 공통사항는 국내에 주된 사무소를 두고 있는 법인 또는 외국법인의 국내지점,출장소 기타의 사무소이다."
+    },
+    {
+      "text": "비거주 | 외국국적 보유자로서 국내에183일이상 주소 또는 거소를 두고 있지 아니한 개인 및 외국정부, 외국지방자치단체,",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 39,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "비거주의 법인 공통사항는 외국국적 보유자로서 국내에183일이상 주소 또는 거소를 두고 있지 아니한 개인 및 외국정부, 외국지방자치단체,이다."
+    },
+    {
+      "text": "외 국 인 | 외국공공기관, 외국법령에 의하여 설립된 외국기업 및 조약에 의하여 설립된 국제금융기구 기타 재정경제부령이 정하는 외국법인",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 40,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "외 국 인의 법인 공통사항는 외국공공기관, 외국법령에 의하여 설립된 외국기업 및 조약에 의하여 설립된 국제금융기구 기타 재정경제부령이 정하는 외국법인이다."
     },
     {
       "text": "ㅁ. 소득자구분코드 : 국세청 금융소득자료 전산매체 제출요령 기준",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 1,
-      "order": 24,
-      "heading_level": null
+      "order": 41,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "|       |                                                                              | 실 지 명 의 구 분                                                            | 식 별 번                     |   코드 |\n|-------|------------------------------------------------------------------------------|------------------------------------------------------------------------------|------------------------------|--------|\n| 개 인 | 내국인                                                                       | 주민등록번호 부여자                                                          | 주민등록번호                 |    111 |\n|       |                                                                              | 주민등록번호 미부여자                                                        | 의료보호증관리번호           |    112 |\n|       | 재외국민                                                                     | 외국인등록증 소유자, 영주증 소유자                                           | 외국인등록번호               |    131 |\n|       | 및                                                                           | 국내거소신고증 소유자( 외국인)                                               | 국내거소신고번호             |    141 |\n|       | 외국인 등                                                                    | 주민등록증(재외국민) 소유자                                                  | 주민등록번호                 |    123 |\n|       |                                                                              | 기 타                                                                        | 여권번호 거주지국의 납세번호 |    121 |\n| 법 인 | 국내 사업자등록번호(법인으로보는 단체의 경우 고유번호)가 부여된 내·외국 법인 | 국내 사업자등록번호(법인으로보는 단체의 경우 고유번호)가 부여된 내·외국 법인 | 사업자등록번호(고유번호)     |    211 |\n|       | 사업자등록번호가 미부여된 외국법인                                           | 사업자등록번호가 미부여된 외국법인                                           | 거주지국의 납세번호          |    222 |",
       "block_type": "table",
       "page": 1,
-      "order": 25,
-      "heading_level": null
+      "order": 42,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
+    },
+    {
+      "text": "개 인 | 내국인 | 주민등록번호 부여자 | 주민등록번호 | 111",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 43,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "개 인 내국인 주민등록번호 부여자 주민등록번호의 법인 공통사항는 111이다."
+    },
+    {
+      "text": "주민등록번호 미부여자 | 의료보호증관리번호 | 112",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 44,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "주민등록번호 미부여자 의료보호증관리번호의 법인 공통사항는 112이다."
+    },
+    {
+      "text": "재외국민 | 외국인등록증 소유자, 영주증 소유자 | 외국인등록번호 | 131",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 45,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "재외국민 외국인등록증 소유자, 영주증 소유자 외국인등록번호의 법인 공통사항는 131이다."
+    },
+    {
+      "text": "및 | 국내거소신고증 소유자( 외국인) | 국내거소신고번호 | 141",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 46,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "및 국내거소신고증 소유자( 외국인) 국내거소신고번호의 법인 공통사항는 141이다."
+    },
+    {
+      "text": "외국인 등 | 주민등록증(재외국민) 소유자 | 주민등록번호 | 123",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 47,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "외국인 등 주민등록증(재외국민) 소유자 주민등록번호의 법인 공통사항는 123이다."
+    },
+    {
+      "text": "기 타 | 여권번호 거주지국의 납세번호 | 121",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 48,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "기 타 여권번호 거주지국의 납세번호의 법인 공통사항는 121이다."
+    },
+    {
+      "text": "법 인 | 국내 사업자등록번호(법인으로보는 단체의 경우 고유번호)가 부여된 내·외국 법인 | 국내 사업자등록번호(법인으로보는 단체의 경우 고유번호)가 부여된 내·외국 법인 | 사업자등록번호(고유번호) | 211",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 49,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "법 인 국내 사업자등록번호(법인으로보는 단체의 경우 고유번호)가 부여된 내·외국 법인 사업자등록번호(고유번호)의 법인 공통사항는 211이다."
+    },
+    {
+      "text": "사업자등록번호가 미부여된 외국법인 | 사업자등록번호가 미부여된 외국법인 | 거주지국의 납세번호 | 222",
+      "block_type": "table_row",
+      "page": 1,
+      "order": 50,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "사업자등록번호가 미부여된 외국법인 거주지국의 납세번호의 법인 공통사항는 222이다."
     },
     {
       "text": "|       | LEI 부여자                                       | LEI 부여자                                       | LEI 번호                                  |     |\n|-------|--------------------------------------------------|--------------------------------------------------|-------------------------------------------|-----|\n| 단 체 | 개인단체                                         | 개인단체 고유번호 부여자                         | 고유번호                                  | 311 |\n|       | 외국단체                                         |                                                  | 외국단체등록번호 또는 거주지국의 납세번호 | 321 |\n|       | 기타 임의단체                                    | 개인으로 보는 단체                               | 대표자주민등록번호                        | 331 |\n| 기 타 | 비거주외국인(단체)으로 증권거래자                | 비거주외국인(단체)으로 증권거래자                | 투자등록증고유번호                        | 411 |\n|       | 투자기업설립을 위한 외국인(단체)                 | 투자기업설립을 위한 외국인(단체)                 | 관련문서번호                              | 413 |\n|       | 명의 및 번호 등이 공란인 경우 또는 비실명인 경우 | 명의 및 번호 등이 공란인 경우 또는 비실명인 경우 | 공란                                      | 999 |",
       "block_type": "table",
       "page": 2,
-      "order": 26,
-      "heading_level": null
+      "order": 51,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
+    },
+    {
+      "text": "단 체 | 개인단체 | 개인단체 고유번호 부여자 | 고유번호 | 311",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 52,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "단 체 개인단체 개인단체 고유번호 부여자 고유번호의 법인 공통사항는 311이다."
+    },
+    {
+      "text": "외국단체 | 외국단체등록번호 또는 거주지국의 납세번호 | 321",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 53,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "외국단체 외국단체등록번호 또는 거주지국의 납세번호의 법인 공통사항는 321이다."
+    },
+    {
+      "text": "기타 임의단체 | 개인으로 보는 단체 | 대표자주민등록번호 | 331",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 54,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "기타 임의단체 개인으로 보는 단체 대표자주민등록번호의 법인 공통사항는 331이다."
+    },
+    {
+      "text": "기 타 | 비거주외국인(단체)으로 증권거래자 | 비거주외국인(단체)으로 증권거래자 | 투자등록증고유번호 | 411",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 55,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "기 타 비거주외국인(단체)으로 증권거래자 투자등록증고유번호의 법인 공통사항는 411이다."
+    },
+    {
+      "text": "투자기업설립을 위한 외국인(단체) | 투자기업설립을 위한 외국인(단체) | 관련문서번호 | 413",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 56,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "투자기업설립을 위한 외국인(단체) 관련문서번호의 법인 공통사항는 413이다."
+    },
+    {
+      "text": "명의 및 번호 등이 공란인 경우 또는 비실명인 경우 | 명의 및 번호 등이 공란인 경우 또는 비실명인 경우 | 공란 | 999",
+      "block_type": "table_row",
+      "page": 2,
+      "order": 57,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": "명의 및 번호 등이 공란인 경우 또는 비실명인 경우 공란의 법인 공통사항는 999이다."
     },
     {
       "text": "b. 비거주자인 경우 투자등록증 및 여권 상의 국적 (국제기구는 998선택)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 27,
-      "heading_level": null
+      "order": 58,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅊ.해외납세자 확인 (개인 : '14.7.1시행, 법인 : '15.1.2시행)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 28,
-      "heading_level": null
+      "order": 59,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "2016.4.1부터 신규 개인계좌 개설 시 우리나라가 유일한 조세목적상 거주지임을 확인한 순수 내국인에 대해서는 별도 본인확인서를 징구하지 않음",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 29,
-      "heading_level": null
+      "order": 60,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "내국인 주민등록증 발급자로 해외납세자가 아닌 경우 징구 제외",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 30,
-      "heading_level": null
+      "order": 61,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "내국 법인의 경우에는 법인용 본인확인서 징구",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 31,
-      "heading_level": null
+      "order": 62,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "본인확인서 징구 하여 처음거래하실때와 같이 편철",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 32,
-      "heading_level": null
+      "order": 63,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "본인확인서 및 관련 징구서류는 [11027] 전자문서이미지 등록 필수",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 33,
-      "heading_level": null
+      "order": 64,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "처리화면 : [11260] 본인확인서",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 34,
-      "heading_level": null
+      "order": 65,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㄷ. 법인 공통사항"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅋ. 주소",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 2,
-      "order": 35,
-      "heading_level": 1
+      "order": 66,
+      "heading_level": 3,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "자택 및 사업장 : 필수 정보 입력사항",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 36,
-      "heading_level": null
+      "order": 67,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "직장주소",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 37,
-      "heading_level": null
+      "order": 68,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "실거주지: 비거주 개인 및 법인인 경우 실거주지를 반드시 입력",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 38,
-      "heading_level": null
+      "order": 69,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "우편통보처 : 계좌별로 계좌개설화면에서 등록, 계좌정보변경에서 변경",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 39,
-      "heading_level": null
+      "order": 70,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "① 계좌개설시 고객계좌 모두적용시는 일괄적으로 관리",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 40,
-      "heading_level": null
+      "order": 71,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "② 우편물통보지 선택은 계좌개설 화면에서 자택/직장 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 41,
-      "heading_level": null
+      "order": 72,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "③ 통보설정",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 42,
-      "heading_level": null
+      "order": 73,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "⒜ 우송물수령 : 이메일, 온라인 직접조회, 알림톡, 우편,  중 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 43,
-      "heading_level": null
+      "order": 74,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "⒝ 약관통보 : 이메일, 알림톡, SMS,거부 중 선택(우편은 법인만 선택 가능)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 44,
-      "heading_level": null
+      "order": 75,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "⒞ 매매보고서 : HTS, 우편교부 (지점발송, 제경비 부담:고객 또는 지점), 창구교부, 유선확인, 기타 중 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 45,
-      "heading_level": null
+      "order": 76,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "⒟ RP통지방법 : 영업점조회, 온라인조회, 이메일 중 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 46,
-      "heading_level": null
+      "order": 77,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "⒠ 금융소득 : 우편, 이메일, 거부 중 선택",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 47,
-      "heading_level": null
+      "order": 78,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "도로명주소(새주소)만 입력가능(2014.1.1시행)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 48,
-      "heading_level": null
+      "order": 79,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅋ. 주소"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅌ. 마케팅수신동의",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 2,
-      "order": 49,
-      "heading_level": 1
+      "order": 80,
+      "heading_level": 3,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "E-mail, SMS, TM, DM 선택 가능",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 50,
-      "heading_level": null
+      "order": 81,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "'개인(신용)정보선택동의서' 동의시 상품서비스 안내 등 마케팅 동의 선택 가능",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 51,
-      "heading_level": null
+      "order": 82,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "야간(21시~08시)에 광고를 전송하기 위해서는 별도의 사전동의 필요",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 52,
-      "heading_level": null
+      "order": 83,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "'마케팅 매체별 및 야간광고 수신동의 신청서' 작성(2015.06.22)",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 53,
-      "heading_level": null
+      "order": 84,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "온라인(홈페이지, HTS, MTS  동의 신청 가능 )",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 54,
-      "heading_level": null
+      "order": 85,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅌ. 마케팅수신동의"
+      ],
+      "canonical_text": null
     },
     {
       "text": "ㅍ. 기타",
-      "block_type": "section_header",
+      "block_type": "heading",
       "page": 2,
-      "order": 55,
-      "heading_level": 1
+      "order": 86,
+      "heading_level": 3,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅍ. 기타"
+      ],
+      "canonical_text": null
     },
     {
       "text": "직업, 직장명, 부서명, 직위,  핸드폰번호, 팩스번호, E-mail, E-mail정보수신",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 56,
-      "heading_level": null
+      "order": 87,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅍ. 기타"
+      ],
+      "canonical_text": null
     },
     {
       "text": "생년월일,결혼기념일",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 57,
-      "heading_level": null
+      "order": 88,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅍ. 기타"
+      ],
+      "canonical_text": null
     },
     {
       "text": "자택 전화번호/휴대폰/E-mail중 한 개 필수 입력",
-      "block_type": "text",
+      "block_type": "paragraph",
       "page": 2,
-      "order": 58,
-      "heading_level": null
+      "order": 89,
+      "heading_level": null,
+      "hierarchy_path": [
+        "나. 기본정보내용",
+        "ㅍ. 기타"
+      ],
+      "canonical_text": null
     }
   ],
   "meta": {
