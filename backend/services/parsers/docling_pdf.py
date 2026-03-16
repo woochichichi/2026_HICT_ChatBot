@@ -1,4 +1,4 @@
-"""Docling 기반 PDF 파서. POC: 텍스트 블록 추출만."""
+"""Docling 기반 PDF 파서. 업무편람 텍스트·표 추출 → Vector DB 저장용."""
 
 import hashlib
 import json
@@ -11,11 +11,44 @@ from backend.models.parsed_document import Block, ParsedDocument
 logger = logging.getLogger(__name__)
 
 try:
-    from docling.document_converter import DocumentConverter
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import (
+        TableFormerMode,
+        TableStructureOptions,
+        ThreadedPdfPipelineOptions,
+    )
+    from docling.document_converter import DocumentConverter, PdfFormatOption
+    from docling_core.types.doc import DocItemLabel, SectionHeaderItem, TableItem, TextItem
 except ImportError as e:
     raise ImportError(
         "Docling이 설치되지 않았습니다. pip install docling 후 다시 시도하세요."
     ) from e
+
+
+_SKIP_LABELS = frozenset({
+    DocItemLabel.PAGE_HEADER,
+    DocItemLabel.PAGE_FOOTER,
+})
+
+
+def _build_converter() -> DocumentConverter:
+    """업무편람 PDF에 최적화된 DocumentConverter를 생성."""
+    pipeline_opts = ThreadedPdfPipelineOptions(
+        do_table_structure=True,
+        table_structure_options=TableStructureOptions(
+            do_cell_matching=True,
+            mode=TableFormerMode.ACCURATE,
+        ),
+        do_ocr=True,
+    )
+    return DocumentConverter(
+        allowed_formats=[InputFormat.PDF],
+        format_options={
+            InputFormat.PDF: PdfFormatOption(
+                pipeline_options=pipeline_opts,
+            ),
+        },
+    )
 
 
 def _doc_id_from_path(input_path: str) -> str:
@@ -24,27 +57,106 @@ def _doc_id_from_path(input_path: str) -> str:
     return hashlib.sha1(str(path).encode()).hexdigest()[:16]
 
 
-def _collect_blocks_from_docling(doc) -> list[tuple[str, int | None]]:
-    """DoclingDocument에서 (text, page_no) 리스트를 순서대로 수집."""
-    blocks_raw: list[tuple[str, int | None]] = []
+def _get_page_no(item) -> int | None:
+    """ProvenanceItem에서 페이지 번호를 추출."""
+    prov = getattr(item, "prov", None)
+    if prov and len(prov) > 0:
+        return prov[0].page_no
+    return None
+
+
+def _table_to_text(table: TableItem) -> str:
+    """TableItem을 마크다운 테이블 문자열로 변환.
+    마크다운 변환 실패 시 셀 텍스트를 탭 구분으로 폴백.
+    """
+    try:
+        md = table.export_to_markdown()
+        if md and md.strip():
+            return md.strip()
+    except Exception:
+        logger.debug("export_to_markdown 실패, 폴백 시도")
+
+    try:
+        df = table.export_to_dataframe()
+        if df is not None and not df.empty:
+            return df.to_markdown(index=False)
+    except Exception:
+        logger.debug("export_to_dataframe 실패")
+
+    return ""
+
+
+def _collect_blocks_from_docling(doc) -> list[Block]:
+    """DoclingDocument에서 블록을 타입별로 수집.
+
+    - SectionHeaderItem → block_type="section_header", heading_level 포함
+    - TextItem(paragraph/list_item 등) → block_type="text"
+    - TableItem → block_type="table", 마크다운으로 변환
+    - 머리글/바닥글은 제외
+    """
+    blocks: list[Block] = []
+    order = 0
+
     try:
         for item, _level in doc.iterate_items():
-            text = getattr(item, "text", None)
-            if text is None:
+            label = getattr(item, "label", None)
+            if label in _SKIP_LABELS:
                 continue
-            s = (text or "").strip()
-            if not s:
-                continue
-            page = getattr(item, "page_no", None)
-            blocks_raw.append((s, page))
+
+            if isinstance(item, SectionHeaderItem):
+                text = (item.text or "").strip()
+                if not text:
+                    continue
+                blocks.append(Block(
+                    text=text,
+                    block_type="section_header",
+                    page=_get_page_no(item),
+                    order=order,
+                    heading_level=getattr(item, "level", None),
+                ))
+                order += 1
+
+            elif isinstance(item, TableItem):
+                text = _table_to_text(item)
+                if not text:
+                    continue
+                caption_parts = []
+                for cap_ref in getattr(item, "captions", []):
+                    cap_item = doc.get_ref(cap_ref) if hasattr(doc, "get_ref") else None
+                    if cap_item and hasattr(cap_item, "text"):
+                        caption_parts.append(cap_item.text.strip())
+                if caption_parts:
+                    text = "\n".join(caption_parts) + "\n\n" + text
+                blocks.append(Block(
+                    text=text,
+                    block_type="table",
+                    page=_get_page_no(item),
+                    order=order,
+                ))
+                order += 1
+
+            elif isinstance(item, TextItem):
+                text = (item.text or "").strip()
+                if not text:
+                    continue
+                blocks.append(Block(
+                    text=text,
+                    block_type="text",
+                    page=_get_page_no(item),
+                    order=order,
+                ))
+                order += 1
+
     except Exception as e:
         logger.warning("iterate_items 실패, export_to_markdown 폴백: %s", e)
         full = doc.export_to_markdown() or ""
         for part in full.split("\n\n"):
             s = part.strip()
             if s:
-                blocks_raw.append((s, None))
-    return blocks_raw
+                blocks.append(Block(text=s, block_type="text", page=None, order=order))
+                order += 1
+
+    return blocks
 
 
 def parse_pdf(input_path: str, *, doc_id: str | None = None) -> ParsedDocument:
@@ -55,7 +167,7 @@ def parse_pdf(input_path: str, *, doc_id: str | None = None) -> ParsedDocument:
     if doc_id is None:
         doc_id = _doc_id_from_path(input_path)
 
-    converter = DocumentConverter()
+    converter = _build_converter()
     result = converter.convert(str(path))
     doc = result.document
 
@@ -63,15 +175,18 @@ def parse_pdf(input_path: str, *, doc_id: str | None = None) -> ParsedDocument:
     pages = getattr(doc, "pages", None) or {}
     page_count = len(pages) if pages else None
 
-    blocks_raw = _collect_blocks_from_docling(doc)
-    blocks = [
-        Block(text=t, page=pg, order=i)
-        for i, (t, pg) in enumerate(blocks_raw)
-    ]
+    blocks = _collect_blocks_from_docling(doc)
+
+    table_count = sum(1 for b in blocks if b.block_type == "table")
+    logger.info(
+        "파싱 완료: %s — %d 블록 (표 %d개), %s 페이지",
+        path.name, len(blocks), table_count, page_count or "?",
+    )
 
     meta = {
         "parser": "docling",
         "doc_type": "pdf",
+        "table_count": table_count,
         "output_path": None,
     }
 
@@ -86,7 +201,7 @@ def parse_pdf(input_path: str, *, doc_id: str | None = None) -> ParsedDocument:
 
 
 def save_parsed_document(parsed: ParsedDocument, data_dir: str | None = None) -> str:
-    """ParsedDocument를 {DATA_DIR}/processed/{doc_id}/docling.json 에 저장. meta.output_path 설정 후 저장 경로 반환."""
+    """ParsedDocument를 {DATA_DIR}/processed/{doc_id}/docling.json 에 저장."""
     base = Path(data_dir or settings.DATA_DIR)
     out_dir = base / "processed" / parsed.doc_id
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -2,12 +2,13 @@
 
 from pydantic import BaseModel
 
-# 문서 내용을 나눈 조각
+
 class Block(BaseModel):
     text: str
+    block_type: str = "text"
     page: int | None = None
-    # 문서 안에서 몇 번째 조각인지
     order: int
+    heading_level: int | None = None
 
 
 class ParsedDocument(BaseModel):
