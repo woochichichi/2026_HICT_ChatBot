@@ -15,6 +15,7 @@ POST /api/chat
 ```
 
 **Request:**
+
 ```json
 {
   "question": "비대면 계좌 개설 절차가 어떻게 되나요?",
@@ -49,6 +50,7 @@ data: {}
 ```
 
 **최종 응답 구조 (프론트엔드 조립 후):**
+
 ```json
 {
   "answer": "비대면 계좌 개설은 다음 절차로 진행됩니다...",
@@ -64,6 +66,7 @@ data: {}
 ```
 
 **confidence 기준:**
+
 - `high`: 유사도 0.85 이상, 출처 명확
 - `medium`: 유사도 0.70~0.85
 - `low`: 유사도 0.70 미만 → "편람에 포함되어 있지 않습니다" 안내
@@ -79,6 +82,7 @@ POST /api/training/question
 ```
 
 **Request:**
+
 ```json
 {
   "difficulty": "beginner",
@@ -93,6 +97,7 @@ POST /api/training/question
 > `is_demo`: 데모 모드 여부. `true`이면 LLM 즉석 출제를 하지 않고 `training_golden_answers.json`에서 질문을 직접 꺼내서 반환.
 
 **Response:**
+
 ```json
 {
   "question": "계좌 개설하려면 어떤 서류가 필요한가요?",
@@ -108,6 +113,7 @@ POST /api/training/question
 **difficulty 값:** `beginner` / `intermediate` / `advanced`
 
 > ⚠️ **난이도는 데이터 속성이 아니라 LLM 프롬프트 지시.** FAQ 스키마에 난이도 필드는 없음. 문서는 카테고리로만 필터링하여 랜덤 추출하고, `question_gen.py`의 프롬프트에서 difficulty에 따라 질문 생성 방식을 조절:
+>
 > - `beginner`: 단일 주제, 직접적 질문
 > - `intermediate`: 조건 포함 질문
 > - `advanced`: 복합 주제, 꼬아서 질문
@@ -140,6 +146,7 @@ def select_source(category: str, solved_content_ids: list[str], is_demo: bool) -
 ```
 
 > ⚠️ **데모 모드 vs 일반 모드 차이:**
+>
 > - **일반 모드** (`is_demo: false`): 랜덤 문서 선택 → LLM이 즉석 출제 → 채점 시 Direct Fetch
 > - **데모 모드** (`is_demo: true`): golden_answers.json에서 사전 확정된 질문/정답 사용 → 채점 시 수동 정답 기준
 >
@@ -154,6 +161,7 @@ POST /api/training/score
 ```
 
 **Request:**
+
 ```json
 {
   "question_id": "q-001",
@@ -162,6 +170,7 @@ POST /api/training/score
 ```
 
 **Response:**
+
 ```json
 {
   "score": 65,
@@ -174,6 +183,7 @@ POST /api/training/score
 ```
 
 **채점 정답 소스 (우선순위):**
+
 1. `training_golden_answers.json`에서 수동 정답 조회 → 있으면 이걸 사용
 2. 수동 정답 없으면 → `source_content_id`로 ChromaDB에서 원본 content를 **Direct Fetch** → LLM에 모범 답안 기준으로 전달
 
@@ -224,8 +234,9 @@ POST /api/training/score
 ```
 
 **검색 로직 (rag.py) — 연산 순서 중요:**
+
 1. 사용자 질문으로 `faq_titles` 쿼리 → 상위 10건 + 점수
-2. **titles 결과 내에서 _sim 접미사 제거 후 Max Pooling** (동일 원본 ID → 최고 점수만 채택)
+2. **titles 결과 내에서 \_sim 접미사 제거 후 Max Pooling** (동일 원본 ID → 최고 점수만 채택)
 3. 같은 질문으로 `faq_contents` 쿼리 → 상위 10건 + 점수 (contents는 유사 제목 없으므로 Max Pooling 불필요)
 4. **Title 최종 점수와 Content 점수를 가중 병합** (가중치는 config에서 파라미터로 관리)
 5. 병합 점수 상위 3~5건을 LLM 컨텍스트로 전달
@@ -233,6 +244,7 @@ POST /api/training/score
 > ⚠️ **순서를 뒤집으면 안 됨.** Max Pooling 전에 가중 병합을 하면, 유사 제목이 많은 문서의 title 점수가 여러 번 합산되어 수치가 왜곡됨.
 
 **가중치 설정 (config.py):**
+
 ```python
 TITLE_WEIGHT = 0.5      # 기본값
 CONTENT_WEIGHT = 0.5    # 기본값
@@ -240,6 +252,7 @@ CONTENT_WEIGHT = 0.5    # 기본값
 ```
 
 **유사 제목(similar_titles) 처리:**
+
 - 인제스트 시 원본 title + similar_titles를 각각 별도 document로 저장
 - id에 접미사 추가: `faq-account-001`, `faq-account-001_sim1`, `faq-account-001_sim2`
 - 검색 결과에서 접미사 제거 후 원본 ID로 병합
@@ -300,16 +313,19 @@ class LLMService(ABC):
 ```
 
 **현재 구현체:** `GeminiService(LLMService)` — PoC 기본 (Google AI Studio)
+
 - Chat: `gemini-2.5-flash`
 - Embedding: `gemini-embedding-001` (3072차원)
 - SDK: `google-genai` (sync → `asyncio.to_thread` 래핑)
 
 **백업 구현체:** `OpenAIService(LLMService)` — OpenAI 크레딧 부족으로 백업 전환
+
 - Chat: `gpt-4o` / Embedding: `text-embedding-3-small` (1536차원)
 
 **향후 추가:** 실도입 모델 확정 시 해당 구현체 추가 (예: `Qwen3Service`, `VLLMService` 등)
 
 **전환 시 필수 체크:**
+
 - 임베딩 차원 변경 시 ChromaDB 컬렉션 전체 재구축 필요 → 인제스트 파이프라인을 "모델 교체 → 재인제스트" 원커맨드로 실행 가능하게 설계
 - JSON 구조화 출력(채점 프롬프트) 품질은 모델별로 편차가 큼 → 전환 후 반드시 재검증
 - stop token, temperature 동작, 토큰 카운팅 방식의 미묘한 차이 주의
@@ -321,6 +337,7 @@ class LLMService(ABC):
 ### 문제
 
 채점 시 정답이 필요한데, 두 가지 소스가 있음:
+
 - 수동 확정 정답 (golden answer) — 정확하지만 수동 작업 필요
 - 출처 문서 Direct Fetch — `source_content_id`로 원본 content를 직접 가져옴
 
@@ -433,19 +450,19 @@ prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 
 ### 현재 백로그
 
-| # | 상태 | 발견일 | 발견자 | 내용 | 관련 섹션 | 비고 |
-|---|------|--------|--------|------|-----------|------|
-| 1 | ✅ | 03-03 | Gemini | 채점 시 RAG 재검색 불필요, Direct Fetch로 변경 | 섹션 1, 5 | v3에서 반영 |
-| 2 | ✅ | 03-03 | Gemini | 다중 제목 중복 검색 시 점수 처리 기준 누락 (Max Pooling) | 섹션 3 | v3에서 반영 |
-| 3 | ✅ | 03-03 | Gemini | session_id 있으나 Multi-turn 메커니즘 없음 | 섹션 1 | v3에서 Single-turn 확정 |
-| 4 | ✅ | 03-03 | Gemini | 문제 추출 방식(랜덤/순차) 미정의 | 섹션 1 | v3에서 반영 |
-| 5 | ✅ | 03-03 | Gemini | 훈련 모드 session_history 상태 관리 누락 | 섹션 1 | v4에서 solved_content_ids로 해결 |
-| 6 | ✅ | 03-03 | Gemini | 난이도가 데이터 속성인지 프롬프트 지시인지 모호 | 섹션 1 | v4에서 프롬프트 지시로 확정 |
-| 7 | ✅ | 03-03 | Gemini | Max Pooling과 가중 병합 연산 순서 모호 | 섹션 3 | v4에서 순서 명시 |
-| 8 | ✅ | 03-03 | Gemini | SSE sources를 마지막에 보내면 UX 낭비 | 섹션 1 | v4에서 선전송으로 변경 |
-| 9 | ✅ | 03-03 | Gemini | 데모 수동 정답과 동적 출제 question_id 매칭 불가 | 섹션 1, 5 | v5에서 is_demo 분기 추가 |
-| 10 | ✅ | 03-03 | Gemini | 문제 소진 시 프론트 solved_content_ids 상태 꼬임 | 섹션 1 | v5에서 is_reset 플래그 추가 |
-| - | | | | | | |
+| #   | 상태 | 발견일 | 발견자 | 내용                                                     | 관련 섹션 | 비고                             |
+| --- | ---- | ------ | ------ | -------------------------------------------------------- | --------- | -------------------------------- |
+| 1   | ✅   | 03-03  | Gemini | 채점 시 RAG 재검색 불필요, Direct Fetch로 변경           | 섹션 1, 5 | v3에서 반영                      |
+| 2   | ✅   | 03-03  | Gemini | 다중 제목 중복 검색 시 점수 처리 기준 누락 (Max Pooling) | 섹션 3    | v3에서 반영                      |
+| 3   | ✅   | 03-03  | Gemini | session_id 있으나 Multi-turn 메커니즘 없음               | 섹션 1    | v3에서 Single-turn 확정          |
+| 4   | ✅   | 03-03  | Gemini | 문제 추출 방식(랜덤/순차) 미정의                         | 섹션 1    | v3에서 반영                      |
+| 5   | ✅   | 03-03  | Gemini | 훈련 모드 session_history 상태 관리 누락                 | 섹션 1    | v4에서 solved_content_ids로 해결 |
+| 6   | ✅   | 03-03  | Gemini | 난이도가 데이터 속성인지 프롬프트 지시인지 모호          | 섹션 1    | v4에서 프롬프트 지시로 확정      |
+| 7   | ✅   | 03-03  | Gemini | Max Pooling과 가중 병합 연산 순서 모호                   | 섹션 3    | v4에서 순서 명시                 |
+| 8   | ✅   | 03-03  | Gemini | SSE sources를 마지막에 보내면 UX 낭비                    | 섹션 1    | v4에서 선전송으로 변경           |
+| 9   | ✅   | 03-03  | Gemini | 데모 수동 정답과 동적 출제 question_id 매칭 불가         | 섹션 1, 5 | v5에서 is_demo 분기 추가         |
+| 10  | ✅   | 03-03  | Gemini | 문제 소진 시 프론트 solved_content_ids 상태 꼬임         | 섹션 1    | v5에서 is_reset 플래그 추가      |
+| -   |      |        |        |                                                          |           |                                  |
 
 > 새 이슈 추가 시 `#` 번호를 이어서 매기고, 상태는 `⬚`(미처리)로 시작.
 
@@ -453,26 +470,26 @@ prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 
 PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
-| # | 내용 | 이유 |
-|---|------|------|
-| T1 | Multi-turn 대화 히스토리 관리 (Redis/인메모리) | PoC는 Single-turn, 실도입 시 후속 질문 지원 필요 |
-| T2 | 검색 결과 Reranking + 상위 N개만 LLM 전달 | 데이터 확장 시 컨텍스트 길이 → 응답 시간 초과 우려 |
-| T3 | 2단계 RAG (LangGraph) | PoC는 순차 파이프라인, 복잡한 질문은 멀티스텝 필요 |
-| T4 | 전체 편람 자동 전처리 파이프라인 | PoC는 수동 20건, 실도입은 전체 편람 (6~12개월 별도 프로젝트) |
-| T5 | GPT-4o vs 실도입 모델 성능 비교표 | 3주차 비교 테스트 결과로 작성 |
+| #   | 내용                                           | 이유                                                         |
+| --- | ---------------------------------------------- | ------------------------------------------------------------ |
+| T1  | Multi-turn 대화 히스토리 관리 (Redis/인메모리) | PoC는 Single-turn, 실도입 시 후속 질문 지원 필요             |
+| T2  | 검색 결과 Reranking + 상위 N개만 LLM 전달      | 데이터 확장 시 컨텍스트 길이 → 응답 시간 초과 우려           |
+| T3  | 2단계 RAG (LangGraph)                          | PoC는 순차 파이프라인, 복잡한 질문은 멀티스텝 필요           |
+| T4  | 전체 편람 자동 전처리 파이프라인               | PoC는 수동 20건, 실도입은 전체 편람 (6~12개월 별도 프로젝트) |
+| T5  | GPT-4o vs 실도입 모델 성능 비교표              | 3주차 비교 테스트 결과로 작성                                |
 
 ---
 
 ## 변경 이력
 
-| 버전 | 날짜 | 변경 내용 |
-|------|------|-----------|
-| v1 | 2026-02-28 | 초기 API 스펙 + 데이터 스키마 |
-| v2 | 2026-03-03 | 설계 리뷰 반영 — Qwen3 후보화, 가중치 파라미터화, 수동 정답 병합, LLM 인터페이스 |
-| v3 | 2026-03-03 | 구현 리뷰 1차 — 채점 Direct Fetch, Max Pooling, SSE 스트리밍, 문제 추출 로직 |
-| v4 | 2026-03-03 | 구현 리뷰 2차 — solved_content_ids 상태관리, 난이도=프롬프트 지시 확정, Max Pooling→병합 순서 명시, SSE sources 선전송 |
-| v5 | 2026-03-03 | 구현 리뷰 3차 (Gemini) — is_demo 데모/일반 모드 분기, is_reset 프론트 상태 초기화 플래그 |
-| v6 | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가 |
+| 버전 | 날짜       | 변경 내용                                                                                                              |
+| ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| v1   | 2026-02-28 | 초기 API 스펙 + 데이터 스키마                                                                                          |
+| v2   | 2026-03-03 | 설계 리뷰 반영 — Qwen3 후보화, 가중치 파라미터화, 수동 정답 병합, LLM 인터페이스                                       |
+| v3   | 2026-03-03 | 구현 리뷰 1차 — 채점 Direct Fetch, Max Pooling, SSE 스트리밍, 문제 추출 로직                                           |
+| v4   | 2026-03-03 | 구현 리뷰 2차 — solved_content_ids 상태관리, 난이도=프롬프트 지시 확정, Max Pooling→병합 순서 명시, SSE sources 선전송 |
+| v5   | 2026-03-03 | 구현 리뷰 3차 (Gemini) — is_demo 데모/일반 모드 분기, is_reset 프론트 상태 초기화 플래그                               |
+| v6   | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가                   |
 
 ---
 
@@ -485,6 +502,7 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 **커밋**: `fe91692`
 
 #### 변경 요약
+
 - `backend/services/embedder.py` — `LLMService(ABC)` + `GeminiService`(기본) + `OpenAIService`(백업) 구현
 - `backend/services/rag.py` — ChromaDB 초기화 + `RAGService` 검색 파이프라인
 - `backend/config.py` — Google AI Studio 설정, RAG 검색 가중치 추가
@@ -510,4 +528,29 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
 ---
 
-*이 문서는 개발 진행에 따라 팀원 누구나 업데이트.*
+### 2026-03-16 | 승구리 → 우치 | Docling PDF 파서 구현
+
+**커밋**: `cc12efa` ~ `85d8628` (8 commits)
+
+#### 변경 요약
+
+- `backend/services/parsers/docling_pdf.py` (신규) — Docling 기반 PDF 파서. 텍스트·표 추출, 한국어 개조식 번호 패턴(`1)`, `가.`, `ㄱ.`)으로 heading 깊이 감지, 계층 구조(hierarchy_path) 자동 생성
+- `backend/models/parsed_document.py` (신규) — `Block`, `ParsedDocument` Pydantic 공통 스키마. 파서 종류(docling/pymupdf)와 무관하게 통일된 출력 구조
+- `scripts/parse_pdf.py` (신규) — CLI 파싱 스크립트 (`python scripts/parse_pdf.py -i <PDF경로>`)
+- `tests/test_docling_parser.py` (신규) — 파서 최소 테스트 (`data/raw/sample.pdf` 있을 때 실행)
+- `backend/config.py` — `DATA_DIR` 설정 추가
+- `requirements.txt` — `docling>=2.0.0`, `pytest>=8.0.0` 추가, 기존 camelot 주석 제거
+- `backend/utils/pdf_parser.py` — 기존 유틸 삭제
+
+#### 확인사항
+
+- [ ] **패키지 재설치 필요**: `pip install -r requirements.txt` — docling은 무거운 패키지이므로 설치 시간 주의
+- [ ] **파서 출력 스키마 확인**: `ParsedDocument` → `blocks[]` 구조. 각 Block에 `block_type`(heading/paragraph/table/table_row/rule), `hierarchy_path`, `canonical_text` 포함
+- [ ] **ChromaDB 인제스트 시 `canonical_text` 사용 권장**: 검색 최적화용 평문이 `block.canonical_text`에 생성됨. RAG 파이프라인에서 이 필드를 임베딩 대상으로 활용할 것
+- [ ] **표(table) 추출**: Docling `TableFormerMode`로 표 구조 추출 → `block_type: "table"` (전체 HTML/마크다운) + `"table_row"` (행 단위 분리). RAG 검색 시 행 단위 블록 활용 가능
+- [ ] **계층 구조**: `hierarchy_path`에 문서 소제목 경로가 리스트로 담김 (예: `["계좌개설", "가. 신규개설"]`). 검색 결과 출처 표시에 활용 가능
+- [ ] **기존 `pdf_parser.py` 삭제됨**: `backend/utils/pdf_parser.py` 제거. 기존 참조가 있으면 `backend.services.parsers.docling_pdf`로 교체 필요
+
+---
+
+_이 문서는 개발 진행에 따라 팀원 누구나 업데이트._
