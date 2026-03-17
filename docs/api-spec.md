@@ -103,11 +103,13 @@ POST /api/training/question
   "question": "계좌 개설하려면 어떤 서류가 필요한가요?",
   "question_id": "q-001",
   "source_content_id": "faq-account-003",
+  "reference": "계좌업무편람 p.23 제5조",
   "difficulty": "beginner",
   "is_reset": false
 }
 ```
 
+> `reference`: 편람 내 해당 내용 위치 (문서명, 페이지 등). 질문/채점 결과 화면에 표시용.
 > `is_reset`: 해당 카테고리의 문제를 한 바퀴 다 돌아서 전체 풀에서 재추출이 일어났을 때 `true`. 프론트엔드는 이 플래그를 보고 `solved_content_ids`를 빈 배열 `[]`로 초기화해야 함.
 
 **difficulty 값:** `beginner` / `intermediate` / `advanced`
