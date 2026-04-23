@@ -165,6 +165,7 @@ async def generate_training_question(
             "question": demo_item["question"],
             "question_id": demo_item["question_id"],
             "source_content_id": demo_item.get("source_content_id", demo_item["question_id"]),
+            "reference": demo_item.get("reference", ""),
             "difficulty": difficulty,
             "is_reset": is_reset,
         }
@@ -175,10 +176,13 @@ async def generate_training_question(
     # question_id: 채점 시 Direct Fetch용. source_content_id와 동일 형식으로 매핑
     question_id = f"q-{selected_id}"
 
+    reference = f"{content.get('source_document', '')} {content.get('source_page', '')}".strip()
+
     return {
         "question": question,
         "question_id": question_id,
         "source_content_id": selected_id,
+        "reference": reference,
         "difficulty": difficulty,
         "is_reset": is_reset,
     }

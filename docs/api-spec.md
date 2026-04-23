@@ -103,11 +103,13 @@ POST /api/training/question
   "question": "계좌 개설하려면 어떤 서류가 필요한가요?",
   "question_id": "q-001",
   "source_content_id": "faq-account-003",
+  "reference": "계좌업무편람 p.23 제5조",
   "difficulty": "beginner",
   "is_reset": false
 }
 ```
 
+> `reference`: 편람 내 해당 내용 위치 (문서명, 페이지 등). 질문/채점 결과 화면에 표시용.
 > `is_reset`: 해당 카테고리의 문제를 한 바퀴 다 돌아서 전체 풀에서 재추출이 일어났을 때 `true`. 프론트엔드는 이 플래그를 보고 `solved_content_ids`를 빈 배열 `[]`로 초기화해야 함.
 
 **difficulty 값:** `beginner` / `intermediate` / `advanced`
@@ -462,6 +464,7 @@ prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 | 8   | ✅   | 03-03  | Gemini | SSE sources를 마지막에 보내면 UX 낭비                    | 섹션 1    | v4에서 선전송으로 변경           |
 | 9   | ✅   | 03-03  | Gemini | 데모 수동 정답과 동적 출제 question_id 매칭 불가         | 섹션 1, 5 | v5에서 is_demo 분기 추가         |
 | 10  | ✅   | 03-03  | Gemini | 문제 소진 시 프론트 solved_content_ids 상태 꼬임         | 섹션 1    | v5에서 is_reset 플래그 추가      |
+| 11  | ⏳   | 04-14  | Claude | WBS 2.2 다중 제목 생성: 인제스트가 편람 청크 기반으로 변경되어 `_sim` 방식 불필요. 승구리와 이월/제외 협의 필요 | 섹션 3 | 보류 중, 현재 검색 품질 충분(0.94) |
 | -   |      |        |        |                                                          |           |                                  |
 
 > 새 이슈 추가 시 `#` 번호를 이어서 매기고, 상태는 `⬚`(미처리)로 시작.
@@ -490,6 +493,7 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 | v4   | 2026-03-03 | 구현 리뷰 2차 — solved_content_ids 상태관리, 난이도=프롬프트 지시 확정, Max Pooling→병합 순서 명시, SSE sources 선전송 |
 | v5   | 2026-03-03 | 구현 리뷰 3차 (Gemini) — is_demo 데모/일반 모드 분기, is_reset 프론트 상태 초기화 플래그                               |
 | v6   | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가                   |
+| v7   | 2026-04-14 | 챗봇 모드 SSE 스트리밍 구현. chat.py 전면 교체, rag.py에 generate_answer_stream 추가, 챗봇 프론트엔드(ChatScreen) 구현   |
 
 ---
 
@@ -626,6 +630,46 @@ npm run dev
 ```
 
 ---
+
+### 2026-04-14 | 우치 → 승구리 | 챗봇 모드 2~3주차 구현 완료
+
+**브랜치**: `feature/chatbot`
+
+#### 변경 요약
+
+**백엔드 (챗봇 모드)**
+
+- `backend/services/rag.py` — `generate_answer_stream()` 추가. SSE용 스트리밍 답변 생성 (sources 선반환 + 토큰 AsyncIterator). `_build_system_prompt`에서 불필요한 `{question}` replace 제거
+- `backend/routers/chat.py` — 기존 스텁 → SSE 스트리밍 API 전면 구현. FastAPI `StreamingResponse` 사용 (추가 패키지 없음). 이벤트 순서: sources → token → done
+- `backend/prompts/chat_system.txt` — v2: 출처 번호 [1][2] 인용 형식, 엣지케이스 처리 지시 (모호한 질문, 부분 매칭, 편람 외 질문)
+
+**프론트엔드 (챗봇 UI)**
+
+- `frontend/src/api/chat.js` (신규) — SSE 스트리밍 API 헬퍼. fetch + ReadableStream으로 POST SSE 소비
+- `frontend/src/components/chat/ChatScreen.jsx` (신규) — 챗봇 UI. 메시지 히스토리, 실시간 스트리밍 표시, SourcePanel (출처 목록 + confidence 뱃지)
+- `frontend/src/App.jsx` — "준비 중" placeholder → ChatScreen 교체
+
+**스크립트**
+
+- `scripts/weight_search.py` (신규) — 가중치 그리드 서치 [5:5, 4:6, 3:7] 비교
+
+**문서 인프라**
+
+- `docs/INDEX.md`, `docs/TROUBLESHOOTING.md`, `docs/PROMPT_HISTORY.md`, `docs/TEST_CHECKLIST.md` (신규) — AI 도구용 문서 체계
+- `scripts/pre-commit-check.sh` (신규) — pre-commit hook (.env 차단, API 키 하드코딩 검사, 소유권 경고)
+- `CLAUDE.md`, `.cursorrules`, `RULES.md` — 문서 참조 + 주석 규칙 추가
+
+#### 확인사항
+
+- [ ] **챗봇 모드 동작 확인**: `uvicorn backend.main:app --reload` → `cd frontend && npm run dev` → 브라우저 `localhost:3000` → 챗봇 모드 탭
+- [ ] **SSE 스트리밍 정상**: sources 선전송 → 토큰 실시간 → done 순서
+- [ ] **App.jsx 변경**: 훈련 모드 동작에 영향 없음 (import 추가 + placeholder 교체만)
+- [ ] **pre-commit hook**: `scripts/pre-commit-check.sh`를 `.git/hooks/pre-commit`에 복사해서 사용. 승구리 로컬에서도 설치 필요:
+  ```bash
+  cp scripts/pre-commit-check.sh .git/hooks/pre-commit
+  chmod +x .git/hooks/pre-commit
+  ```
+- [ ] **문서 확인**: `docs/INDEX.md` → 전체 문서 인덱스. Cursor에서도 동일하게 참조 가능
 
 ### 2026-04-23 | 개발 환경 | ChromaDB 패키지 하한 버전
 
