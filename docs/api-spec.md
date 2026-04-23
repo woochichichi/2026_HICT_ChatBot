@@ -627,4 +627,12 @@ npm run dev
 
 ---
 
+### 2026-04-23 | 개발 환경 | ChromaDB 패키지 하한 버전
+
+**변경**: `requirements.txt`의 `chromadb` 제약을 `>=1.0.0,<2.0.0`으로 조정 (기존 `>=0.5.0,<1.0.0`).
+
+**이유**: 0.6.x 계열은 Windows에서 `chroma-hnswlib` 소스 빌드가 필요해 Microsoft C++ Build Tools 없이 `pip install`이 실패할 수 있음. 1.x는 사전 빌드 휠로 설치가 안정적이며, PoC에서 사용하는 `chromadb.PersistentClient` API와 호환됨.
+
+---
+
 _이 문서는 개발 진행에 따라 팀원 누구나 업데이트._
