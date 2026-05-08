@@ -14,22 +14,22 @@ flowchart LR
   Trainee([신입 상담원])
   Admin([관리자])
   System(((증권 상담원<br/>AI 코치)))
-  Manuals[(업무편람 PDF)]
-  Goldens[(수동 정답<br/>golden answers)]
+  Manuals[("업무편람 PDF")]
+  Goldens[("수동 정답<br/>golden answers")]
   LLM([Google AI Studio])
 
-  Operator -->|질문| System
-  System -->|답변+출처| Operator
+  Operator -->|"질문"| System
+  System -->|"답변+출처"| Operator
 
-  Trainee -->|난이도/카테고리,<br/>답변 입력| System
-  System -->|고객 질문,<br/>채점 결과| Trainee
+  Trainee -->|"난이도/카테고리,<br/>답변 입력"| System
+  System -->|"고객 질문,<br/>채점 결과"| Trainee
 
-  Admin -->|편람 PDF 업로드| Manuals
-  Admin -->|정답 작성| Goldens
-  Manuals -->|인제스트 (배치)| System
-  Goldens -->|로딩| System
+  Admin -->|"편람 PDF 업로드"| Manuals
+  Admin -->|"정답 작성"| Goldens
+  Manuals -->|"인제스트 — 배치"| System
+  Goldens -->|"로딩"| System
 
-  System <-->|임베딩/생성<br/>HTTPS| LLM
+  System <-->|"임베딩/생성<br/>HTTPS"| LLM
 ```
 
 ---
@@ -46,9 +46,9 @@ flowchart LR
   end
 
   PDF[("data/raw/*.pdf")] --> P1
-  P1 --> Docling[("data/processed/<br/>{doc_id}/docling.json")]
+  P1 --> Docling[("data/processed/<br/>&lt;doc_id&gt;/docling.json")]
   Docling --> P2
-  P3 -->|3072-d 벡터| P4
+  P3 -->|"3072-d 벡터"| P4
   P4 --> Chroma[("ChromaDB")]
 
   subgraph S1["[2.0] 챗봇 모드 (실시간)"]
@@ -58,12 +58,12 @@ flowchart LR
     C3 --> C4["2.4 LLM 답변 생성<br/>(stream)"]
   end
 
-  Operator([상담원 질문]) --> C1
+  Operator(["상담원 질문"]) --> C1
   Chroma --> C2
   Prompt1[("prompts/<br/>chat_system.txt")] --> C4
-  C3 -->|sources, confidence| AnsOut1[/SSE: event=sources/]
-  C4 -->|token chunks| AnsOut2[/SSE: event=token/]
-  AnsOut1 & AnsOut2 --> Operator2([상담원 화면])
+  C3 -->|"sources, confidence"| AnsOut1[/"SSE: event=sources"/]
+  C4 -->|"token chunks"| AnsOut2[/"SSE: event=token"/]
+  AnsOut1 & AnsOut2 --> Operator2(["상담원 화면"])
 
   subgraph S2["[3.0] 훈련 — 출제 (실시간)"]
     direction LR
@@ -71,12 +71,12 @@ flowchart LR
     Q2 --> Q3["3.3 LLM 질문 생성<br/>(고객 역할)"]
   end
 
-  Trainee1([신입: 카테고리/난이도]) --> Q1
-  Goldens[("training_golden_<br/>answers.json")] -.is_demo=true.-> Q1
-  Chroma -.is_demo=false.-> Q1
+  Trainee1(["신입: 카테고리/난이도"]) --> Q1
+  Goldens[("training_golden_<br/>answers.json")] -. "데모 모드" .-> Q1
+  Chroma -. "일반 모드" .-> Q1
   Chroma --> Q2
   Prompt2[("prompts/<br/>training_customer.txt")] --> Q3
-  Q3 --> QOut[/question, question_id,<br/>source_content_id, is_reset/] --> Trainee2([신입 화면])
+  Q3 --> QOut[/"question, question_id,<br/>source_content_id, is_reset"/] --> Trainee2(["신입 화면"])
 
   subgraph S3["[4.0] 훈련 — 채점 (실시간) — TODO"]
     direction LR
@@ -84,11 +84,11 @@ flowchart LR
     SC2 --> SC3["4.3 LLM 채점<br/>(JSON 구조화 출력)"]
   end
 
-  Trainee3([신입 답변]) --> SC1
+  Trainee3(["신입 답변"]) --> SC1
   Goldens --> SC1
   Chroma --> SC2
   Prompt3[("prompts/<br/>training_scorer.txt")] --> SC3
-  SC3 --> SCOut[/score, included/missing,<br/>feedback, model_answer/] --> Trainee4([신입 화면])
+  SC3 --> SCOut[/"score, included/missing,<br/>feedback, model_answer"/] --> Trainee4(["신입 화면"])
 ```
 
 > 4.0 채점 흐름은 `services/scorer.py`가 현재 TODO 상태이며, [docs/api-spec.md 섹션 5](./api-spec.md) 명세 기준으로 구현될 예정.
@@ -102,9 +102,9 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as 상담원 (브라우저)
-    participant FE as React (Vite :3000)
-    participant API as FastAPI (:8000)
+    participant U as 상담원 브라우저
+    participant FE as React Vite :3000
+    participant API as FastAPI :8000
     participant RAG as RAGService
     participant LLM as GeminiService
     participant CDB as ChromaDB
@@ -153,7 +153,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as 신입 (브라우저)
+    participant U as 신입 브라우저
     participant FE as React
     participant API as FastAPI
     participant Q as question_gen
@@ -214,7 +214,7 @@ sequenceDiagram
     autonumber
     participant FE as React
     participant API as FastAPI
-    participant S as scorer (TODO)
+    participant S as scorer_TODO
     participant FS as golden_answers
     participant CDB as ChromaDB
     participant LLM as GeminiService

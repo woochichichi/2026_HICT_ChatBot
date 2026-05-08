@@ -79,7 +79,7 @@ flowchart TB
   subgraph DataLayer["데이터 계층"]
     direction TB
     Chroma[("ChromaDB<br/>(PersistentClient)<br/>data/chroma_db/<br/><br/>· faq_titles<br/>· faq_contents")]
-    Files[("파일 시스템<br/><br/>· data/raw/ (PDF)<br/>· data/processed/<br/>  &nbsp;&nbsp;{doc_id}/docling.json<br/>· tests/training_<br/>  &nbsp;&nbsp;golden_answers.json")]
+    Files[("파일 시스템<br/><br/>· data/raw/ — PDF<br/>· data/processed/&lt;doc_id&gt;/<br/>  &nbsp;&nbsp;docling.json<br/>· tests/training_<br/>  &nbsp;&nbsp;golden_answers.json")]
   end
 
   subgraph External["외부 서비스"]
@@ -94,7 +94,7 @@ flowchart TB
     STest["scripts/test_accuracy.py<br/>(정확도 30건 회귀)"]
   end
 
-  Client <==>|HTTP/SSE<br/>Vite proxy /api → :8000| Backend
+  Client <==>|"HTTP/SSE<br/>Vite proxy /api → :8000"| Backend
   RAG --> Chroma
   QGen --> Chroma
   Scorer --> Chroma
@@ -139,12 +139,12 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  Dev[개발자 로컬<br/>Windows/Mac]
-  Dev -->|npm run dev| Vite[Vite Dev Server<br/>:3000]
-  Dev -->|uvicorn --reload| FastAPI[FastAPI<br/>:8000]
+  Dev["개발자 로컬<br/>Windows/Mac"]
+  Dev -->|npm run dev| Vite["Vite Dev Server :3000"]
+  Dev -->|uvicorn --reload| FastAPI["FastAPI :8000"]
   Vite -->|/api proxy| FastAPI
-  FastAPI -->|file I/O| ChromaDB[(ChromaDB<br/>./data/chroma_db)]
-  FastAPI -->|HTTPS| Google[Google AI Studio]
+  FastAPI -->|file I/O| ChromaDB[("ChromaDB<br/>./data/chroma_db")]
+  FastAPI -->|HTTPS| Google["Google AI Studio"]
 ```
 
 - **단일 머신**에서 프론트(Vite)와 백엔드(Uvicorn)를 별도 프로세스로 실행
@@ -155,14 +155,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  User[상담원 PC] -->|HTTPS| LB[L7 LB / Reverse Proxy]
-  LB --> WebUI[Static Web<br/>(React build)]
-  LB --> API[FastAPI<br/>(N replicas, 컨테이너)]
-  API --> Vec[(ChromaDB<br/>or Milvus)]
-  API --> Cache[(Redis<br/>Multi-turn 세션)]
-  API --> LLM[자체 LLM 서버<br/>Qwen3-30B-A3B<br/>(vLLM/TGI)]
-  API --> Embed[자체 임베딩 서버<br/>bge-m3]
-  API --> Logs[(로그/메트릭<br/>Loki + Prometheus)]
+  User["상담원 PC"] -->|HTTPS| LB["L7 LB / Reverse Proxy"]
+  LB --> WebUI["Static Web<br/>React build"]
+  LB --> API["FastAPI<br/>N replicas, 컨테이너"]
+  API --> Vec[("ChromaDB<br/>또는 Milvus")]
+  API --> Cache[("Redis<br/>Multi-turn 세션")]
+  API --> LLM["자체 LLM 서버<br/>Qwen3-30B-A3B<br/>vLLM 또는 TGI"]
+  API --> Embed["자체 임베딩 서버<br/>bge-m3"]
+  API --> Logs[("로그/메트릭<br/>Loki + Prometheus")]
 ```
 
 - 폐쇄망 요구사항으로 외부 API 의존을 제거(Qwen3, bge-m3 자체 호스팅)
