@@ -1,4 +1,17 @@
-"""RAG 파이프라인 — 검색 + 답변 생성 (api-spec.md 섹션 3)."""
+"""RAG 파이프라인 — 검색 + 답변 생성 (api-spec.md 섹션 3).
+
+검색 흐름 (api-spec.md 섹션 3, 순서 중요):
+  1. faq_titles 쿼리 → Max Pooling (유사 제목 중복 제거)
+  2. faq_contents 쿼리
+  3. 가중 병합 (TITLE_WEIGHT : CONTENT_WEIGHT)
+  4. 상위 top_k건 → LLM 컨텍스트
+
+이 모듈을 사용하는 곳:
+  - routers/chat.py: SSE 스트리밍 챗봇 API (generate_answer_stream 호출)
+  - 향후 scripts/weight_search.py: 가중치 그리드 서치
+"""
+
+from typing import AsyncIterator
 
 import chromadb
 
@@ -124,6 +137,37 @@ class RAGService:
             "confidence": self._calc_confidence(top_score),
         }
 
+    async def generate_answer_stream(
+        self, query: str, contexts: list[dict]
+    ) -> tuple[dict, AsyncIterator[str]]:
+        """검색된 컨텍스트 기반 LLM 답변 스트리밍 생성 (api-spec.md 섹션 1: SSE).
+
+        Returns:
+            (pre_stream_data, token_iterator)
+            - pre_stream_data: sources + confidence (SSE 'sources' 이벤트로 먼저 전송)
+            - token_iterator: LLM 토큰 스트림 (SSE 'token' 이벤트로 전송)
+
+        사용처: routers/chat.py의 SSE 스트리밍 엔드포인트
+        """
+        # 시스템 프롬프트 빌드 — chat_system.txt 템플릿에 컨텍스트 삽입
+        system_prompt = self._build_system_prompt(contexts)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": query},
+        ]
+
+        # sources와 confidence는 RAG 검색 완료 시점에 이미 확정
+        # → SSE 첫 이벤트로 프론트에 선전송하여 체감 대기 시간 단축
+        top_score = contexts[0]["score"] if contexts else 0.0
+        pre_stream_data = {
+            "sources": self._build_sources(contexts),
+            "confidence": self._calc_confidence(top_score),
+        }
+
+        # LLM 스트리밍 — embedder.py의 generate_stream() 사용
+        token_iter = self.llm.generate_stream(messages)
+        return pre_stream_data, token_iter
+
     # --- Private helpers ---
 
     @staticmethod
@@ -164,7 +208,11 @@ class RAGService:
 
     @staticmethod
     def _build_system_prompt(contexts: list[dict]) -> str:
-        """chat_system.txt 프롬프트에 컨텍스트 삽입."""
+        """chat_system.txt 프롬프트에 컨텍스트 삽입.
+
+        질문은 별도 user 메시지로 전달되므로 시스템 프롬프트에는
+        컨텍스트만 삽입한다. (api-spec.md 섹션 1 참조)
+        """
         import os
         prompt_path = os.path.join(
             os.path.dirname(__file__), "..", "prompts", "chat_system.txt"
@@ -172,6 +220,7 @@ class RAGService:
         with open(prompt_path, encoding="utf-8") as f:
             template = f.read()
 
+        # 번호 매기기 — 프론트엔드 출처 표시와 매칭 ([1], [2], ...)
         context_text = ""
         for i, ctx in enumerate(contexts, 1):
             context_text += (
@@ -180,4 +229,4 @@ class RAGService:
                 f"내용: {ctx['content']}\n\n"
             )
 
-        return template.replace("{context}", context_text).replace("{question}", "")
+        return template.replace("{context}", context_text)

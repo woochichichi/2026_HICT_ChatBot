@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchQuestion } from "../../api/training";
+import { fetchQuestion, fetchScore } from "../../api/training";
 
 const DIFFICULTY_LABELS = {
   beginner: "초급",
@@ -11,17 +11,20 @@ export default function TrainingScreen() {
   const [difficulty, setDifficulty] = useState("beginner");
   const [category, setCategory] = useState("");
   const [isDemo, setIsDemo] = useState(true);
-  const [question, setQuestion] = useState(null);
+  const [questionData, setQuestionData] = useState(null);
   const [solvedContentIds, setSolvedContentIds] = useState([]);
   const [traineeAnswer, setTraineeAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [scoreResult, setScoreResult] = useState(null);
 
   const handleFetchQuestion = async () => {
     setLoading(true);
     setError(null);
-    setQuestion(null);
+    setQuestionData(null);
     setTraineeAnswer("");
+    setScoreResult(null);
 
     try {
       const data = await fetchQuestion({
@@ -31,7 +34,7 @@ export default function TrainingScreen() {
         isDemo,
       });
 
-      setQuestion(data.question);
+      setQuestionData(data);
       setSolvedContentIds((prev) =>
         data.is_reset
           ? [data.source_content_id]
@@ -41,6 +44,28 @@ export default function TrainingScreen() {
       setError(err.message || "질문을 불러오지 못했습니다.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!questionData?.question_id || !traineeAnswer.trim()) {
+      setError("답변을 입력해 주세요.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    setScoreResult(null);
+
+    try {
+      const result = await fetchScore({
+        questionId: questionData.question_id,
+        traineeAnswer: traineeAnswer.trim(),
+      });
+      setScoreResult(result);
+    } catch (err) {
+      setError(err.message || "채점에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -130,7 +155,7 @@ export default function TrainingScreen() {
         </div>
       )}
 
-      {question && (
+      {questionData && (
         <div
           style={{
             marginBottom: 20,
@@ -152,13 +177,27 @@ export default function TrainingScreen() {
             고객 질문 {DIFFICULTY_LABELS[difficulty] || difficulty}
           </p>
           <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#1e293b" }}>
-            {question}
+            {questionData.question}
           </p>
+          {questionData.reference && (
+            <p
+              style={{
+                margin: "12px 0 0",
+                fontSize: 13,
+                color: "#475569",
+                padding: "8px 10px",
+                background: "#e2e8f0",
+                borderRadius: 6,
+              }}
+            >
+              📖 편람 내 위치: {questionData.reference}
+            </p>
+          )}
         </div>
       )}
 
-      {question && (
-        <div>
+      {questionData && (
+        <div style={{ marginBottom: 16 }}>
           <label
             style={{
               display: "block",
@@ -185,10 +224,90 @@ export default function TrainingScreen() {
               resize: "vertical",
             }}
           />
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            style={{
+              marginTop: 12,
+              padding: "10px 24px",
+              borderRadius: 8,
+              border: "none",
+              background: submitting ? "#cbd5e1" : "#059669",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: submitting ? "not-allowed" : "pointer",
+            }}
+          >
+            {submitting ? "채점 중…" : "제출"}
+          </button>
         </div>
       )}
 
-      {!question && !loading && (
+      {scoreResult && (
+        <div
+          style={{
+            marginTop: 24,
+            padding: 20,
+            background: "#f0fdf4",
+            borderRadius: 12,
+            border: "1px solid #bbf7d0",
+          }}
+        >
+          <h3 style={{ margin: "0 0 16px", fontSize: 18, color: "#166534" }}>
+            채점 결과 — {scoreResult.score}점
+          </h3>
+          <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.6, color: "#1e293b" }}>
+            {scoreResult.feedback}
+          </p>
+          {scoreResult.included_items?.length > 0 && (
+            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#15803d" }}>
+              ✓ 포함: {scoreResult.included_items.join(", ")}
+            </p>
+          )}
+          {scoreResult.missing_items?.length > 0 && (
+            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#b91c1c" }}>
+              ✗ 누락: {scoreResult.missing_items.join(", ")}
+            </p>
+          )}
+          {scoreResult.reference && (
+            <p
+              style={{
+                margin: "12px 0 0",
+                padding: "8px 10px",
+                background: "#e0f2fe",
+                borderRadius: 6,
+                fontSize: 13,
+                color: "#0369a1",
+              }}
+            >
+              📖 편람 내 위치: {scoreResult.reference}
+            </p>
+          )}
+          {scoreResult.model_answer && (
+            <details style={{ marginTop: 12 }}>
+              <summary style={{ fontSize: 13, color: "#475569", cursor: "pointer" }}>
+                모범 답변 보기
+              </summary>
+              <p
+                style={{
+                  marginTop: 8,
+                  padding: 12,
+                  background: "#fff",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: "#334155",
+                }}
+              >
+                {scoreResult.model_answer}
+              </p>
+            </details>
+          )}
+        </div>
+      )}
+
+      {!questionData && !loading && (
         <p style={{ color: "#94a3b8", fontSize: 14 }}>
           위에서 난이도와 카테고리를 선택한 뒤 "새 질문"을 눌러 시작하세요.
         </p>

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from ..services import question_gen
+from ..services import question_gen, scorer
 
 router = APIRouter()
 
@@ -19,6 +19,7 @@ class QuestionResponse(BaseModel):
     question: str
     question_id: str
     source_content_id: str
+    reference: str = ""
     difficulty: str
     is_reset: bool
 
@@ -53,12 +54,11 @@ async def generate_question(request: QuestionRequest):
 
 @router.post("/score", response_model=ScoreResponse)
 async def score_answer(request: ScoreRequest):
-    # TODO: 채점 서비스 연동
-    return ScoreResponse(
-        score=0,
-        included_items=[],
-        missing_items=[],
-        feedback="아직 구현되지 않았습니다.",
-        reference="",
-        model_answer="",
-    )
+    try:
+        result = await scorer.score_answer(
+            question_id=request.question_id,
+            trainee_answer=request.trainee_answer,
+        )
+        return ScoreResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

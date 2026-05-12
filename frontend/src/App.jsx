@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ChatScreen from "./components/chat/ChatScreen";
 import TrainingScreen from "./components/training/TrainingScreen";
 
 function App() {
@@ -59,20 +60,8 @@ function App() {
         </div>
       </header>
 
-      {mode === "chat" ? (
-        <div
-          style={{
-            padding: 48,
-            textAlign: "center",
-            color: "#94a3b8",
-            fontSize: 15,
-          }}
-        >
-          챗봇 모드는 준비 중입니다.
-        </div>
-      ) : (
-        <TrainingScreen />
-      )}
+      {/* 모드별 화면 전환 — 챗봇(우치), 훈련(승구리) */}
+      {mode === "chat" ? <ChatScreen /> : <TrainingScreen />}
     </main>
   );
 }
