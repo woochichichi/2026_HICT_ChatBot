@@ -5,6 +5,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# 사내 SSL 인터셉트 환경(Zscaler 등 자체 서명 CA) 대응.
+# google-genai SDK는 _api_client._ensure_httpx_ssl_ctx에서 SSL_CERT_FILE을 직접 인식.
+# requests/urllib 호환을 위해 REQUESTS_CA_BUNDLE/CURL_CA_BUNDLE도 함께 동기화.
+# docs/TROUBLESHOOTING.md 2026-05-08 항목 참조.
+_ssl_cert_file = os.environ.get("SSL_CERT_FILE")
+if _ssl_cert_file:
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", _ssl_cert_file)
+    os.environ.setdefault("CURL_CA_BUNDLE", _ssl_cert_file)
+
 
 class Settings:
     """환경변수 기반 설정."""
