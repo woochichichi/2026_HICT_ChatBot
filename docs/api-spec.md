@@ -494,6 +494,20 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 | v5   | 2026-03-03 | 구현 리뷰 3차 (Gemini) — is_demo 데모/일반 모드 분기, is_reset 프론트 상태 초기화 플래그                               |
 | v6   | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가                   |
 | v7   | 2026-04-14 | 챗봇 모드 SSE 스트리밍 구현. chat.py 전면 교체, rag.py에 generate_answer_stream 추가, 챗봇 프론트엔드(ChatScreen) 구현   |
+| v8   | 2026-05-08 | 산출물 5종 신규 작성: `architecture.md`, `data-flow.md`, `api-spec-formal.md`, `db-design.md`, `adr/0001~0009`. 기존 설계 결정을 ADR 양식으로 정리(역추적용). 본 문서가 여전히 단일 진실 소스. |
+
+---
+
+## 산출물 인덱스
+
+| 산출물          | 경로                                          | 역할                                                       |
+| --------------- | --------------------------------------------- | ---------------------------------------------------------- |
+| API 스펙 (SoT)  | [`docs/api-spec.md`](./api-spec.md) (이 문서) | 단일 진실 소스. 설계 결정 로그 + 백로그                     |
+| API 명세서      | [`docs/api-spec-formal.md`](./api-spec-formal.md) | 정형 명세 (헤더/에러/예시 포함)                          |
+| 시스템 구성도   | [`docs/architecture.md`](./architecture.md)   | 컴포넌트/배포 토폴로지                                     |
+| 데이터 흐름도   | [`docs/data-flow.md`](./data-flow.md)         | DFD + 시나리오 시퀀스                                      |
+| DB 설계서       | [`docs/db-design.md`](./db-design.md)         | ChromaDB + 파일 스토리지                                   |
+| ADR             | [`docs/adr/`](./adr/)                         | 9건의 설계 결정 기록 (0001~0009)                           |
 
 ---
 
