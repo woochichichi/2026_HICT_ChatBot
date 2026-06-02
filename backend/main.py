@@ -25,3 +25,5 @@ app.include_router(training.router, prefix="/api/training", tags=["training"])
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+

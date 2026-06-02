@@ -1,9 +1,13 @@
 """프로젝트 설정 관리."""
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# 프로젝트 루트: config.py(backend/) → 상위 디렉토리
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # 사내 SSL 인터셉트 환경(Zscaler 등 자체 서명 CA) 대응.
 # google-genai SDK는 _api_client._ensure_httpx_ssl_ctx에서 SSL_CERT_FILE을 직접 인식.
@@ -28,8 +32,11 @@ class Settings:
     OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
     OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o")
 
-    CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "./data/chroma_db")
-    DATA_DIR: str = os.getenv("DATA_DIR", "./data")
+    CHROMA_DB_PATH: str = os.getenv(
+        "CHROMA_DB_PATH",
+        str(_PROJECT_ROOT / "data" / "chroma_db"),
+    )
+    DATA_DIR: str = os.getenv("DATA_DIR", str(_PROJECT_ROOT / "data"))
 
     # RAG 검색 가중치 (api-spec.md 섹션 3)
     TITLE_WEIGHT: float = float(os.getenv("TITLE_WEIGHT", "0.5"))
