@@ -18,7 +18,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from ..services.embedder import GeminiService
+from ..services.embedder import GeminiService, OpenAIService
 from ..services.rag import RAGService
 
 logger = logging.getLogger(__name__)
@@ -56,9 +56,15 @@ async def chat(request: ChatRequest):
 
     async def event_stream():
         try:
-            # RAGService 생성 — GeminiService를 LLM으로 사용
-            # embedder.py의 LLMService 추상화를 통해 모델 교체 가능
-            rag = RAGService(llm=GeminiService())
+            # RAGService 생성 — LLM_PROVIDER 환경변수로 모델 전환 가능
+            # LLM_PROVIDER=openai  → OpenAIService (임시 대체 또는 Gemini 할당량 소진 시)
+            # LLM_PROVIDER=gemini  → GeminiService (기본값)
+            # 임베딩 모델 교체 시 ChromaDB 재인제스트 필요 (차원이 다를 수 있음)
+            # text-embedding-3-large(3072차원) ↔ gemini-embedding-001(3072차원) 은 재인제스트 불필요
+            from ..config import settings as _s
+            _provider = getattr(_s, "LLM_PROVIDER", "gemini").lower()
+            llm = OpenAIService() if _provider == "openai" else GeminiService()
+            rag = RAGService(llm=llm)
 
             # 1. RAG 검색 — rag.py의 search()가 Max Pooling + 가중 병합 수행
             contexts = await rag.search(request.question)

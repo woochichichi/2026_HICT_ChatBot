@@ -18,5 +18,8 @@ tiktoken>=0.7.0,<1.0.0
 pymupdf>=1.24.0,<2.0.0
 docling>=2.0.0
 
+# Hybrid Search — BM25 키워드 검색 (rank-bm25: 순수 Python, 추가 인프라 불필요)
+rank-bm25>=0.2.2
+
 # 테스트
 pytest>=8.0.0

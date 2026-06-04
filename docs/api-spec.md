@@ -235,23 +235,98 @@ POST /api/training/score
    - metadata: { category, source_document, source_page }
 ```
 
-**검색 로직 (rag.py) — 연산 순서 중요:**
+**검색 로직 (rag.py) — Hybrid Search, 연산 순서 중요:**
 
-1. 사용자 질문으로 `faq_titles` 쿼리 → 상위 10건 + 점수
+**[벡터 검색 레이어]**
+1. 사용자 질문으로 `faq_titles` 벡터 쿼리 → 상위 10건 + 점수
 2. **titles 결과 내에서 \_sim 접미사 제거 후 Max Pooling** (동일 원본 ID → 최고 점수만 채택)
-3. 같은 질문으로 `faq_contents` 쿼리 → 상위 10건 + 점수 (contents는 유사 제목 없으므로 Max Pooling 불필요)
-4. **Title 최종 점수와 Content 점수를 가중 병합** (가중치는 config에서 파라미터로 관리)
-5. 병합 점수 상위 3~5건을 LLM 컨텍스트로 전달
+3. 같은 질문으로 `faq_contents` 벡터 쿼리 → 상위 10건 + 점수
+4. **Title 최종 점수와 Content 점수를 가중 병합** → 벡터 점수 `{doc_id: float}` 산출
+
+**[BM25 키워드 검색 레이어]**
+5. 원본 쿼리(확장 없이)로 BM25 키워드 검색 → `{doc_id: bm25_score}` 산출
+   - 고유명사(ISA, CMA, RP), 약어, 조문 번호 등 정확 단어 매칭에 강점
+   - 인덱스는 서버 시작 시 `faq_contents` 전체에서 자동 빌드 (인메모리)
+
+**[RRF 병합 레이어]**
+6. 벡터 순위 + BM25 순위를 **RRF(Reciprocal Rank Fusion)** 로 병합
+7. 병합 점수 상위 top_k건을 LLM 컨텍스트로 전달
 
 > ⚠️ **순서를 뒤집으면 안 됨.** Max Pooling 전에 가중 병합을 하면, 유사 제목이 많은 문서의 title 점수가 여러 번 합산되어 수치가 왜곡됨.
 
 **가중치 설정 (config.py):**
 
 ```python
-TITLE_WEIGHT = 0.5      # 기본값
+TITLE_WEIGHT = 0.5      # 기본값 — 벡터 검색 내부 title/content 가중치
 CONTENT_WEIGHT = 0.5    # 기본값
 # 3주차에 [5:5, 4:6, 3:7] 그리드 서치로 최적값 확정
 ```
+
+**Hybrid Search 파라미터 (config.py):**
+
+```python
+HYBRID_ALPHA = 0.7      # 벡터 비중 (0.0=BM25 only, 1.0=vector only)
+RRF_K = 60              # RRF 상수 k — 표준값 (Cormack et al. 2009)
+BM25_SEARCH_N = 10      # BM25 후보 건수
+```
+
+**RRF 공식:**
+
+```
+rrf(d) = HYBRID_ALPHA       × 1/(RRF_K + rank_vector(d))
+       + (1 - HYBRID_ALPHA) × 1/(RRF_K + rank_bm25(d))
+```
+
+- 한쪽에만 존재하는 문서: 반대쪽 rank = (코퍼스 크기 + 1) → 자연스러운 패널티
+- RRF를 선택한 이유: 벡터 점수(0~1)와 BM25 점수(0~수십)의 스케일이 달라 단순 가중합 불가; RRF는 rank만 사용하므로 정규화 불필요
+
+**confidence 산출:** RRF 점수가 아닌 **벡터 점수(0~1)** 기준으로 계산 (기존 high/medium/low 기준 유지)
+
+---
+
+### Wiki(Confluence) 인제스트 메타데이터 계약
+
+> **우치 참조용.** `ingest_wiki.py` 개발 시 아래 계약을 반드시 준수해야 `rag.py`가 무변경으로 동작합니다.
+
+**ChromaDB 컬렉션 구조 — PDF와 동일하게 유지:**
+
+```
+faq_titles 컬렉션:
+  id       → "confluence-{page_id}-{chunk_order}"  (고유 문자열)
+  document → Confluence 페이지 제목 또는 섹션 헤딩
+  metadata → { source_document, source_page, category, ... }
+
+faq_contents 컬렉션:
+  id       → titles와 동일한 id  (반드시 1:1 대응)
+  document → 본문 청크 텍스트
+  metadata → 위와 동일
+```
+
+**rag.py가 요구하는 필수 metadata 필드:**
+
+| 필드 | PDF 현재값 | Wiki 대응값 | 비고 |
+|---|---|---|---|
+| `source_document` | `"계좌업무편람.pdf"` | Confluence 페이지 제목 | 프론트 출처 표시용 |
+| `source_page` | `"p.23"` | `"https://wiki.hict.com/pages/12345"` | **`https://`로 시작해야 URL 분기 동작** |
+| `category` | `""` | Confluence 공간(Space)명 또는 `""` | 현재 미사용, 향후 필터링 예정 |
+
+**`source_page` URL 분기 동작 (rag.py 자동 처리):**
+
+- `source_page`가 `http://` 또는 `https://`로 시작하면 → `_build_sources()`가 `url` 필드로 분리하여 프론트에 전달
+- LLM 프롬프트(`_build_system_prompt()`)에서는 URL 대신 페이지 제목만 `출처:` 줄에 표시 (URL 노출 시 LLM 컨텍스트 오염 방지)
+- PDF 방식(`"p.23"`)은 기존과 동일하게 동작 — **하위 호환 유지**
+
+**`_build_sources()` 반환 구조 (프론트엔드 참조):**
+
+```json
+// PDF일 때
+{ "title": "편람.pdf p.23 섹션제목", "reference": "편람.pdf p.23", "url": null, "relevance_score": 0.92 }
+
+// Wiki일 때
+{ "title": "페이지제목 섹션제목", "reference": "페이지제목", "url": "https://wiki.hict.com/pages/12345", "relevance_score": 0.91 }
+```
+
+---
 
 **유사 제목(similar_titles) 처리:**
 

@@ -22,6 +22,10 @@ if _ssl_cert_file:
 class Settings:
     """환경변수 기반 설정."""
 
+    # LLM 프로바이더 전환 (gemini | openai) — Gemini 할당량 소진 시 openai로 교체
+    # openai 사용 시 OPENAI_EMBEDDING_MODEL=text-embedding-3-large 권장 (3072차원, 재인제스트 불필요)
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
+
     # Google AI Studio (기본)
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     GOOGLE_CHAT_MODEL: str = os.getenv("GOOGLE_CHAT_MODEL", "gemini-2.5-flash")
@@ -42,6 +46,15 @@ class Settings:
     TITLE_WEIGHT: float = float(os.getenv("TITLE_WEIGHT", "0.5"))
     CONTENT_WEIGHT: float = float(os.getenv("CONTENT_WEIGHT", "0.5"))
     TOP_K: int = int(os.getenv("TOP_K", "5"))
+
+    # Hybrid Search 파라미터 (api-spec.md 섹션 3: Hybrid Search)
+    # HYBRID_ALPHA: 벡터 검색 비중 (0.0=BM25 only, 1.0=vector only)
+    # 기본값 0.7 — 의미 검색 위주이되 키워드 매칭을 30% 반영
+    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA", "0.7"))
+    # RRF_K: Reciprocal Rank Fusion 상수. 표준값 60 (논문 Cormack et al. 2009)
+    RRF_K: int = int(os.getenv("RRF_K", "60"))
+    # BM25_SEARCH_N: BM25 후보 건수 (벡터 검색 n_results=10과 동일하게 맞춤)
+    BM25_SEARCH_N: int = int(os.getenv("BM25_SEARCH_N", "10"))
 
 
 settings = Settings()
