@@ -3,15 +3,26 @@
 > api-spec.md 섹션 9의 운영 절차. 사내 위키(wiki.hanwhawm.com) BM001 공간을
 > 자동 수집해 ChromaDB에 증분 적재한다.
 
-## 0. 준비 (최초 1회)
+## 0. 준비 (최초 1회) — 폐쇄망 zip 반입 방식
+
+> 회사에서 git/PyPI 접속이 안 되므로 zip 2개를 반입한다:
+> `hict_chatbot_feature-wiki-ingest_*.zip` (코드), `hict_wheels_*.zip` (의존성 휠)
 
 ```bash
-git pull
-git checkout feature/wiki-ingest    # 머지 전이면 이 브랜치 사용
+# 1. 코드 zip을 기존 프로젝트 폴더에 덮어쓰기 풀기
+#    (.env / data / chroma_db는 zip에 없으므로 기존 것 그대로 유지됨)
 
-pip install -r requirements.txt     # beautifulsoup4, httpx 추가됨
-# 실패 시 (사내망 인코딩): PYTHONUTF8=1 설정 후 재시도 — TROUBLESHOOTING.md 참조
+# 2. 의존성 오프라인 설치 — 인터넷 불필요 (휠 폴더에서 직접 설치)
+#    wheels zip을 임의 폴더(예: C:\wheels)에 풀고:
+pip install --no-index --find-links C:\wheels beautifulsoup4 rank_bm25 httpx
+
+# 3. 설치 확인
+python -c "import bs4, rank_bm25, httpx; print('ok')"
 ```
+
+> 신규 의존성은 3개뿐 (beautifulsoup4, rank_bm25, httpx) — 전부 순수 파이썬이라
+> 파이썬 버전 무관. numpy는 chromadb와 함께 이미 설치되어 있음.
+> 휠 zip의 numpy는 py3.12/win64용 예비 — 기존에 numpy 있으면 무시해도 됨.
 
 ## 1. .env 설정
 
