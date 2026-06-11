@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<!--
+  설계 문서: 위키 → 챗봇 데이터 파이프라인 (Confluence 수집 + 증분 diff 인제스트)
+  - animation-explainer 스킬 패턴 3(Stepper) 기반
+  - self-contained: CDN/외부폰트/라이브러리 없음 (폐쇄망 OK)
+  - 관련: docs/api-spec.md 섹션 3(ChromaDB), scripts/ingest_manual.py(청킹 재사용)
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>위키 → 챗봇 데이터 파이프라인 설계</title>
+<style>
+:root {
+  --bg: #fafaf7; --surface: #ffffff; --surface-2: #f1efe8;
+  --text: #2c2c2a; --text-muted: #73726c;
+  --border: rgba(0,0,0,0.1);
+  --accent: #378ADD; --success: #1D9E75; --danger: #E24B4A;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a18; --surface: #25241f; --surface-2: #2c2c2a;
+    --text: #e8e6dc; --text-muted: #9c9a92;
+    --border: rgba(255,255,255,0.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  background: var(--bg); color: var(--text);
+  margin: 0; padding: 32px 16px 64px;
+  line-height: 1.6;
+}
+.wrap { max-width: 860px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; }
+.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 8px; }
+h2 { font-size: 17px; font-weight: 600; margin: 40px 0 14px; padding-top: 8px; }
+h2 .no {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-size: 12px; border-radius: 6px; padding: 1px 8px;
+  margin-right: 8px; vertical-align: 2px;
+}
+.principle {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px; padding: 14px 18px; margin: 20px 0;
+  font-size: 14px;
+}
+.principle b { color: var(--accent); }
+
+/* ── 스테퍼 ── */
+.demo {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: 12px; padding: 24px;
+}
+.pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+.pill {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border); transition: background .3s, transform .3s;
+}
+.pill.active { background: var(--accent); transform: scale(1.4); }
+.pill.done { background: var(--success); }
+.diagram-svg { width: 100%; height: auto; margin-bottom: 20px; }
+.snode { transition: fill .4s, stroke .4s; }
+.sline { transition: stroke .4s; }
+.content {
+  background: var(--surface-2); border-radius: 8px;
+  padding: 16px 20px; min-height: 120px;
+}
+.step-num {
+  display: inline-block; font-size: 11px; background: var(--accent);
+  color: #fff; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
+}
+.step-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.step-desc { color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.step-desc b { color: var(--text); }
+.step-desc .ok { color: var(--success); font-weight: 600; }
+.step-desc .del { color: var(--danger); font-weight: 600; }
+.controls { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
+.btn {
+  padding: 8px 18px; font-size: 13px; font-family: inherit;
+  border: 0.5px solid var(--border); background: var(--surface);
+  color: var(--text); border-radius: 6px; cursor: pointer;
+  transition: background .2s;
+}
+.btn:hover { background: var(--surface-2); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.hint { text-align: center; color: var(--text-muted); font-size: 11px; margin-top: 10px; }
+
+/* ── 카드 ── */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card {
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; font-size: 13px;
+}
+.card h3 { font-size: 14px; margin: 0 0 8px; font-weight: 600; }
+.card p { margin: 0 0 6px; color: var(--text-muted); }
+.badge {
+  display: inline-block; font-size: 11px; border-radius: 99px;
+  padding: 1px 10px; margin-left: 6px; vertical-align: 1px;
+  color: #fff;
+}
+.badge.sure { background: var(--success); }
+.badge.likely { background: var(--accent); }
+.badge.unknown { background: var(--text-muted); }
+
+/* ── 테이블 ── */
+table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  background: var(--surface); border-radius: 10px; overflow: hidden;
+}
+th, td { padding: 9px 12px; text-align: left; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+td code, p code, li code {
+  background: var(--surface-2); border-radius: 4px; padding: 1px 6px;
+  font-size: 12px; font-family: Consolas, "D2Coding", monospace;
+}
+.tag { font-size: 11px; border-radius: 4px; padding: 1px 7px; color: #fff; white-space: nowrap; }
+.tag.new { background: var(--success); }
+.tag.mod { background: var(--accent); }
+.tag.doc { background: var(--text-muted); }
+
+/* ── 코드블록 ── */
+pre {
+  background: #20201c; color: #d8d6cc; border-radius: 10px;
+  padding: 16px 18px; overflow-x: auto; font-size: 12.5px;
+  font-family: Consolas, "D2Coding", monospace; line-height: 1.7;
+}
+pre .c { color: #7d8a6a; }   /* 주석 */
+pre .k { color: #7fb4e8; }   /* 키워드 */
+pre .s { color: #d9a76a; }   /* 문자열/강조 */
+@media (prefers-color-scheme: dark) {
+  pre { background: #111110; }
+}
+.footnote {
+  margin-top: 36px; padding: 14px 18px; font-size: 13px;
+  background: var(--surface); border: 0.5px solid var(--border);
+  border-left: 4px solid var(--success); border-radius: 8px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>위키 → 챗봇 데이터 파이프라인 설계</h1>
+  <div class="subtitle">Confluence 업무편람 수집 + 증분(diff) 인제스트 · 2026-06-10 · HICT 챗봇 과제 1</div>
+
+  <div class="principle">
+    핵심 원칙 — <b>diff의 본질은 "수집 절감"이 아니라 "임베딩 절감"</b>이다.
+    매일 전체 페이지를 다시 가져와도, 청크 hash 비교가 변경분만 골라내므로
+    임베딩 API 호출(진짜 비용)은 변경분만큼만 발생한다.
+    그래서 REST API가 막혀 있어도 증분 인제스트는 성립한다.
+  </div>
+
+  <!-- ════════ 1. 파이프라인 단계별 ════════ -->
+  <h2><span class="no">1</span>파이프라인 — 단계별로 클릭해 보세요</h2>
+  <div class="demo">
+    <div class="pills" id="pills"></div>
+
+    <svg class="diagram-svg" viewBox="0 0 760 80" role="img">
+      <title>위키 수집부터 ChromaDB 적재까지 6단계 파이프라인</title>
+      <desc>수집, 1차 스킵, 파싱, 청킹, diff, 적재 순서. 각 단계마다 활성 노드가 강조됨.</desc>
+
+      <line class="sline" x1="110" y1="40" x2="136" y2="40" stroke="rgba(127,127,127,.3)" stroke-width="1.5" data-idx="0"/>
+      <line class="sline" x1="236" y1="40" x2="262" y2="40" stroke="rgba(127,127,127,.3)" stroke-width="1.5" data-idx="1"/>
+      <line class="sline" x1="362" y1="40" x2="388" y2="40" stroke="rgba(127,127,127,.3)" stroke-width="1.5" data-idx="2"/>
+      <line class="sline" x1="488" y1="40" x2="514" y2="40" stroke="rgba(127,127,127,.3)" stroke-width="1.5" data-idx="3"/>
+      <line class="sline" x1="614" y1="40" x2="640" y2="40" stroke="rgba(127,127,127,.3)" stroke-width="1.5" data-idx="4"/>
+
+      <rect class="snode" data-idx="0" x="10"  y="20" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="0" x="60"  y="44" text-anchor="middle" font-size="12" fill="var(--text)">수집</text>
+
+      <rect class="snode" data-idx="1" x="136" y="20" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="1" x="186" y="44" text-anchor="middle" font-size="12" fill="var(--text)">1차 스킵</text>
+
+      <rect class="snode" data-idx="2" x="262" y="20" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="2" x="312" y="44" text-anchor="middle" font-size="12" fill="var(--text)">파싱</text>
+
+      <rect class="snode" data-idx="3" x="388" y="20" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="3" x="438" y="44" text-anchor="middle" font-size="12" fill="var(--text)">청킹+hash</text>
+
+      <rect class="snode" data-idx="4" x="514" y="20" width="100" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="4" x="564" y="44" text-anchor="middle" font-size="12" fill="var(--text)">diff</text>
+
+      <rect class="snode" data-idx="5" x="640" y="20" width="110" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/>
+      <text data-text-idx="5" x="695" y="44" text-anchor="middle" font-size="12" fill="var(--text)">적재+리포트</text>
+    </svg>
+
+    <div class="content" id="content"></div>
+
+    <div class="controls">
+      <button class="btn" id="prev">← 이전</button>
+      <button class="btn primary" id="next">다음 →</button>
+    </div>
+    <div class="hint">키보드 ← → 로도 이동 가능</div>
+  </div>
+
+  <!-- ════════ 2. 수집 3방식 ════════ -->
+  <h2><span class="no">2</span>수집 계층 — 교체 가능한 3방식 (회사 환경에서 되는 것으로)</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>A. 로컬 HTML 폴더 <span class="badge sure">확실히 됨</span></h3>
+      <p>브라우저 "다른 이름으로 저장" 또는 위키 내보내기로 받은 HTML을 폴더에 떨굼.</p>
+      <p><code>--source dir --path data/raw/wiki_html/</code></p>
+      <p>초기 적재 + API 확인 전 0순위. 수동이지만 PDF 출력보다 훨씬 빠르고 구조 보존.</p>
+    </div>
+    <div class="card">
+      <h3>B. 세션 쿠키 크롤링 <span class="badge likely">가능성 높음</span></h3>
+      <p>브라우저로 보이는 페이지는 쿠키(JSESSIONID)만 복사하면 HTTP GET 가능.</p>
+      <p><code>--source crawl --cookie "..."</code></p>
+      <p>매일 배치 자동화의 현실적 1순위. 사내망 내부 통신이라 프록시 무관.</p>
+    </div>
+    <div class="card">
+      <h3>C. Confluence REST API <span class="badge unknown">회사에서 확인</span></h3>
+      <p><code>/rest/api/content</code>로 본문+버전 조회, CQL로 <b>변경 페이지 목록만</b> 조회 가능.</p>
+      <p><code>--source api --token PAT</code></p>
+      <p>되면 최선 — 변경 감지가 서버 제공이라 가장 효율적. 안 돼도 A/B로 동일 결과.</p>
+    </div>
+  </div>
+  <p style="font-size:13px; color:var(--text-muted); margin-top:10px;">
+    세 방식 모두 출력은 동일: <code>RawDocument(source_id, title, html, url)</code> →
+    이후 파이프라인(파싱→diff→적재)은 <b>한 줄도 안 바뀜</b>. 나중에 <code>--source</code> 옵션만 교체.
+  </p>
+
+  <!-- ════════ 3. 핵심 설계 결정 ════════ -->
+  <h2><span class="no">3</span>핵심 설계 결정 3가지</h2>
+  <table>
+    <tr><th style="width:30%">결정</th><th>내용</th></tr>
+    <tr>
+      <td><b>chunk_id = 내용 hash</b><br><code>{doc_id}_{sha1(제목+내용)[:16]}</code></td>
+      <td>기존 PDF 인제스트는 <code>{doc_id}_{블록순번}</code> — 문단 하나 끼어들면 뒤 순번이 전부 밀려 <b>전체 재임베딩</b>.
+      hash ID면 변경 감지가 "ID 집합 비교"로 끝남: 새 ID만 임베딩, 사라진 ID만 삭제, 같은 ID는 스킵.
+      <code>rag.py</code> 검색 코드는 ID 형식 무관 → <b>무수정</b>.</td>
+    </tr>
+    <tr>
+      <td><b>문서 단위 1차 스킵</b><br>raw HTML hash</td>
+      <td>HTML 통째 hash가 메타DB와 같으면 파싱·청킹조차 안 함.
+      위키 일일 변경률 1~5% 가정 시 배치의 95%+가 이 단계에서 종료 → 임베딩 호출 95%+ 절감.</td>
+    </tr>
+    <tr>
+      <td><b>SQLite 메타 DB</b><br><code>data/meta.db</code></td>
+      <td>README 구조도에 계획만 있던 <code>stores/meta_sqlite.py</code> 실현.
+      문서 hash·청크 ID 집합·동기화 이력 보관. ChromaDB와 분리해 "무엇이 언제 들어갔나"를 추적 가능하게.</td>
+    </tr>
+  </table>
+
+  <!-- ════════ 4. 메타 DB 스키마 ════════ -->
+  <h2><span class="no">4</span>메타 DB 스키마</h2>
+  <pre><span class="c">-- 문서 단위: 1차 스킵 판단 + 삭제 감지(목록에서 사라진 문서)</span>
+documents (source_id <span class="k">PK</span>, doc_id, title, url, raw_hash,
+           last_seen_at, last_synced_at, status)
+
+<span class="c">-- 청크 단위: ID 자체가 내용 hash라서 별도 hash 컬럼 불필요</span>
+chunks    (chunk_id <span class="k">PK</span>, doc_id, created_at)
+
+<span class="c">-- 배치 리포트: "오늘 뭐가 얼마나 바뀌었나" 추적</span>
+sync_runs (run_id <span class="k">PK</span>, started_at, mode, docs_total, docs_changed,
+           chunks_added, chunks_deleted, embed_calls)</pre>
+
+  <!-- ════════ 5. 파일 구성 ════════ -->
+  <h2><span class="no">5</span>파일 구성</h2>
+  <table>
+    <tr><th>구분</th><th>파일</th><th>역할</th></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>backend/services/connectors/</code><br><code>base.py · local_html.py · confluence.py</code></td><td>수집 추상화 + 방식 A/B/C 구현체. A는 집 PC에서 완전 테스트 가능</td></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>backend/services/parsers/confluence_html.py</code></td><td>HTML → ParsedDocument (h1~h6→heading 계층, 표→table+행, 패널→notice)</td></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>backend/services/stores/meta_sqlite.py</code></td><td>메타 DB (위 스키마)</td></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>backend/services/ingest.py</code></td><td>청킹 공용화(이동) + diff 인제스트 핵심 로직</td></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>scripts/sync_manual.py</code></td><td>배치 CLI: <code>--source dir|crawl|api</code> / <code>--dry-run</code></td></tr>
+    <tr><td><span class="tag new">신규</span></td><td><code>tests/test_confluence_parser.py</code><br><code>tests/test_diff_ingest.py</code></td><td>샘플 HTML 픽스처 — 집 PC에서 전부 검증 가능</td></tr>
+    <tr><td><span class="tag mod">수정</span></td><td><code>scripts/ingest_manual.py</code></td><td>청킹 로직을 import로 교체 (CLI 동작 100% 동일)</td></tr>
+    <tr><td><span class="tag mod">수정</span></td><td><code>config.py · requirements.txt · .env.example</code></td><td>WIKI_* 설정, beautifulsoup4 추가 (순수 파이썬 → 폐쇄망 설치 용이)</td></tr>
+    <tr><td><span class="tag doc">문서</span></td><td><code>docs/api-spec.md</code> (v9) · <code>docs/adr/0010</code></td><td>설계 결정 기록 (CLAUDE.md 규칙)</td></tr>
+  </table>
+
+  <!-- ════════ 6. 운영 시나리오 ════════ -->
+  <h2><span class="no">6</span>운영 시나리오 (회사 PC)</h2>
+  <pre><span class="c"># 초기 1회 — 위키에서 HTML 저장 후 폴더 인제스트 (방식 A)</span>
+python scripts/sync_manual.py --source dir --path data/raw/wiki_html/
+
+<span class="c"># 매일 배치 — Windows 작업 스케줄러 등록, 같은 명령 반복 실행</span>
+python scripts/sync_manual.py --source dir --path data/raw/wiki_html/
+<span class="c">#  → 리포트: "문서 120건 중 3건 변경 | 청크 +7 / -2 | 임베딩 호출 7회"</span>
+
+<span class="c"># 크롤링/API 확인되면 --source만 교체 (파이프라인 동일)</span>
+python scripts/sync_manual.py --source crawl --cookie <span class="s">"JSESSIONID=..."</span></pre>
+
+  <!-- ════════ 7. 의사결정 테이블 ════════ -->
+  <h2><span class="no">7</span>의사결정 테이블 (dev-harness)</h2>
+  <table>
+    <tr><th style="width:22%">항목</th><th>내용</th></tr>
+    <tr><td>기존 설계 의도</td><td>PDF 수동 출력 → docling 파싱 → 전체 재인제스트(upsert). PoC 20건 규모라 diff 불필요했음</td></tr>
+    <tr><td>변경 후</td><td>[1] 위키 HTML 직접 수집(3방식) [2] 청크 hash 기반 변경분만 임베딩 [3] 삭제 청크 정리 [4] 매일 배치 CLI</td></tr>
+    <tr><td>버그 유무</td><td>기존 버그 없음. 새 위험: hash ID와 기존 순번 ID 혼재 → 신규 파이프라인에만 적용, <code>ingest_manual.py</code>(PDF)는 동작 불변</td></tr>
+    <tr><td>위험성</td><td><b>낮음</b> — 신규 파일 위주. 기존 수정은 청킹 함수 이동 1건(인터페이스 동일). 검색 코드(<code>rag.py</code>) 무수정</td></tr>
+    <tr><td>실효성</td><td>임베딩 호출: 전체 재인제스트 대비 변경 비율만큼만 (일일 변경률 1~5% 가정 시 95%+ 절감). PDF 수동 출력 작업 0회</td></tr>
+    <tr><td>부작용</td><td>[1] 청킹 로직 이동(승구리 소유 영역) [2] beautifulsoup4 의존성 [3] 회사 PC에서 수집 방식 확인 필요</td></tr>
+    <tr><td>부작용 해결법</td><td>[1] CLI 동작 동일 + api-spec.md 핸드오프 로그 기록 [2] 순수 파이썬이라 폐쇄망 설치 용이 [3] A→B→C 순서로 시도, 뭐가 되든 파이프라인 불변</td></tr>
+  </table>
+
+  <div class="footnote">
+    <b>회사에서 확인할 것은 단 하나:</b> "위키 페이지를 HTML로 어떻게 꺼낼 수 있나" (저장 / 내보내기 / 쿠키 GET / REST API 중 뭐가 되나).
+    뭐가 되든 파이프라인은 안 바뀐다. 임베딩(Gemini)은 사내망에서 이미 호출 성공 이력 있음 (TROUBLESHOOTING.md 2026-05-08).
+  </div>
+</div>
+
+<script>
+(function(){
+  // 단계 데이터 — 노드 6개와 1:1 매핑
+  const steps = [
+    {
+      num: "Step 1 — 수집",
+      title: "위키에서 HTML 확보 (방식 A/B/C 중 택1)",
+      desc: "로컬 폴더(A) · 쿠키 크롤링(B) · REST API(C) — 회사 환경에서 되는 방식으로 수집. " +
+            "어느 방식이든 출력은 동일한 <b>RawDocument(source_id, title, html, url)</b>. " +
+            "그래서 수집 방식이 바뀌어도 이후 단계는 한 줄도 안 바뀐다."
+    },
+    {
+      num: "Step 2 — 1차 스킵",
+      title: "문서 raw hash 비교 — 안 바뀐 문서는 여기서 끝",
+      desc: "HTML 통째 hash를 메타DB(documents.raw_hash)와 비교. 같으면 <b>파싱조차 안 하고 스킵</b>. " +
+            "위키 일일 변경률이 1~5%라면 배치의 <span class='ok'>95%+ 문서가 이 단계에서 종료</span> → " +
+            "매일 전체를 가져와도 배치가 가볍다."
+    },
+    {
+      num: "Step 3 — 파싱",
+      title: "HTML → ParsedDocument (기존 블록 스키마 그대로)",
+      desc: "h1~h6 → heading 계층(hierarchy_path), 표 → table + 행 단위 table_row, " +
+            "리스트 → paragraph, info/warning 패널 → notice. " +
+            "기존 PDF 파서(docling)와 <b>같은 출력 스키마</b>라서 청킹·검색 코드를 그대로 공유한다."
+    },
+    {
+      num: "Step 4 — 청킹 + hash ID",
+      title: "기존 chunk_blocks() 재사용 + 내용 기반 chunk_id 생성",
+      desc: "블록타입별 청킹 규칙(병합/오버랩)은 기존 코드 재사용. " +
+            "각 청크에 <b>chunk_id = {doc_id}_{sha1(제목+내용)[:16]}</b> 부여 — " +
+            "내용이 같으면 ID도 같다. 이게 diff의 열쇠."
+    },
+    {
+      num: "Step 5 — diff",
+      title: "ID 집합 비교: 신규 / 삭제 / 동일",
+      desc: "메타DB의 기존 청크 ID 집합과 새 ID 집합을 비교. " +
+            "<span class='ok'>신규 ID → 임베딩 대상</span> · " +
+            "<span class='del'>사라진 ID → ChromaDB 삭제 대상</span> · " +
+            "<b>동일 ID → 스킵 (비용 0)</b>. 문단 하나 수정되면 그 청크 1개만 새 ID가 된다."
+    },
+    {
+      num: "Step 6 — 적재 + 리포트",
+      title: "변경분만 임베딩 → ChromaDB 반영 → 동기화 기록",
+      desc: "신규 청크만 Gemini 임베딩 → faq_titles/faq_contents <b>upsert</b>, 삭제분은 양쪽 컬렉션에서 delete. " +
+            "마지막으로 sync_runs에 리포트 기록: " +
+            "<b>\"문서 120건 중 3건 변경 | 청크 +7 / -2 | 임베딩 호출 7회\"</b>"
+    }
+  ];
+
+  let cur = 0;
+  const pills = document.getElementById('pills');
+  const content = document.getElementById('content');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+
+  steps.forEach(() => {
+    const p = document.createElement('div');
+    p.className = 'pill';
+    pills.appendChild(p);
+  });
+
+  function render() {
+    document.querySelectorAll('.pill').forEach((p, i) => {
+      p.classList.remove('active', 'done');
+      if (i < cur) p.classList.add('done');
+      if (i === cur) p.classList.add('active');
+    });
+    document.querySelectorAll('.snode').forEach(n => {
+      const i = +n.dataset.idx;
+      if (i === cur) { n.setAttribute('fill', 'var(--accent)'); n.setAttribute('stroke', 'var(--accent)'); }
+      else if (i < cur) { n.setAttribute('fill', 'var(--success)'); n.setAttribute('stroke', 'var(--success)'); }
+      else { n.setAttribute('fill', 'var(--surface)'); n.setAttribute('stroke', 'var(--border)'); }
+    });
+    document.querySelectorAll('[data-text-idx]').forEach(t => {
+      const i = +t.dataset.textIdx;
+      t.setAttribute('fill', i <= cur ? 'white' : 'var(--text)');
+    });
+    document.querySelectorAll('.sline').forEach(l => {
+      const i = +l.dataset.idx;
+      l.setAttribute('stroke', i < cur ? 'var(--success)' : 'rgba(127,127,127,.3)');
+    });
+    const s = steps[cur];
+    content.innerHTML =
+      '<span class="step-num">' + s.num + '</span>' +
+      '<div class="step-title">' + s.title + '</div>' +
+      '<div class="step-desc">' + s.desc + '</div>';
+    prevBtn.disabled = cur === 0;
+    nextBtn.textContent = cur === steps.length - 1 ? '처음으로 ↻' : '다음 →';
+  }
+
+  prevBtn.onclick = () => { if (cur > 0) { cur--; render(); } };
+  nextBtn.onclick = () => { cur = cur === steps.length - 1 ? 0 : cur + 1; render(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') nextBtn.click();
+    if (e.key === 'ArrowLeft') prevBtn.click();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

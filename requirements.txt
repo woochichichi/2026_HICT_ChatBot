@@ -18,5 +18,9 @@ tiktoken>=0.7.0,<1.0.0
 pymupdf>=1.24.0,<2.0.0
 docling>=2.0.0
 
+# 위키 HTML 수집/파싱 (api-spec.md 섹션 9) — 순수 파이썬, 폐쇄망 설치 용이
+beautifulsoup4>=4.12.0
+httpx>=0.27.0
+
 # 테스트
 pytest>=8.0.0

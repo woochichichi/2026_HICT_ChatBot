@@ -1,1 +1,183 @@
-[]
+[
+  {
+    "id": "q01",
+    "category": "고객번호",
+    "question": "고객번호는 몇 자리로 구성되나요?",
+    "expect": {
+      "doc_contains": "고객번호",
+      "keywords": [
+        "8자리"
+      ]
+    }
+  },
+  {
+    "id": "q02",
+    "category": "고객번호",
+    "question": "고객번호를 변경하거나 삭제할 수 있나요?",
+    "expect": {
+      "doc_contains": "고객번호",
+      "keywords": [
+        "변경 또는 삭제 불가",
+        "삭제 불가"
+      ]
+    }
+  },
+  {
+    "id": "q03",
+    "category": "고객번호",
+    "question": "고객번호는 언제 부여되나요?",
+    "expect": {
+      "doc_contains": "고객번호",
+      "keywords": [
+        "자동부여",
+        "고객등록 완료"
+      ]
+    }
+  },
+  {
+    "id": "q04",
+    "category": "고객구분",
+    "question": "법인이 금융법인인지 아닌지 어디서 확인할 수 있나요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "제도권금융기관조회",
+        "금융감독원"
+      ]
+    }
+  },
+  {
+    "id": "q05",
+    "category": "고객구분",
+    "question": "집합투자업자(운용사)는 어떤 법인으로 분류되나요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "금융법인"
+      ]
+    }
+  },
+  {
+    "id": "q06",
+    "category": "고객구분",
+    "question": "투자일임사는 일반법인인가요 금융법인인가요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "일반법인"
+      ]
+    }
+  },
+  {
+    "id": "q07",
+    "category": "고객구분",
+    "question": "면세(비과세)법인에는 어떤 곳들이 있나요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "국가공공기관",
+        "창업투자조합"
+      ]
+    }
+  },
+  {
+    "id": "q08",
+    "category": "고객구분",
+    "question": "일반법인은 사업자등록증 분류코드 몇 번대인가요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "80~89"
+      ]
+    }
+  },
+  {
+    "id": "q09",
+    "category": "고객구분",
+    "question": "가망고객이란 무엇인가요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "보유하고 있지 않",
+        "가망고객"
+      ]
+    }
+  },
+  {
+    "id": "q10",
+    "category": "고객구분",
+    "question": "개인 고객에 동창회 같은 임의단체도 포함되나요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "임의단체"
+      ]
+    }
+  },
+  {
+    "id": "q11",
+    "category": "고객구분",
+    "question": "금융법인의 채권이자에 대한 원천징수는 어떻게 처리하나요?",
+    "expect": {
+      "doc_contains": "고객구분",
+      "keywords": [
+        "원천징수"
+      ]
+    }
+  },
+  {
+    "id": "q12",
+    "category": "FAQ",
+    "question": "대습상속인이 누구인지에 대한 FAQ가 있나요?",
+    "expect": {
+      "doc_contains": "자주하는 질문",
+      "keywords": [
+        "대습상속"
+      ]
+    }
+  },
+  {
+    "id": "q13",
+    "category": "매매",
+    "question": "미수동결계좌 제도는 어느 매뉴얼에서 볼 수 있나요?",
+    "expect": {
+      "doc_contains": "매매",
+      "keywords": [
+        "미수동결계좌"
+      ]
+    }
+  },
+  {
+    "id": "q14",
+    "category": "FAQ",
+    "question": "스마트 OTP인지 어떻게 확인하는지 알려주세요.",
+    "expect": {
+      "doc_contains": "자주하는 질문",
+      "keywords": [
+        "스마트 OTP"
+      ]
+    }
+  },
+  {
+    "id": "q15",
+    "category": "매매",
+    "question": "K-OTC 시장 매매 관련 내용은 어디에 있나요?",
+    "expect": {
+      "doc_contains": "매매",
+      "keywords": [
+        "K-OTC"
+      ]
+    }
+  },
+  {
+    "id": "q16",
+    "category": "매매",
+    "question": "ELW 매매는 어느 편람 섹션에 있나요?",
+    "expect": {
+      "doc_contains": "매매",
+      "keywords": [
+        "ELW"
+      ]
+    }
+  }
+]

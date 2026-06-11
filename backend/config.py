@@ -43,5 +43,24 @@ class Settings:
     CONTENT_WEIGHT: float = float(os.getenv("CONTENT_WEIGHT", "0.5"))
     TOP_K: int = int(os.getenv("TOP_K", "5"))
 
+    # 위키 수집 + 증분 동기화 (api-spec.md 섹션 9)
+    # scripts/sync_manual.py --source crawl 에서 사용
+    WIKI_BASE_URL: str = os.getenv("WIKI_BASE_URL", "")          # 예: https://wiki.hanwhawm.com (루트 — viewpage가 루트 경로)
+    WIKI_COOKIE: str = os.getenv("WIKI_COOKIE", "")              # 브라우저에서 복사한 세션 쿠키
+    WIKI_SPACE_KEYS: str = os.getenv("WIKI_SPACE_KEYS", "")      # 쉼표 구분, 예: BM001,BM002
+    # URL 템플릿 — 사이트마다 경로가 달라 설정으로 주입 ({base}, {space} 치환)
+    # 실측(2026-06-11): 목록 화면은 /collector/ 하위, 본문(viewpage)은 루트 하위
+    WIKI_PAGE_LIST_URL: str = os.getenv(
+        "WIKI_PAGE_LIST_URL", "{base}/collector/pages.action?key={space}",
+    )
+    WIKI_RECENT_URL: str = os.getenv(
+        "WIKI_RECENT_URL", "{base}/pages/recentlyupdated.action?key={space}",
+    )
+    WIKI_CRAWL_DELAY: float = float(os.getenv("WIKI_CRAWL_DELAY", "0.5"))
+    META_DB_PATH: str = os.getenv(
+        "META_DB_PATH",
+        str(_PROJECT_ROOT / "data" / "meta.db"),
+    )
+
 
 settings = Settings()

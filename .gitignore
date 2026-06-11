@@ -6,6 +6,9 @@ data/raw/*
 data/chroma_db/*
 !data/raw/.gitkeep
 !data/chroma_db/.gitkeep
+rawdata/
+data/meta.db
+data/meta.db-*
 
 # Python
 __pycache__/

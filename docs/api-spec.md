@@ -483,6 +483,71 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 
 ---
 
+## 9. 위키(Confluence) 수집 + 증분 인제스트
+
+> 2026-06-10 설계·구현. 시각화 문서: [`docs/design-ingest-pipeline.html`](./design-ingest-pipeline.html), ADR: [`adr/0010`](./adr/0010-wiki-diff-ingest.md)
+
+### 배경
+
+업무편람 원본이 사내 위키(Confluence, `wiki.hanwhawm.com`)에 있고 PDF 출력이 비현실적.
+위키를 직접 수집하되, 매일 변경분만 벡터DB에 반영해야 함.
+
+### 핵심 원칙
+
+**diff의 본질은 "수집 절감"이 아니라 "임베딩 절감"** — 매일 전체를 다시 가져와도
+청크 hash 비교가 변경분만 골라내므로, REST API가 막혀 있어도 증분 인제스트는 성립.
+
+### 구조 (3계층)
+
+```
+수집 (교체 가능)             파싱                  diff 인제스트
+─────────────────           ─────────────────     ─────────────────────────
+A. 로컬 HTML 폴더    ──→    confluence_html.py ──→ 1. 문서 raw hash 같으면 스킵
+B. 세션 쿠키 크롤링          (ParsedDocument —     2. 청킹(공용) + hash chunk_id
+C. REST API (미구현)          기존 블록 스키마)     3. ID 집합 비교: 신규만 임베딩,
+                                                     사라진 것만 삭제, 동일은 스킵
+```
+
+### 설계 결정
+
+| 결정 | 내용 |
+|------|------|
+| chunk_id = 내용 hash | `{doc_id}_{sha1(제목+내용)[:16]}` — 내용 같으면 ID 동일. 변경 감지 = ID 집합 비교. 기존 PDF 인제스트(`{doc_id}_{순번}`)는 동작 불변 |
+| 문서 1차 스킵 | 원본 HTML sha256이 메타DB와 같으면 파싱조차 안 함 |
+| 메타 DB 분리 | `data/meta.db` (SQLite) — documents/chunks/sync_runs. ChromaDB와 분리해 "무엇이 언제 들어갔나" 추적 |
+| 수집 추상화 | `SourceConnector.iter_documents()` — 커넥터 출력이 동일(`RawDocument`)해서 수집 방식 교체 시 파이프라인 무수정 |
+| prune은 opt-in | 증분 모드에서 "안 보임 ≠ 삭제됨"이므로 `--prune`은 전체 모드 전용 플래그 |
+| 세션 만료 즉시 중단 | 로그인 리다이렉트 감지 시 `SessionExpiredError` — 빈 데이터 조용히 적재 방지 |
+
+### 파일
+
+| 파일 | 역할 |
+|------|------|
+| `backend/services/connectors/{base,local_html,confluence_crawl}.py` | 수집 (방식 A/B) |
+| `backend/services/parsers/confluence_html.py` | HTML → ParsedDocument |
+| `backend/services/ingest.py` | 청킹 공용(ingest_manual에서 이동) + diff 인제스트 |
+| `backend/services/stores/meta_sqlite.py` | 메타 DB |
+| `scripts/sync_manual.py` | 배치 CLI |
+
+### 운영 (회사 PC)
+
+```bash
+# 초기 — 위키에서 저장한 HTML 폴더
+python scripts/sync_manual.py --source dir --path data/raw/wiki_html/
+
+# 매일 배치 (작업 스케줄러) — 변경분만 크롤
+python scripts/sync_manual.py --source crawl --incremental
+# 리포트: "문서 N건 중 M건 변경 | 청크 +a / -b | 임베딩 c건"
+```
+
+`.env` 필요값: `WIKI_BASE_URL`, `WIKI_COOKIE`(브라우저에서 복사), `WIKI_SPACE_KEYS`,
+화면 URL이 다르면 `WIKI_PAGE_LIST_URL` / `WIKI_RECENT_URL` 템플릿 수정.
+
+**회사에서 확인할 것**: [1] "최근 업데이트" 화면 실제 URL [2] 쿠키 GET 가능 여부
+(페이지 목록 화면은 확인됨: `wiki.hanwhawm.com/collector/pages.action?key=BM001`)
+
+---
+
 ## 변경 이력
 
 | 버전 | 날짜       | 변경 내용                                                                                                              |
@@ -495,6 +560,7 @@ PoC에서 다루지 않지만, 실도입 시 반드시 검토해야 할 항목.
 | v6   | 2026-03-09 | PoC LLM을 OpenAI → Google Gemini로 전환. GeminiService 구현, 임베딩 3072차원, RAG 가중치 config 추가                   |
 | v7   | 2026-04-14 | 챗봇 모드 SSE 스트리밍 구현. chat.py 전면 교체, rag.py에 generate_answer_stream 추가, 챗봇 프론트엔드(ChatScreen) 구현   |
 | v8   | 2026-05-08 | 산출물 5종 신규 작성: `architecture.md`, `data-flow.md`, `api-spec-formal.md`, `db-design.md`, `adr/0001~0009`. 기존 설계 결정을 ADR 양식으로 정리(역추적용). 본 문서가 여전히 단일 진실 소스. |
+| v9   | 2026-06-10 | 섹션 9 신규 — 위키(Confluence) 수집 + 증분(diff) 인제스트. 수집 커넥터(dir/crawl), HTML 파서, hash chunk_id 기반 diff, SQLite 메타DB, sync_manual.py 배치 CLI. 청킹 로직을 `backend/services/ingest.py`로 공용화 (ingest_manual.py 동작 불변). ADR 0010 |
 
 ---
 
@@ -690,6 +756,27 @@ npm run dev
 **변경**: `requirements.txt`의 `chromadb` 제약을 `>=1.0.0,<2.0.0`으로 조정 (기존 `>=0.5.0,<1.0.0`).
 
 **이유**: 0.6.x 계열은 Windows에서 `chroma-hnswlib` 소스 빌드가 필요해 Microsoft C++ Build Tools 없이 `pip install`이 실패할 수 있음. 1.x는 사전 빌드 휠로 설치가 안정적이며, PoC에서 사용하는 `chromadb.PersistentClient` API와 호환됨.
+
+---
+
+### 2026-06-10 | 우치 → 승구리 | 위키 증분 인제스트 파이프라인 (api-spec.md 섹션 9)
+
+#### 변경 요약
+
+- `backend/services/ingest.py` (신규) — **ingest_manual.py의 청킹 로직을 이곳으로 이동** + diff 인제스트 추가
+- `scripts/ingest_manual.py` (수정) — 청킹을 import로 교체. **CLI·동작·chunk_id 형식 100% 동일** (검증: pytest 통과)
+- `backend/services/connectors/` (신규) — 위키 수집 (로컬 HTML 폴더 / 세션 쿠키 크롤링)
+- `backend/services/parsers/confluence_html.py` (신규) — HTML → ParsedDocument (docling_pdf와 같은 출력 스키마)
+- `backend/services/parsers/__init__.py` (수정) — docling 지연 import (docling 미설치 환경에서 HTML 파서 사용 가능하게)
+- `backend/services/stores/meta_sqlite.py` (신규) — 동기화 메타 DB (README 구조도의 그 파일)
+- `scripts/sync_manual.py` (신규) — 위키 동기화 배치 CLI
+- `requirements.txt` — `beautifulsoup4`, `httpx` 추가
+
+#### 확인사항
+
+- [ ] **ingest_manual.py 동작 불변**: 청킹 함수가 `backend.services.ingest`로 이동했지만 결과 동일. 기존 사용법 그대로
+- [ ] **새 테스트**: `pytest tests/test_confluence_parser.py tests/test_diff_ingest.py` — API 키 없이 실행 가능 (FakeLLM)
+- [ ] **위키 크롤은 회사 PC에서**: `.env`에 `WIKI_BASE_URL/WIKI_COOKIE/WIKI_SPACE_KEYS` 입력 후 `python scripts/sync_manual.py --source crawl --dry-run`으로 먼저 확인
 
 ---
 
