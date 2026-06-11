@@ -31,6 +31,20 @@
 - **해결**: `pip install "google-genai>=1.0.0"` 개별 설치
 - **교훈**: requirements.txt 전체 설치 실패 시 핵심 패키지 개별 설치로 우회
 
+## 2026-06-11 | kiwipiepy 한글 사용자명 경로에서 모델 로딩 실패 + 세그폴트
+
+- **증상**: `Kiwi()` 초기화 시 `Exception: Cannot open extract.mdl for WordDetector` 발생 후 인터프리터 종료 시 Segmentation fault. pytest에서는 실패 리포트 생성 중 Kiwi 객체 `repr()` 호출 → access violation으로 pytest 자체가 크래시
+- **원인**: kiwipiepy 네이티브 라이브러리가 비ASCII 경로(한글 사용자명 `C:\Users\전우형\...`)의 모델 파일을 열지 못함. venv가 한글 경로 아래 있으면 발생
+- **해결**: kiwipiepy 의존성 제거 → 한국어 **문자 bigram 토크나이저**로 교체 (`backend/services/keyword_index.py`). bigram은 조사 변형("고객번호는"↔"고객번호")을 자연 매칭하고 순수 파이썬이라 폐쇄망·한글 경로 무관
+- **교훈**: 네이티브 확장 패키지는 Windows 한글 사용자명 환경에서 경로 인코딩 문제 빈발. 회사 PC도 한글 계정명이므로 같은 문제 예상 — 도입 전 비ASCII 경로 테스트 필수. 세그폴트 나는 라이브러리는 uvicorn 서버 프로세스에 절대 싣지 말 것
+
+## 2026-06-11 | Gemini 임베딩 무료 티어 분당 한도(429 RESOURCE_EXHAUSTED)
+
+- **증상**: 인제스트 중 `429 RESOURCE_EXHAUSTED ... embed_content_free_tier_requests, limit: 100` 발생
+- **원인**: 무료 티어 임베딩 분당 100건 제한 — **배치 호출이라도 배치 내 텍스트가 개별 카운트**됨 (100건 배치 1회 = 분당 한도 전부 소진)
+- **해결**: `EMBED_BATCH_SIZE` 100→90 축소 + `embed_in_batches()`에 429 감지 시 지수 백오프(30s→60s→120s, 최대 5회) 재시도 추가
+- **교훈**: 일일 한도(1,000건)도 있음 — 대량 적재가 중단되면 다음날 같은 명령 재실행 (diff가 완료분을 스킵하므로 이어서 진행됨)
+
 ## 2026-05-08 | Gemini API 호출 시 SSL CERTIFICATE_VERIFY_FAILED (사내 SSL 인터셉트)
 
 - **증상**: `/api/training/score` 호출 시 `httpx.ConnectError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain`

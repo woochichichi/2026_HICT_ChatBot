@@ -548,6 +548,42 @@ python scripts/sync_manual.py --source crawl --incremental
 
 ---
 
+## 10. Hybrid Search (BM25 + 벡터 RRF 융합)
+
+> 2026-06-11 구현. 베이스라인 대비 hit@1 62%→81% (+19%p), MRR 0.786→0.877
+
+### 구조
+
+```
+질문 ─┬─ 벡터 검색 (기존: titles/contents 가중 병합) ─┐
+      │                                              ├─ RRF 융합 → top_k
+      └─ BM25 키워드 검색 (keyword_index.py) ─────────┘
+         RRF: score(d) = Σ 1/(RRF_K + rank)  (RRF_K=60)
+```
+
+### 설계 결정
+
+| 결정 | 내용 |
+|------|------|
+| 토크나이저 = 한국어 문자 bigram | 영문/숫자는 단어 토큰("K-OTC", "80~89" 보존), 한국어는 bigram("고객번호는"↔"고객번호" 조사 무관 매칭). kiwipiepy는 한글 사용자명 경로 세그폴트로 제외 (TROUBLESHOOTING 2026-06-11) |
+| 정렬은 RRF, score는 벡터 유사도 유지 | confidence 임계값(0.85/0.70)이 벡터 점수 기준 — RRF 점수(~0.016)와 섞으면 깨짐. confidence는 contexts의 max 벡터 점수 사용 |
+| `HYBRID_ENABLED` 플래그 | 명시적 true 체크. false면 기존 순수 벡터 경로 그대로 |
+| 인덱스 신선도 | 컬렉션 count 변화 감지 → 다음 검색 때 자동 재구축 (401청크 기준 수십 ms) |
+
+### 측정 (tests/test_questions.json 16문항, data/eval/ 리포트)
+
+| 지표 | 벡터만 (baseline) | Hybrid | 변화 |
+|------|------|--------|------|
+| hit@1 | 62% | **81%** | +19%p |
+| hit@3 | 94% | 94% | — |
+| hit@5 | 100% | 100% | — |
+| MRR | 0.786 | **0.877** | +0.091 |
+
+고유명사 질문 개선: 미수동결계좌 3위→1위, K-OTC 2위→1위, "8자리" 4위→2위.
+트레이드오프: q04(제도권금융기관조회) 2위→5위 — top5 유지로 실해 없음, 가중치 튜닝 여지.
+
+---
+
 ## 변경 이력
 
 | 버전 | 날짜       | 변경 내용                                                                                                              |
@@ -561,6 +597,7 @@ python scripts/sync_manual.py --source crawl --incremental
 | v7   | 2026-04-14 | 챗봇 모드 SSE 스트리밍 구현. chat.py 전면 교체, rag.py에 generate_answer_stream 추가, 챗봇 프론트엔드(ChatScreen) 구현   |
 | v8   | 2026-05-08 | 산출물 5종 신규 작성: `architecture.md`, `data-flow.md`, `api-spec-formal.md`, `db-design.md`, `adr/0001~0009`. 기존 설계 결정을 ADR 양식으로 정리(역추적용). 본 문서가 여전히 단일 진실 소스. |
 | v9   | 2026-06-10 | 섹션 9 신규 — 위키(Confluence) 수집 + 증분(diff) 인제스트. 수집 커넥터(dir/crawl), HTML 파서, hash chunk_id 기반 diff, SQLite 메타DB, sync_manual.py 배치 CLI. 청킹 로직을 `backend/services/ingest.py`로 공용화 (ingest_manual.py 동작 불변). ADR 0010 |
+| v10  | 2026-06-11 | 섹션 10 신규 — Hybrid Search (BM25 bigram + 벡터 RRF 융합, `HYBRID_ENABLED`). 실측 hit@1 62%→81%. 파서 실데이터 보강(개조식 헤딩/br 분리/1×1표 notice), 크롤러 pagetree 자동 순회(rootPageId 추출), 진단 도구 test_accuracy.py + 16문항, CRAWLER_GUIDE.md |
 
 ---
 

@@ -43,6 +43,11 @@ class Settings:
     CONTENT_WEIGHT: float = float(os.getenv("CONTENT_WEIGHT", "0.5"))
     TOP_K: int = int(os.getenv("TOP_K", "5"))
 
+    # Hybrid Search (api-spec.md 섹션 10) — BM25 키워드 + 벡터 RRF 융합
+    HYBRID_ENABLED: bool = os.getenv("HYBRID_ENABLED", "true").lower() == "true"
+    RRF_K: int = int(os.getenv("RRF_K", "60"))            # RRF 평탄화 상수 (표준값 60)
+    KEYWORD_TOP_N: int = int(os.getenv("KEYWORD_TOP_N", "20"))  # BM25 후보 수
+
     # 위키 수집 + 증분 동기화 (api-spec.md 섹션 9)
     # scripts/sync_manual.py --source crawl 에서 사용
     WIKI_BASE_URL: str = os.getenv("WIKI_BASE_URL", "")          # 예: https://wiki.hanwhawm.com (루트 — viewpage가 루트 경로)

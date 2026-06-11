@@ -22,5 +22,10 @@ docling>=2.0.0
 beautifulsoup4>=4.12.0
 httpx>=0.27.0
 
+# Hybrid Search (api-spec.md 섹션 10) — BM25 키워드 검색 (순수 파이썬)
+# 한국어 토큰화는 문자 bigram 사용 — kiwipiepy는 한글 사용자명 경로에서
+# 네이티브 모델 로딩 실패+세그폴트로 제외 (TROUBLESHOOTING.md 2026-06-11)
+rank_bm25>=0.2.2
+
 # 테스트
 pytest>=8.0.0

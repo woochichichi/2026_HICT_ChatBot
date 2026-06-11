@@ -59,6 +59,13 @@ class RAGService:
         self.title_weight = settings.TITLE_WEIGHT
         self.content_weight = settings.CONTENT_WEIGHT
 
+        # Hybrid Search (api-spec.md 섹션 10): BM25 키워드 인덱스 — 명시적 true일 때만
+        # (silent default ON 방지 — dev-harness 규칙)
+        self.keyword_index = None
+        if settings.HYBRID_ENABLED is True:
+            from .keyword_index import KeywordIndex
+            self.keyword_index = KeywordIndex(self.titles_col, self.contents_col)
+
     async def search(self, query: str, top_k: int | None = None) -> list[dict]:
         """제목+내용 컬렉션에서 검색 후 점수 병합."""
         top_k = top_k or settings.TOP_K
@@ -101,6 +108,28 @@ class RAGService:
             })
         merged.sort(key=lambda x: x["score"], reverse=True)
 
+        # 4.5 Hybrid: BM25 키워드 순위와 RRF 융합 (api-spec.md 섹션 10)
+        #   - 정렬은 RRF 순위로, score 필드는 벡터 유사도 유지
+        #     (confidence 임계값 0.85/0.70이 벡터 점수 기준이므로 섞으면 안 됨)
+        #   - 벡터에 없고 BM25에만 잡힌 청크는 score=0.0으로 포함
+        if self.keyword_index is not None:
+            bm25_ranked = self.keyword_index.search(
+                query, top_n=settings.KEYWORD_TOP_N,
+            )
+            k = settings.RRF_K
+            rrf: dict[str, float] = {}
+            for rank, item in enumerate(merged):
+                rrf[item["id"]] = rrf.get(item["id"], 0.0) + 1.0 / (k + rank + 1)
+            for rank, (cid, _score) in enumerate(bm25_ranked):
+                rrf[cid] = rrf.get(cid, 0.0) + 1.0 / (k + rank + 1)
+
+            vector_score = {item["id"]: item["score"] for item in merged}
+            ordered = sorted(rrf.items(), key=lambda x: x[1], reverse=True)
+            merged = [
+                {"id": cid, "score": vector_score.get(cid, 0.0)}
+                for cid, _ in ordered
+            ]
+
         # 5. 상위 top_k건에 메타데이터 부착
         results = []
         for item in merged[:top_k]:
@@ -130,7 +159,8 @@ class RAGService:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": query},
         ])
-        top_score = contexts[0]["score"] if contexts else 0.0
+        # Hybrid 시 1위가 BM25 전용(score=0)일 수 있어 max 사용 (벡터 유사도 기준 유지)
+        top_score = max((c["score"] for c in contexts), default=0.0)
         return {
             "answer": answer,
             "sources": self._build_sources(contexts),
@@ -158,7 +188,8 @@ class RAGService:
 
         # sources와 confidence는 RAG 검색 완료 시점에 이미 확정
         # → SSE 첫 이벤트로 프론트에 선전송하여 체감 대기 시간 단축
-        top_score = contexts[0]["score"] if contexts else 0.0
+        # Hybrid 시 1위가 BM25 전용(score=0)일 수 있어 max 사용 (벡터 유사도 기준 유지)
+        top_score = max((c["score"] for c in contexts), default=0.0)
         pre_stream_data = {
             "sources": self._build_sources(contexts),
             "confidence": self._calc_confidence(top_score),
