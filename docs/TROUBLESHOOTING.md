@@ -17,6 +17,34 @@
 
 ---
 
+## 2026-06-12 | 폐쇄망 회사 PC에 Python/pip 없음 → PowerShell 수집으로 분리
+
+- **증상**: 회사 PC에 Python·pip 미설치, 설치도 불가(폐쇄망 + 보안정책). `sync_manual.py --source crawl`(Python) 실행 자체가 불가능
+- **원인**: 수집(내부망 접근 필요)과 적재(파싱/임베딩/ChromaDB)를 한 머신에서 한다고 가정. 실제로는 "내부망에서 HTML을 꺼내는 일"만 회사 PC에서 필요하고 나머지는 어디서든 가능
+- **해결**: 작업을 2단계로 분리 — ① 회사 PC: **Windows 내장 PowerShell**(`Invoke-WebRequest`)로 HTML만 수집 → ② Python PC(집): 기존 `--source dir` 커넥터가 그 HTML 폴더를 그대로 적재. PowerShell은 모든 Windows에 내장이라 설치 0
+- **교훈**: 폐쇄망 제약은 "전부 한 머신"이 아니라 "내부망 접근이 꼭 필요한 최소 단계"만 분리하면 풀린다. 신규 바이너리/설치가 보안 검토 대상이면 OS 내장 도구(PowerShell)가 정치적으로도 유리
+
+## 2026-06-12 | PowerShell `$PSScriptRoot`가 param 기본값에서 비어 config 못 찾음
+
+- **증상**: `.bat`로 `wiki_fetch.ps1` 실행 시 `config file not found: \wiki_fetch.config.txt` (경로 앞이 `\`로 시작 = 폴더 부분이 빈 문자열). 스크립트 옆에 config가 있는데도 못 찾음
+- **원인**: `param([string]$ConfigPath = "$PSScriptRoot\...")` — Windows PowerShell 5.1에서 `$PSScriptRoot`는 **param 바인딩 시점에 아직 안 채워져** 빈 문자열로 평가됨. 본문에서는 정상이지만 param 기본값에서는 비어 경로가 드라이브 루트로 잡힘
+- **해결**: param 기본값에서 `$PSScriptRoot` 사용 금지. 본문에서 `$PSScriptRoot` → `$MyInvocation.MyCommand.Definition` → `Get-Location` 순으로 폴백해 `$scriptDir`를 구한 뒤 config/출력경로 해석. config 없으면 throw 대신 내장 기본값 사용
+- **교훈**: PS 스크립트 폴더 경로는 항상 본문에서 다중 폴백으로 구할 것. 상대 출력경로는 cwd가 아닌 스크립트 폴더 기준으로(관리자 실행 시 cwd=System32라 파일이 엉뚱한 곳에 생김)
+
+## 2026-06-12 | Confluence 로그인 오탐 — 정상 페이지를 'auth rejected'로 판정
+
+- **증상**: 유효한 인증인데도 모든 페이지에서 `auth header rejected (bounced to login page)` 발생
+- **원인**: "본문에 `os_username`/`loginform` 문자열이 있으면 로그인 페이지로 튕긴 것"으로 판정. 그러나 **로그인된 Confluence 페이지에도 우측 상단 로그인 드롭다운(숨은 로그인 폼)이 있어** `os_username`이 항상 존재 → 매 페이지 거짓 양성
+- **해결**: 본문 문자열 스캔 제거. 인증 실패의 신뢰 가능한 신호는 **최종 URL이 `login.action`으로 리다이렉트되는 것**뿐 → 그것만으로 만료 판정
+- **교훈**: 인증 만료 감지는 "본문에 로그인 관련 단어 있나"가 아니라 "로그인 페이지로 리다이렉트됐나"(최종 URL)로 판단. 정상 페이지의 헤더/푸터에 인증 관련 마크업이 흔히 들어있음
+
+## 2026-06-12 | 사내 위키는 Windows 통합인증으로 통과 (쿠키 불필요)
+
+- **증상**: F12에서 쿠키를 수동으로 골라 복사하는 절차가 번거롭고 오류가 잦음 (`dt*`=Dynatrace 모니터링 쿠키를 인증용으로 착각 등)
+- **원인**: 인증 방식을 "세션 쿠키"로만 가정. 실제 사내 위키(wiki.hanwhawm.com)는 도메인 PC의 Windows 세션을 신뢰
+- **해결**: `Invoke-WebRequest -UseDefaultCredentials`로 **쿠키 없이** 통과 확인 (`rootId: True`, `login.action` 리다이렉트 없음, len 60051). `wiki_fetch.ps1 -WindowsAuth` 모드 추가. 쿠키가 필요한 환경 대비로 "Copy as cURL/헤더블록/원시값"에서 쿠키를 자동 추출하는 `Extract-Cookie`도 추가(`Read-Host`는 멀티라인 붙여넣기 불가 → 파일 입력 권장)
+- **교훈**: 사내 인트라넷은 쿠키보다 Windows 통합인증(NTLM/Kerberos)이 되는 경우가 많음 → 쿠키 작업 전에 `-UseDefaultCredentials`부터 시도. 인증 입력은 사용자에게 형식을 강요하지 말고(어느 복사 방식이든) 자동 파싱
+
 ## 2026-04-14 | pip install 한국어 주석 인코딩 에러
 
 - **증상**: `pip install -r requirements.txt` 실행 시 `UnicodeDecodeError: 'cp949'`
