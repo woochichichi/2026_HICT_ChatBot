@@ -131,24 +131,22 @@ $headers = @{
     'User-Agent' = 'wiki-fetch/1.0 (internal batch)'
 }
 
-# auth-expiry markers (request bounced to the login page)
-$loginMarkers = @('login.action', 'os_username', 'loginform')
-
 # ---------- http ----------
 
 function Invoke-Page([string]$url) {
-    # returns the response HTML; throws 'AUTH_EXPIRED' if bounced to login
+    # returns the response HTML; throws 'AUTH_EXPIRED' only if the server
+    # REDIRECTED us to the login page (final URI contains login.action).
+    # NOTE: do NOT scan the body for 'os_username'/'loginform' — authenticated
+    # Confluence pages contain a hidden login form, so body scanning gives a
+    # false "auth rejected" on every valid page.
     $resp = Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing `
                               -TimeoutSec $timeoutS -MaximumRedirection 5
     $finalUri = ''
     try { $finalUri = $resp.BaseResponse.ResponseUri.AbsoluteUri } catch { }
-    $body = [string]$resp.Content
-    foreach ($m in $loginMarkers) {
-        if ($finalUri.ToLower().Contains($m) -or $body.ToLower().Contains($m)) {
-            throw 'AUTH_EXPIRED'
-        }
+    if ($finalUri.ToLower().Contains('login.action')) {
+        throw 'AUTH_EXPIRED'
     }
-    return $body
+    return [string]$resp.Content
 }
 
 # ---------- id discovery ----------
