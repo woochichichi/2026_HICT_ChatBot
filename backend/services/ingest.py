@@ -132,6 +132,8 @@ def build_metadata(blocks: list[Block], parsed: ParsedDocument) -> dict:
         "doc_id": parsed.doc_id,
         "block_type": first.block_type,
         "hierarchy_path": hp_json,
+        # 출처 클릭용 위키 URL (confluence_html이 meta에 설정, 없으면 빈 문자열)
+        "source_url": (parsed.meta or {}).get("source_url", ""),
     }
 
 

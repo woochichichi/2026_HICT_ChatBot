@@ -379,7 +379,21 @@ function SourcePanel({ sources }) {
           {sources.map((src, i) => (
             <div key={i} style={{ marginTop: i > 0 ? 6 : 0, lineHeight: 1.5 }}>
               <span style={{ fontWeight: 600, color: "#475569" }}>[{i + 1}]</span>{" "}
-              {src.title}
+              {/* url이 있으면 위키 페이지로 새 탭 이동, 없으면 일반 텍스트 */}
+              {src.url ? (
+                <a
+                  href={src.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#2563eb", textDecoration: "none" }}
+                  onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                  onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                >
+                  {src.title} ↗
+                </a>
+              ) : (
+                src.title
+              )}
               <span style={{ marginLeft: 6, fontSize: 11, color: "#94a3b8" }}>
                 ({(src.relevance_score * 100).toFixed(0)}%)
               </span>

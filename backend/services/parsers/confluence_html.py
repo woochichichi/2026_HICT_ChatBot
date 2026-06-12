@@ -20,9 +20,26 @@ import re
 
 from bs4 import BeautifulSoup, Tag
 
+from ...config import settings
 from ...models.parsed_document import Block, ParsedDocument
 
 logger = logging.getLogger(__name__)
+
+
+def _derive_source_url(source_id: str, url: str | None) -> str:
+    """출처 클릭용 위키 URL 복원 (api-spec.md 섹션 9).
+
+    - crawl 모드: 실제 viewpage URL이 들어옴 → 그대로 사용
+    - dir 모드: source_id가 'page_<pageId>.html' → pageId로 URL 재구성
+      (PowerShell 수집물 파일명이 page_<id>.html 규칙이라 복원 가능)
+    """
+    if url and url.lower().startswith("http"):
+        return url
+    m = re.search(r"(?:page_|pageId[:=])(\d{3,})", source_id)
+    if m:
+        base = (settings.WIKI_BASE_URL or "https://wiki.hanwhawm.com").rstrip("/")
+        return f"{base}/pages/viewpage.action?pageId={m.group(1)}"
+    return ""
 
 # Confluence 본문 영역 후보 셀렉터 — 위에서부터 먼저 매칭되는 것 사용.
 # view 화면(#main-content), storage/export(wiki-content), 일반 HTML(article/body) 순.
@@ -398,5 +415,7 @@ def parse_html(
             "table_count": table_count,
             # ingest.build_metadata가 출처 표시(source_document)에 사용
             "source_label": title or source_id,
+            # 출처 클릭 시 이동할 위키 URL (rag 결과 → 프론트 SourcePanel 링크)
+            "source_url": _derive_source_url(source_id, url),
         },
     )

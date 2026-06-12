@@ -149,6 +149,7 @@ class RAGService:
                 "source_document": meta.get("source_document", ""),
                 "source_page": meta.get("source_page", ""),
                 "category": meta.get("category", ""),
+                "source_url": meta.get("source_url", ""),
             })
         return results
 
@@ -233,6 +234,8 @@ class RAGService:
                 "title": f"{ctx['source_document']} {ctx['source_page']} {ctx['title']}".strip(),
                 "reference": f"{ctx['source_document']} {ctx['source_page']}",
                 "relevance_score": round(ctx["score"], 4),
+                # 출처 클릭 시 이동할 위키 URL (없으면 빈 문자열 → 프론트에서 일반 텍스트)
+                "url": ctx.get("source_url", ""),
             }
             for ctx in contexts
         ]
