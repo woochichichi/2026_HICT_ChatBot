@@ -37,7 +37,9 @@ param(
     [string]$ConfigPath = '',
     [string]$AuthValue,
     [switch]$Incremental,
-    [switch]$SkipCertCheck
+    [switch]$SkipCertCheck,
+    # use the logged-in Windows session instead of a cookie (NTLM/Kerberos/SSO)
+    [switch]$WindowsAuth
 )
 
 $ErrorActionPreference = 'Stop'
@@ -114,21 +116,46 @@ if ($baseUrl -eq '' -or $spaceKey -eq '') {
     throw 'BASE_URL and SPACE_KEY are required'
 }
 
-# --- auth header value: param > file > prompt ---
-if (-not $AuthValue) {
-    $authFile = Join-Path $scriptDir 'wiki_auth.txt'
-    if (Test-Path $authFile) {
-        $AuthValue = (Get-Content -Path $authFile -Raw -Encoding UTF8).Trim()
-    }
+# --- cookie extraction: accept a raw value, a "Copy as cURL" blob, or a
+#     "Copy request headers" blob, and pull the cookie out automatically ---
+function Extract-Cookie([string]$raw) {
+    if (-not $raw) { return '' }
+    # 1) curl: -H 'cookie: ...'  /  -H "cookie: ..."
+    $m = [regex]::Match($raw, "(?is)-H\s+['""]cookie:\s*(.+?)['""]")
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    # 2) curl: -b '...' / --cookie '...'
+    $m = [regex]::Match($raw, "(?is)(?:-b|--cookie)\s+['""](.+?)['""]")
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    # 3) request-headers blob: a line "Cookie: ..."
+    $m = [regex]::Match($raw, "(?im)^\s*cookie:\s*(.+)$")
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    # 4) otherwise assume the whole thing is the cookie value
+    return ($raw -replace "[\r\n]+", ' ').Trim()
 }
-if (-not $AuthValue) {
-    $AuthValue = Read-Host "Paste $authName header value"
-}
-if (-not $AuthValue) { throw 'auth header value is empty' }
 
-$headers = @{
-    $authName    = $AuthValue
-    'User-Agent' = 'wiki-fetch/1.0 (internal batch)'
+# --- authentication: Windows integrated session OR cookie/header ---
+$script:useDefaultCred = $false
+$headers = @{ 'User-Agent' = 'wiki-fetch/1.0 (internal batch)' }
+
+if ($WindowsAuth) {
+    $script:useDefaultCred = $true
+    Write-Host '[auth] using the logged-in Windows session (no cookie)'
+} else {
+    # value source: param > scripts\wiki_auth.txt (multi-line OK) > prompt
+    if (-not $AuthValue) {
+        $authFile = Join-Path $scriptDir 'wiki_auth.txt'
+        if (Test-Path $authFile) {
+            $AuthValue = (Get-Content -Path $authFile -Raw -Encoding UTF8)
+            Write-Host "[auth] read from $authFile"
+        }
+    }
+    if (-not $AuthValue) {
+        $AuthValue = Read-Host "Paste cookie value (or paste a full 'Copy as cURL')"
+    }
+    $cookie = Extract-Cookie $AuthValue
+    if (-not $cookie) { throw 'auth value is empty' }
+    $headers[$authName] = $cookie
+    Write-Host ("[auth] {0} header set ({1} chars)" -f $authName, $cookie.Length)
 }
 
 # ---------- http ----------
@@ -139,8 +166,12 @@ function Invoke-Page([string]$url) {
     # NOTE: do NOT scan the body for 'os_username'/'loginform' — authenticated
     # Confluence pages contain a hidden login form, so body scanning gives a
     # false "auth rejected" on every valid page.
-    $resp = Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing `
-                              -TimeoutSec $timeoutS -MaximumRedirection 5
+    $p = @{
+        Uri = $url; Headers = $headers; UseBasicParsing = $true
+        TimeoutSec = $timeoutS; MaximumRedirection = 5
+    }
+    if ($script:useDefaultCred) { $p['UseDefaultCredentials'] = $true }
+    $resp = Invoke-WebRequest @p
     $finalUri = ''
     try { $finalUri = $resp.BaseResponse.ResponseUri.AbsoluteUri } catch { }
     if ($finalUri.ToLower().Contains('login.action')) {
