@@ -10,6 +10,11 @@ rawdata/
 data/meta.db
 data/meta.db-*
 
+# 위키 배치 조회 산출물 + auth (절대 커밋 금지)
+scripts/wiki_auth.txt
+scripts/wiki_html/
+wiki_html/
+
 # Python
 __pycache__/
 *.pyc

@@ -3,6 +3,16 @@
 > api-spec.md 섹션 9의 운영 절차. 사내 위키(wiki.hanwhawm.com) BM001 공간을
 > 자동 수집해 ChromaDB에 증분 적재한다.
 
+## 실행 방식 선택
+
+| 회사 PC 환경 | 방식 | 산출물 |
+|--------------|------|--------|
+| Python 있음 | A. `sync_manual.py --source crawl` (아래 1~5번) | ChromaDB 직접 적재 |
+| **Python 없음/설치 불가** | **B. `wiki_fetch.ps1` (PowerShell 내장)** | HTML 폴더 → Python PC로 옮겨 `--source dir` 적재 |
+
+> 방식 B는 Windows 내장 PowerShell만 사용 — 설치/관리자권한/신규 바이너리 0.
+> 상세는 맨 아래 "방식 B" 섹션 참조. 아래 1~5번은 방식 A(Python) 기준.
+
 ## 0. 준비 (최초 1회) — 폐쇄망 zip 반입 방식
 
 > 회사에서 git/PyPI 접속이 안 되므로 zip 2개를 반입한다:
@@ -108,3 +118,59 @@ python scripts/test_accuracy.py --tag company-baseline
 | 429 한도 초과 반복 | 자동 재시도 됨. 일일 한도면 다음날 재실행 |
 | 페이지 트리 없음 폴백 경고 | `WIKI_PAGE_LIST_URL` 템플릿이 실제 목록 화면 URL과 다름 — 실제 URL로 수정 |
 | 그 외 에러 | docs/TROUBLESHOOTING.md 확인 후 기록 |
+
+---
+
+## 방식 B: PowerShell 조회 (Python 없는 회사 PC)
+
+Windows 내장 PowerShell만 사용. 설치·관리자권한·신규 바이너리 0.
+회사 PC에서는 HTML만 수집하고, 적재(파싱→임베딩→ChromaDB)는 Python 있는 PC에서 한다.
+
+### B-1. 회사 PC에서 HTML 수집
+
+반입 파일: `scripts/wiki_fetch.ps1`, `scripts/wiki_fetch.config.txt` (코드 zip에 포함)
+
+```
+# 1. 설정 확인 — scripts\wiki_fetch.config.txt 의 BASE_URL/SPACE_KEY/URL 템플릿
+#    (기본값이 wiki.hanwhawm.com / BM001 로 채워져 있음)
+
+# 2. auth header 값 준비 (셋 중 하나)
+#    - 실행 시 프롬프트에 붙여넣기 (가장 간단)
+#    - scripts\wiki_auth.txt 에 저장 (gitignore됨)
+#    - -AuthValue "..." 파라미터
+
+#    값 얻는 법: 브라우저 로그인 → F12 → Network 탭 → 아무 위키 요청 클릭
+#    → Request Headers 의 Cookie: 값 전체 복사
+
+# 3. 연결 테스트 겸 전체 수집
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\wiki_fetch.ps1
+
+#    → "rootPageId=23069356 -> walking full tree" 로그 확인
+#    → page_<id>.html 들이 scripts\wiki_html\ 에 저장됨
+#    → "auth header rejected" 나오면 쿠키 다시 복사
+
+# 매일 변경분만 (최근 업데이트 화면)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\wiki_fetch.ps1 -Incremental
+```
+
+> 사내 인증서 오류 시: 회사 CA가 Windows 신뢰저장소에 있으면 자동 통과됨.
+> 그래도 막히면 `-SkipCertCheck` (단, 신뢰 가능한 내부망에서만).
+
+### B-2. 수집한 HTML을 Python PC로 옮겨 적재
+
+`scripts\wiki_html\` 폴더를 Python 있는 PC로 복사 후:
+
+```bash
+python scripts/sync_manual.py --source dir --path scripts/wiki_html/
+```
+
+이후는 방식 A와 동일 (diff 적재 → ChromaDB). 정확도 측정도 동일하게 `test_accuracy.py`.
+
+### 방식 B 문제 해결
+
+| 증상 | 대응 |
+|------|------|
+| `auth header rejected` | 쿠키 만료 — 브라우저에서 재복사 |
+| `rootPageId not found` 경고 | config의 `ROOT_PAGE_ID=23069356` 직접 지정 |
+| 인증서 오류 | `-SkipCertCheck` (내부망 한정) |
+| 0 page(s) to fetch | URL 템플릿이 실제 화면과 다름 — config의 LIST_PATH/TREE_PATH 수정 |

@@ -1,0 +1,29 @@
+# Internal wiki batch-fetch config (used by scripts/wiki_fetch.ps1)
+# KEY=VALUE, lines starting with # are ignored.
+# This file holds NO secret. The auth header value is supplied separately
+# (-AuthValue param / scripts\wiki_auth.txt / runtime prompt).
+
+BASE_URL=https://wiki.hanwhawm.com
+SPACE_KEY=BM001
+
+# URL templates: {space} and {id} are substituted at runtime.
+# Adjust if the actual screen URLs differ.
+LIST_PATH=/collector/pages.action?key={space}
+RECENT_PATH=/pages/recentlyupdated.action?key={space}
+VIEW_PATH=/pages/viewpage.action?pageId={id}
+TREE_PATH=/plugins/pagetree/naturalchildren.action?decorator=none&excerpt=false&sort=position&reverse=false&disableLinks=false&expandCurrent=false
+
+# Auth header name (Cookie for session-based, or Authorization for token-based)
+AUTH_HEADER_NAME=Cookie
+
+# Output folder (consumed by: sync_manual.py --source dir --path <OUT_DIR>)
+OUT_DIR=.\wiki_html
+
+# Politeness / safety
+DELAY_MS=500
+MAX_PAGES=2000
+TIMEOUT_SEC=30
+
+# Optional: pin the space root page id to skip auto-detection.
+# (observed value for BM001: 23069356)
+ROOT_PAGE_ID=
