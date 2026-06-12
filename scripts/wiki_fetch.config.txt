@@ -17,7 +17,8 @@ TREE_PATH=/plugins/pagetree/naturalchildren.action?decorator=none&excerpt=false&
 AUTH_HEADER_NAME=Cookie
 
 # Output folder (consumed by: sync_manual.py --source dir --path <OUT_DIR>)
-OUT_DIR=.\wiki_html
+# Relative paths resolve against the scripts\ folder (not the current dir).
+OUT_DIR=wiki_html
 
 # Politeness / safety
 DELAY_MS=500
