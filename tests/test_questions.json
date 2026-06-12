@@ -179,5 +179,161 @@
         "ELW"
       ]
     }
+  },
+  {
+    "id": "q17",
+    "category": "매매",
+    "question": "K-OTC 시장에서 최초 매매 주문 전에 무엇을 등록해야 하나요?",
+    "expect": {
+      "doc_contains": "K-OTC",
+      "keywords": [
+        "투자자유의사항"
+      ]
+    }
+  },
+  {
+    "id": "q18",
+    "category": "매매",
+    "question": "미수동결계좌로 지정되면 며칠간 위탁증거금을 현금 100% 징수하나요?",
+    "expect": {
+      "doc_contains": "미수동결",
+      "keywords": [
+        "30일"
+      ]
+    }
+  },
+  {
+    "id": "q19",
+    "category": "매매",
+    "question": "한국거래소 정규시장 매매시간은 몇 시부터 몇 시까지인가요?",
+    "expect": {
+      "doc_contains": "매매",
+      "keywords": [
+        "09:00",
+        "15:30"
+      ]
+    }
+  },
+  {
+    "id": "q20",
+    "category": "매매",
+    "question": "시간외종가매매 거래시간은 언제인가요?",
+    "expect": {
+      "doc_contains": "매매",
+      "keywords": [
+        "08:30~08:40"
+      ]
+    }
+  },
+  {
+    "id": "q21",
+    "category": "ELW",
+    "question": "ELW 결제는 며칠 결제인가요?",
+    "expect": {
+      "doc_contains": "ELW",
+      "keywords": [
+        "3일"
+      ]
+    }
+  },
+  {
+    "id": "q22",
+    "category": "ELW",
+    "question": "전화로 ELW 거래신청을 하면 거래설명서는 어떻게 받게 되나요?",
+    "expect": {
+      "doc_contains": "ELW",
+      "keywords": [
+        "SMS",
+        "URL"
+      ]
+    }
+  },
+  {
+    "id": "q23",
+    "category": "ELW",
+    "question": "조기종료 ELW에서 조기종료 조건을 뭐라고 부르나요?",
+    "expect": {
+      "doc_contains": "조기종료",
+      "keywords": [
+        "Knock-Out"
+      ]
+    }
+  },
+  {
+    "id": "q24",
+    "category": "서비스",
+    "question": "홈페이지 ID는 몇 자리로 만들 수 있나요?",
+    "expect": {
+      "doc_contains": "ID관리",
+      "keywords": [
+        "6~10자리"
+      ]
+    }
+  },
+  {
+    "id": "q25",
+    "category": "매매",
+    "question": "주식단주매매 업무는 언제 폐지되었나요?",
+    "expect": {
+      "doc_contains": "단주매매",
+      "keywords": [
+        "2014.6.2"
+      ]
+    }
+  },
+  {
+    "id": "q26",
+    "category": "서비스",
+    "question": "스마트 월지급식 서비스 1개에 펀드를 몇 개까지 등록할 수 있나요?",
+    "expect": {
+      "doc_contains": "월지급식",
+      "keywords": [
+        "50개"
+      ]
+    }
+  },
+  {
+    "id": "q27",
+    "category": "출납",
+    "question": "고액현금 거래보고제도를 영문 약자로 뭐라고 하나요?",
+    "expect": {
+      "doc_contains": "고액현금",
+      "keywords": [
+        "CTR"
+      ]
+    }
+  },
+  {
+    "id": "q28",
+    "category": "매매",
+    "question": "미국 영주권자는 해외주식 계좌 개설에 제한이 있나요?",
+    "expect": {
+      "doc_contains": "해외주식",
+      "keywords": [
+        "미국 영주권자"
+      ]
+    }
+  },
+  {
+    "id": "q29",
+    "category": "서비스",
+    "question": "제증명서 발급 업무 화면(TR) 번호는 무엇인가요?",
+    "expect": {
+      "doc_contains": "제증명서",
+      "keywords": [
+        "11181"
+      ]
+    }
+  },
+  {
+    "id": "q30",
+    "category": "서비스",
+    "question": "주식담보대출 약정 화면(TR) 번호는 무엇인가요?",
+    "expect": {
+      "doc_contains": "대출",
+      "keywords": [
+        "11124"
+      ]
+    }
   }
 ]

@@ -41,7 +41,10 @@ class LocalHtmlConnector(SourceConnector):
             rel = p.relative_to(self.root).as_posix()
             yield RawDocument(
                 source_id=rel,
-                title=p.stem,  # 파서가 <title>로 덮어쓸 수 있음
+                # title=None: 파서가 HTML <title>에서 실제 페이지 제목 추출.
+                # 파일명(page_<id>)을 넘기면 파서가 추출을 건너뛰어 출처가
+                # 파일명으로 표시되는 버그가 있었음 (2026-06-12)
+                title=None,
                 html=html,
                 url=None,
             )
