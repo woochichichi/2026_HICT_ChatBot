@@ -18,7 +18,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from ..services.embedder import GeminiService
+from ..services.embedder import make_llm
 from ..services.rag import RAGService
 
 logger = logging.getLogger(__name__)
@@ -56,9 +56,9 @@ async def chat(request: ChatRequest):
 
     async def event_stream():
         try:
-            # RAGService 생성 — GeminiService를 LLM으로 사용
-            # embedder.py의 LLMService 추상화를 통해 모델 교체 가능
-            rag = RAGService(llm=GeminiService())
+            # RAGService 생성 — make_llm()이 설정(EMBEDDING_PROVIDER)에 따라
+            # GeminiService 또는 LocalEmbeddingService 반환 (모델 교체 추상화)
+            rag = RAGService(llm=make_llm())
 
             # 1. RAG 검색 — rag.py의 search()가 Max Pooling + 가중 병합 수행
             contexts = await rag.search(request.question)

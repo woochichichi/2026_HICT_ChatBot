@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.config import settings
-from backend.services.embedder import GeminiService
+from backend.services.embedder import make_llm
 from backend.services.rag import RAGService
 
 logging.basicConfig(level=logging.WARNING)  # 진행 출력은 print로 깔끔하게
@@ -86,7 +86,7 @@ def _judge_answer(answer: str, expect: dict) -> dict:
 
 async def run(args: argparse.Namespace) -> None:
     questions = _load_questions()
-    rag = RAGService(GeminiService())
+    rag = RAGService(make_llm())
 
     n = len(questions)
     print(f"질문 {n}건 | top_k={args.top_k} | 답변 생성={'ON' if args.answers else 'OFF'}")

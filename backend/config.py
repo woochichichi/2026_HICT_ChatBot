@@ -27,6 +27,12 @@ class Settings:
     GOOGLE_CHAT_MODEL: str = os.getenv("GOOGLE_CHAT_MODEL", "gemini-2.5-flash")
     GOOGLE_EMBEDDING_MODEL: str = os.getenv("GOOGLE_EMBEDDING_MODEL", "gemini-embedding-001")
 
+    # 임베딩 제공자 (api-spec.md 섹션 4) — gemini | local
+    # local: sentence-transformers 로컬 모델(무제한·무료·오프라인, 폐쇄망 실도입).
+    #        답변 생성은 그대로 Gemini(별도 쿼터) 위임.
+    EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
+    LOCAL_EMBEDDING_MODEL: str = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-m3")
+
     # OpenAI (백업)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")

@@ -155,6 +155,76 @@ class GeminiService(LLMService):
         return resp.total_tokens
 
 
+class LocalEmbeddingService(LLMService):
+    """로컬 임베딩(sentence-transformers) + Gemini 생성 하이브리드 (api-spec.md 섹션 4).
+
+    임베딩만 로컬 모델로 → 무제한·무료·오프라인(폐쇄망 실도입 정답, Gemini 일일 한도 회피).
+    답변 생성은 임베딩과 별도 쿼터인 Gemini에 위임 (생성 한도는 넉넉).
+
+    모델은 클래스 레벨에 1회 로드(캐시)되어 프로세스 내 재사용.
+    """
+
+    _model = None  # 클래스 캐시 — 모델 1회 로드
+
+    def __init__(self) -> None:
+        self._gemini = GeminiService()  # generate/generate_stream 위임용
+        self._model_name = settings.LOCAL_EMBEDDING_MODEL
+
+    def _get_model(self):
+        if LocalEmbeddingService._model is None:
+            from sentence_transformers import SentenceTransformer
+
+            logger.info("로컬 임베딩 모델 로드 중: %s (최초 1회)", self._model_name)
+            LocalEmbeddingService._model = SentenceTransformer(self._model_name)
+        return LocalEmbeddingService._model
+
+    async def embed(self, texts: list[str]) -> list[list[float]]:
+        model = self._get_model()
+        # encode는 CPU 바운드 → to_thread로 이벤트루프 블로킹 방지.
+        # normalize=True → ChromaDB cosine 공간과 정합 (bge-m3 권장)
+        vectors = await asyncio.to_thread(
+            lambda: model.encode(
+                texts, normalize_embeddings=True, batch_size=16,
+                show_progress_bar=False,
+            )
+        )
+        return [v.tolist() for v in vectors]
+
+    async def generate(
+        self,
+        messages: list,
+        temperature: float = 0.1,
+        response_format: dict | None = None,
+    ) -> str:
+        return await self._gemini.generate(messages, temperature, response_format)
+
+    async def generate_stream(
+        self,
+        messages: list,
+        temperature: float = 0.1,
+    ) -> AsyncIterator[str]:
+        async for tok in self._gemini.generate_stream(messages, temperature):
+            yield tok
+
+    def count_tokens(self, text: str) -> int:
+        # 인제스트는 별도 휴리스틱을 쓰므로 근사값으로 충분
+        return max(1, len(text) // 2)
+
+
+def make_llm() -> LLMService:
+    """설정에 따라 임베딩 제공자 선택 (api-spec.md 섹션 4).
+
+    EMBEDDING_PROVIDER=local → LocalEmbeddingService (임베딩 로컬 + 생성 Gemini)
+    그 외(기본)             → GeminiService
+
+    이 팩토리를 사용하는 곳: scripts/sync_manual.py, scripts/test_accuracy.py,
+    routers/chat.py — 한 곳에서 제공자를 갈아끼우기 위함.
+    """
+    if settings.EMBEDDING_PROVIDER.lower() == "local":
+        return LocalEmbeddingService()
+    return GeminiService()
+
+
 class OpenAIService(LLMService):
     """OpenAI 구현체. (백업용 보관)"""
 

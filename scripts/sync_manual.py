@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.config import settings
 from backend.services.connectors.base import SourceConnector
 from backend.services.connectors.local_html import LocalHtmlConnector
-from backend.services.embedder import GeminiService
+from backend.services.embedder import make_llm
 from backend.services.ingest import delete_document_chunks, sync_document
 from backend.services.parsers.confluence_html import parse_html
 from backend.services.rag import get_chroma_client, init_collections
@@ -74,7 +74,7 @@ async def run(args: argparse.Namespace) -> None:
     started_at = now_iso()
     connector = _build_connector(args)
 
-    llm = GeminiService()
+    llm = make_llm()
     client = get_chroma_client()
     titles_col, contents_col = init_collections(client)
     meta = MetaStore(args.meta_db)

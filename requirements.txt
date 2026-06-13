@@ -27,5 +27,10 @@ httpx>=0.27.0
 # 네이티브 모델 로딩 실패+세그폴트로 제외 (TROUBLESHOOTING.md 2026-06-11)
 rank_bm25>=0.2.2
 
+# 로컬 임베딩 (api-spec.md 섹션 4) — EMBEDDING_PROVIDER=local 일 때.
+# 무제한·무료·오프라인(폐쇄망 실도입). torch는 CPU 버전 권장:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers>=3.0.0
+
 # 테스트
 pytest>=8.0.0
