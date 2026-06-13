@@ -17,6 +17,16 @@
 
 ---
 
+## 2026-06-13 | Gemini 답변 생성도 무료 일일 한도(20/일)로 측정 중단 → 로컬 임베딩 전환
+
+- **증상**: 로컬 임베딩(bge-m3)으로 검색은 무제한이 됐으나, 30문항 답변 측정이 ~20번째에서 `429 ... generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash`로 중단. `gemini-2.0-flash`도 429, `gemini-1.5-flash`는 404(단종)
+- **원인**: 무료 티어는 **임베딩 1000/일 + 생성(gemini-2.5-flash) 20/일** 두 한도가 별도로 존재. 생성 20/일은 30문항 답변 측정에 부족
+- **해결**:
+  - 임베딩: `EMBEDDING_PROVIDER=local`(sentence-transformers bge-m3)로 전환 → 무제한·무료·오프라인. 50페이지 1281청크를 한 번에 적재(한도 0). 답변 생성은 별도 쿼터인 Gemini 위임
+  - 채점: 키워드 정확매칭이 패러프레이즈 정답을 0%로 오채점 → 공백 무시 매칭 + `--judge`(LLM 의미채점, 1회 배치 호출) 추가
+  - 측정 결과(bge-m3, 30문항/50페이지): hit@1=70%, **hit@3=100%, hit@5=100%**, MRR=0.839. 검색 정확도 손해 없음 확인
+- **교훈**: 무료 Gemini는 PoC 측정·데모엔 쓰되, **임베딩은 로컬 모델이 정답**(한도·폐쇄망 동시 해결). 답변 생성까지 대량 측정하려면 유료 또는 로컬 LLM 필요. 키워드 채점은 의미를 못 잡으니 LLM 판정 병행
+
 ## 2026-06-12 | Gemini 임베딩 일일 한도(1000/일)로 대량 적재 중단
 
 - **증상**: 50페이지(1281청크) 적재 중 489청크에서 `429 ... EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier, quotaValue: 1000`로 중단

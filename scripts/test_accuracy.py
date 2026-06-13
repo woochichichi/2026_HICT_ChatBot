@@ -23,6 +23,7 @@ import argparse
 import asyncio
 import json
 import logging
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -70,18 +71,66 @@ def _judge_retrieval(results: list[dict], expect: dict) -> dict:
     return {"keyword_rank": keyword_rank, "doc_rank": doc_rank}
 
 
+def _norm(s: str) -> str:
+    """공백 제거 정규화 — '자동 부여' vs '자동부여' 같은 띄어쓰기 차이 흡수."""
+    return re.sub(r"\s+", "", s)
+
+
 def _judge_answer(answer: str, expect: dict) -> dict:
-    """답변 판정 — 정답 키워드 포함률 (간이 휴리스틱, 최종 판단은 사람이 리뷰)."""
+    """답변 키워드 채점 (공백 무시). 키워드 중 하나라도 들어가면 매칭.
+
+    한계: '삭제 불가' vs '삭제할 수 없습니다'처럼 표현이 다르면(패러프레이즈)
+    못 잡음 → 의미 채점은 --judge(LLM 판정)로. 이건 무료(생성 0) 빠른 추정치.
+    """
     keywords = expect.get("keywords", [])
     if not keywords:
         return {"matched": [], "missed": [], "rate": None}
-    matched = [k for k in keywords if k in answer]
-    missed = [k for k in keywords if k not in answer]
+    ans = _norm(answer)
+    matched = [k for k in keywords if _norm(k) in ans]
+    missed = [k for k in keywords if _norm(k) not in ans]
     return {
         "matched": matched,
         "missed": missed,
-        "rate": len(matched) / len(keywords),
+        # 키워드는 "정답의 단서" — 하나라도 맞으면 1(정답 단서 포함)로 본다
+        "rate": 1.0 if matched else 0.0,
     }
+
+
+async def _llm_judge(rag: RAGService, details: list[dict]) -> dict:
+    """LLM 의미 채점 (정답/오답) — 답변 생성 후 1회 배치 호출로 전 문항 판정.
+
+    키워드 매칭이 못 잡는 패러프레이즈 정답을 의미로 채점한다.
+    생성 쿼터 절약 위해 전 문항을 한 프롬프트에 묶어 1회만 호출.
+    반환: {question_id: bool}
+    """
+    items = []
+    for d in details:
+        if "answer" not in d:
+            continue
+        kw = ", ".join(d.get("_keywords", []))
+        items.append(
+            f'[{d["id"]}]\n질문: {d["question"]}\n'
+            f'기대 사실(키워드): {kw}\n답변: {d["answer"]}'
+        )
+    if not items:
+        return {}
+
+    prompt = (
+        "다음 각 항목에서 '답변'이 '기대 사실'을 올바르게 담고 있으면 true, "
+        "아니면 false로 판정하세요. 표현이 달라도 의미가 맞으면 true입니다.\n"
+        "반드시 JSON만 출력: {\"q01\": true, \"q02\": false, ...}\n\n"
+        + "\n\n".join(items)
+    )
+    raw = await rag.llm.generate(
+        [{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"},
+    )
+    try:
+        cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```")
+        return json.loads(cleaned)
+    except Exception:
+        logger.warning("LLM 판정 JSON 파싱 실패")
+        return {}
 
 
 async def run(args: argparse.Namespace) -> None:
@@ -110,6 +159,7 @@ async def run(args: argparse.Namespace) -> None:
             row["confidence"] = gen["confidence"]
             row["answer"] = gen["answer"]
             row["answer_judge"] = _judge_answer(gen["answer"], q["expect"])
+            row["_keywords"] = q["expect"].get("keywords", [])  # LLM 판정용
 
         details.append(row)
 
@@ -149,11 +199,26 @@ async def run(args: argparse.Namespace) -> None:
             round(sum(rates) / len(rates), 4) if rates else None
         )
 
+    # --- LLM 의미 채점 (--judge) — 키워드가 못 잡는 패러프레이즈 정답 보정 ---
+    if args.answers and args.judge:
+        verdicts = await _llm_judge(rag, details)
+        correct = 0
+        judged = 0
+        for d in details:
+            v = verdicts.get(d["id"])
+            if v is not None:
+                d["llm_correct"] = bool(v)
+                judged += 1
+                correct += 1 if v else 0
+        summary["answer_llm_rate"] = round(correct / judged, 4) if judged else None
+
     print("=" * 78)
     print(f"검색:  hit@1={summary['hit@1']:.0%}  hit@3={summary['hit@3']:.0%}"
           f"  hit@5={summary['hit@5']:.0%}  MRR={summary['mrr']:.3f}  (n={n})")
     if args.answers and summary.get("answer_keyword_rate") is not None:
-        print(f"답변:  키워드 포함률={summary['answer_keyword_rate']:.0%}")
+        print(f"답변(키워드):  {summary['answer_keyword_rate']:.0%}")
+    if args.answers and args.judge and summary.get("answer_llm_rate") is not None:
+        print(f"답변(LLM 의미채점):  {summary['answer_llm_rate']:.0%}")
 
     # --- 리포트 저장 (베이스라인 vs 개선 비교용) ---
     EVAL_DIR.mkdir(parents=True, exist_ok=True)
@@ -179,6 +244,11 @@ def main():
     parser.add_argument(
         "--answers", action="store_true",
         help="LLM 답변 생성까지 측정 (호출 비용 추가)",
+    )
+    parser.add_argument(
+        "--judge", action="store_true",
+        help="답변을 LLM이 의미로 채점 (--answers 필요, 생성 1회 추가). "
+             "키워드 매칭이 못 잡는 패러프레이즈 정답 보정",
     )
     parser.add_argument(
         "--tag", default="baseline",
