@@ -1,0 +1,257 @@
+{
+  "timestamp": "2026-06-13T09:57:53",
+  "tag": "bge_m3_search",
+  "top_k": 5,
+  "title_weight": 0.5,
+  "content_weight": 0.5,
+  "with_answers": false,
+  "summary": {
+    "n": 30,
+    "hit@1": 0.7,
+    "hit@3": 1.0,
+    "hit@5": 1.0,
+    "mrr": 0.8389
+  },
+  "details": [
+    {
+      "id": "q01",
+      "category": "고객번호",
+      "question": "고객번호는 몇 자리로 구성되나요?",
+      "top_score": 0.5818,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q02",
+      "category": "고객번호",
+      "question": "고객번호를 변경하거나 삭제할 수 있나요?",
+      "top_score": 0.6564,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q03",
+      "category": "고객번호",
+      "question": "고객번호는 언제 부여되나요?",
+      "top_score": 0.6444,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q04",
+      "category": "고객구분",
+      "question": "법인이 금융법인인지 아닌지 어디서 확인할 수 있나요?",
+      "top_score": 0.5914,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q05",
+      "category": "고객구분",
+      "question": "집합투자업자(운용사)는 어떤 법인으로 분류되나요?",
+      "top_score": 0.3739,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q06",
+      "category": "고객구분",
+      "question": "투자일임사는 일반법인인가요 금융법인인가요?",
+      "top_score": 0.6735,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q07",
+      "category": "고객구분",
+      "question": "면세(비과세)법인에는 어떤 곳들이 있나요?",
+      "top_score": 0.7673,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q08",
+      "category": "고객구분",
+      "question": "일반법인은 사업자등록증 분류코드 몇 번대인가요?",
+      "top_score": 0.587,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q09",
+      "category": "고객구분",
+      "question": "가망고객이란 무엇인가요?",
+      "top_score": 0.7641,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q10",
+      "category": "고객구분",
+      "question": "개인 고객에 동창회 같은 임의단체도 포함되나요?",
+      "top_score": 0.3021,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q11",
+      "category": "고객구분",
+      "question": "금융법인의 채권이자에 대한 원천징수는 어떻게 처리하나요?",
+      "top_score": 0.3463,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q12",
+      "category": "FAQ",
+      "question": "대습상속인이 누구인지에 대한 FAQ가 있나요?",
+      "top_score": 0.5951,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q13",
+      "category": "매매",
+      "question": "미수동결계좌 제도는 어느 매뉴얼에서 볼 수 있나요?",
+      "top_score": 0.6453,
+      "keyword_rank": 1,
+      "doc_rank": null
+    },
+    {
+      "id": "q14",
+      "category": "FAQ",
+      "question": "스마트 OTP인지 어떻게 확인하는지 알려주세요.",
+      "top_score": 0.414,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q15",
+      "category": "매매",
+      "question": "K-OTC 시장 매매 관련 내용은 어디에 있나요?",
+      "top_score": 0.6672,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q16",
+      "category": "매매",
+      "question": "ELW 매매는 어느 편람 섹션에 있나요?",
+      "top_score": 0.615,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q17",
+      "category": "매매",
+      "question": "K-OTC 시장에서 최초 매매 주문 전에 무엇을 등록해야 하나요?",
+      "top_score": 0.3589,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q18",
+      "category": "매매",
+      "question": "미수동결계좌로 지정되면 며칠간 위탁증거금을 현금 100% 징수하나요?",
+      "top_score": 0.7786,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q19",
+      "category": "매매",
+      "question": "한국거래소 정규시장 매매시간은 몇 시부터 몇 시까지인가요?",
+      "top_score": 0.7338,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q20",
+      "category": "매매",
+      "question": "시간외종가매매 거래시간은 언제인가요?",
+      "top_score": 0.7788,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q21",
+      "category": "ELW",
+      "question": "ELW 결제는 며칠 결제인가요?",
+      "top_score": 0.617,
+      "keyword_rank": 3,
+      "doc_rank": 1
+    },
+    {
+      "id": "q22",
+      "category": "ELW",
+      "question": "전화로 ELW 거래신청을 하면 거래설명서는 어떻게 받게 되나요?",
+      "top_score": 0.6907,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q23",
+      "category": "ELW",
+      "question": "조기종료 ELW에서 조기종료 조건을 뭐라고 부르나요?",
+      "top_score": 0.7385,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q24",
+      "category": "서비스",
+      "question": "홈페이지 ID는 몇 자리로 만들 수 있나요?",
+      "top_score": 0.557,
+      "keyword_rank": 2,
+      "doc_rank": 1
+    },
+    {
+      "id": "q25",
+      "category": "매매",
+      "question": "주식단주매매 업무는 언제 폐지되었나요?",
+      "top_score": 0.5783,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q26",
+      "category": "서비스",
+      "question": "스마트 월지급식 서비스 1개에 펀드를 몇 개까지 등록할 수 있나요?",
+      "top_score": 0.7013,
+      "keyword_rank": 3,
+      "doc_rank": 1
+    },
+    {
+      "id": "q27",
+      "category": "출납",
+      "question": "고액현금 거래보고제도를 영문 약자로 뭐라고 하나요?",
+      "top_score": 0.6828,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q28",
+      "category": "매매",
+      "question": "미국 영주권자는 해외주식 계좌 개설에 제한이 있나요?",
+      "top_score": 0.3033,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q29",
+      "category": "서비스",
+      "question": "제증명서 발급 업무 화면(TR) 번호는 무엇인가요?",
+      "top_score": 0.6167,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    },
+    {
+      "id": "q30",
+      "category": "서비스",
+      "question": "주식담보대출 약정 화면(TR) 번호는 무엇인가요?",
+      "top_score": 0.3062,
+      "keyword_rank": 1,
+      "doc_rank": 1
+    }
+  ]
+}
