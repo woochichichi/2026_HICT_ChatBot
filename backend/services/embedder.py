@@ -1,10 +1,33 @@
 """LLM 서비스 추상화 — 모델 전환 대비 (api-spec.md 섹션 4)."""
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import AsyncIterator
 
 from ..config import settings
+
+logger = logging.getLogger(__name__)
+
+
+async def _with_retry(fn, *, what: str, retries: int = 4, base_delay: float = 5.0):
+    """일시적 오류(429 한도, 503 과부하)만 지수 백오프 재시도.
+
+    검색·답변 생성 중 Gemini의 순간 과부하(503)나 분당 한도(429)로
+    파이프라인이 통째 죽는 것을 방지 (api-spec.md 섹션 4). 그 외 오류는 즉시 전파.
+    """
+    delay = base_delay
+    for attempt in range(retries + 1):
+        try:
+            return await asyncio.to_thread(fn)
+        except Exception as e:
+            msg = str(e)
+            transient = "429" in msg or "RESOURCE_EXHAUSTED" in msg or "503" in msg or "UNAVAILABLE" in msg
+            if not transient or attempt == retries:
+                raise
+            logger.warning("%s 일시 오류 — %.0f초 후 재시도 (%d/%d)", what, delay, attempt + 1, retries)
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, 60.0)
 
 
 class LLMService(ABC):
@@ -83,11 +106,13 @@ class GeminiService(LLMService):
         if response_format and response_format.get("type") == "json_object":
             config.response_mime_type = "application/json"
 
-        resp = await asyncio.to_thread(
-            self._client.models.generate_content,
-            model=self._chat_model,
-            contents=contents,
-            config=config,
+        resp = await _with_retry(
+            lambda: self._client.models.generate_content(
+                model=self._chat_model,
+                contents=contents,
+                config=config,
+            ),
+            what="답변 생성",
         )
         return resp.text or ""
 
@@ -114,10 +139,12 @@ class GeminiService(LLMService):
                 yield chunk.text
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
-        resp = await asyncio.to_thread(
-            self._client.models.embed_content,
-            model=self._embedding_model,
-            contents=texts,
+        resp = await _with_retry(
+            lambda: self._client.models.embed_content(
+                model=self._embedding_model,
+                contents=texts,
+            ),
+            what="임베딩",
         )
         return [e.values for e in resp.embeddings]
 
