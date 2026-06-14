@@ -135,6 +135,10 @@ async def _llm_judge(rag: RAGService, details: list[dict]) -> dict:
 
 async def run(args: argparse.Namespace) -> None:
     questions = _load_questions()
+    if args.limit:
+        # 생성 무료 한도(20/일) 대응 — 일부만 측정. 카테고리 분산 위해 균등 샘플
+        step = max(1, len(questions) // args.limit)
+        questions = questions[::step][: args.limit]
     rag = RAGService(make_llm())
 
     n = len(questions)
@@ -249,6 +253,10 @@ def main():
         "--judge", action="store_true",
         help="답변을 LLM이 의미로 채점 (--answers 필요, 생성 1회 추가). "
              "키워드 매칭이 못 잡는 패러프레이즈 정답 보정",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=0,
+        help="측정 문항 수 제한 (생성 무료 한도 대응, 카테고리 균등 샘플)",
     )
     parser.add_argument(
         "--tag", default="baseline",

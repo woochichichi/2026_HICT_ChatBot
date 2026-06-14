@@ -15,6 +15,12 @@ scripts/wiki_auth.txt
 scripts/wiki_html/
 wiki_html/
 
+# 작업 중 생긴 임시·정크 (커밋 제외)
+KakaoTalk_*.jpg
+docs/presentation/_t*.html
+tmp_ps_out/
+scripts/_*.py
+
 # Python
 __pycache__/
 *.pyc

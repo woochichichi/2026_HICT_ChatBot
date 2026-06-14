@@ -9,7 +9,6 @@ const DIFFICULTY_LABELS = {
 
 export default function TrainingScreen() {
   const [difficulty, setDifficulty] = useState("beginner");
-  const [category, setCategory] = useState("");
   const [isDemo, setIsDemo] = useState(true);
   const [questionData, setQuestionData] = useState(null);
   const [solvedContentIds, setSolvedContentIds] = useState([]);
@@ -29,7 +28,6 @@ export default function TrainingScreen() {
     try {
       const data = await fetchQuestion({
         difficulty,
-        category,
         solvedContentIds,
         isDemo,
       });
@@ -96,22 +94,6 @@ export default function TrainingScreen() {
               <option value="intermediate">중급</option>
               <option value="advanced">고급</option>
             </select>
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 14, color: "#64748b" }}>카테고리</span>
-            <input
-              type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="계좌, 매매 등"
-              style={{
-                padding: "6px 10px",
-                borderRadius: 6,
-                border: "1px solid #e2e8f0",
-                fontSize: 14,
-                width: 160,
-              }}
-            />
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
@@ -309,7 +291,7 @@ export default function TrainingScreen() {
 
       {!questionData && !loading && (
         <p style={{ color: "#94a3b8", fontSize: 14 }}>
-          위에서 난이도와 카테고리를 선택한 뒤 "새 질문"을 눌러 시작하세요.
+          위에서 난이도를 선택한 뒤 "새 질문"을 눌러 시작하세요.
         </p>
       )}
     </section>
