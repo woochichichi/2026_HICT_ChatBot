@@ -1,6 +1,11 @@
 # 환경변수
 .env
 
+# 시연 번들 (ChromaDB + .env 포함 - API 키 들어있어 절대 커밋 금지)
+demo_bundle/
+demo_bundle.zip
+_bundle_tmp/
+
 # 데이터 (고객사 문서 보호)
 data/raw/*
 data/chroma_db/*
