@@ -49,6 +49,25 @@ class Settings:
     CONTENT_WEIGHT: float = float(os.getenv("CONTENT_WEIGHT", "0.5"))
     TOP_K: int = int(os.getenv("TOP_K", "5"))
 
+    # confidence 뱃지 임계값 (api-spec.md 섹션 1·3) — top 벡터 유사도 기준.
+    # bge-m3(1024) 재보정값: 정답 1위 케이스 점수가 0.30~0.78에 분포(최댓값 0.78)해
+    # 기존 Gemini 기준 0.85/0.70이면 high가 절대 안 뜨고 대부분 low로 깔림.
+    # 측정(data/eval/accuracy_bge_m3_search_..., 30문항): 0.70↑ 9건 / 0.50~0.70 14건 / 0.50↓ 7건.
+    # provider 교체 시(임베딩 점수 스케일이 달라짐) 이 값 재튜닝 필요 → 환경변수로 분리.
+    CONFIDENCE_HIGH_THRESHOLD: float = float(os.getenv("CONFIDENCE_HIGH_THRESHOLD", "0.70"))
+    CONFIDENCE_MEDIUM_THRESHOLD: float = float(os.getenv("CONFIDENCE_MEDIUM_THRESHOLD", "0.50"))
+
+    # 페이지당 top_k 청크 캡 (api-spec.md 섹션 3: 답변 품질) — 같은 위키 페이지의
+    # 여러 청크가 top_k를 독식(예: 배당옵션 FAQ 4청크)하는 것 방지. 출처 도배 해소 +
+    # LLM 컨텍스트 다양성↑. 1이면 페이지당 최고 점수 1청크만 → 출처가 페이지 단위로 유일.
+    # citation [n]이 컨텍스트 순번과 1:1이므로, 캡>1이면 출처 목록에 동일 페이지가
+    # 다시 보일 수 있음(번호 정합은 유지). 기본 1.
+    PER_PAGE_CHUNK_CAP: int = int(os.getenv("PER_PAGE_CHUNK_CAP", "1"))
+
+    # 검색 쿼리 동의어 확장 (api-spec.md 섹션 3) — "미국 주식"→"해외주식" 등
+    # 명시적 false로 끌 수 있음(정확도 A/B 테스트용). 기본 on.
+    QUERY_EXPANSION_ENABLED: bool = os.getenv("QUERY_EXPANSION_ENABLED", "true").lower() == "true"
+
     # Hybrid Search (api-spec.md 섹션 10) — BM25 키워드 + 벡터 RRF 융합
     HYBRID_ENABLED: bool = os.getenv("HYBRID_ENABLED", "true").lower() == "true"
     RRF_K: int = int(os.getenv("RRF_K", "60"))            # RRF 평탄화 상수 (표준값 60)

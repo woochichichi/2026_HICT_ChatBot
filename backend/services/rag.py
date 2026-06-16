@@ -69,7 +69,16 @@ class RAGService:
     async def search(self, query: str, top_k: int | None = None) -> list[dict]:
         """제목+내용 컬렉션에서 검색 후 점수 병합."""
         top_k = top_k or settings.TOP_K
-        query_emb = (await self.llm.embed([query]))[0]
+
+        # 동의어 확장 (api-spec.md 섹션 3) — "미국 주식"이 "해외주식" 문서를 못 찾는
+        # 동의어 미스 보완. 임베딩·BM25에 쓰는 검색 쿼리만 확장하고, LLM에 가는
+        # 사용자 질문 원문(chat.py의 user 메시지)은 그대로 둔다. query_expand.py 참조.
+        search_query = query
+        if settings.QUERY_EXPANSION_ENABLED:
+            from .query_expand import expand_query
+            search_query = expand_query(query)
+
+        query_emb = (await self.llm.embed([search_query]))[0]
 
         # 1. faq_titles 쿼리
         title_results = self.titles_col.query(
@@ -113,8 +122,9 @@ class RAGService:
         #     (confidence 임계값 0.85/0.70이 벡터 점수 기준이므로 섞으면 안 됨)
         #   - 벡터에 없고 BM25에만 잡힌 청크는 score=0.0으로 포함
         if self.keyword_index is not None:
+            # 동의어 확장된 쿼리로 키워드 검색 — 벡터와 동일 기준 (search_query)
             bm25_ranked = self.keyword_index.search(
-                query, top_n=settings.KEYWORD_TOP_N,
+                search_query, top_n=settings.KEYWORD_TOP_N,
             )
             k = settings.RRF_K
             rrf: dict[str, float] = {}
@@ -130,9 +140,16 @@ class RAGService:
                 for cid, _ in ordered
             ]
 
-        # 5. 상위 top_k건에 메타데이터 부착
+        # 5. 페이지 중복 억제 + 상위 top_k건에 메타데이터 부착 (api-spec.md 섹션 3)
+        #    같은 위키 페이지의 여러 청크가 top_k를 독식하면(예: 배당옵션 FAQ 4청크)
+        #    출처가 한 문서로 도배되고 LLM 컨텍스트 다양성도 떨어진다.
+        #    → 페이지당 최대 PER_PAGE_CHUNK_CAP개만 채택하고, 점수순으로 다른 페이지에
+        #      자리를 양보. 컨텍스트 단계에서 줄여야 citation [n] ↔ 출처 순번 1:1이 유지됨.
         results = []
-        for item in merged[:top_k]:
+        page_count: dict[str, int] = {}
+        for item in merged:
+            if len(results) >= top_k:
+                break
             doc_id = item["id"]
             doc = self.contents_col.get(ids=[doc_id], include=["documents", "metadatas"])
             title_doc = self.titles_col.get(ids=[doc_id], include=["documents"])
@@ -140,6 +157,16 @@ class RAGService:
             content = doc["documents"][0] if doc["documents"] else ""
             meta = doc["metadatas"][0] if doc["metadatas"] else {}
             title = title_doc["documents"][0] if title_doc["documents"] else ""
+
+            # 페이지 식별자: 위키 URL 우선 → 문서|페이지 → 최후 doc_id
+            page_key = (
+                meta.get("source_url")
+                or f"{meta.get('source_document', '')}|{meta.get('source_page', '')}".strip("|")
+                or doc_id
+            )
+            if page_count.get(page_key, 0) >= settings.PER_PAGE_CHUNK_CAP:
+                continue
+            page_count[page_key] = page_count.get(page_key, 0) + 1
 
             results.append({
                 "id": doc_id,
@@ -220,10 +247,14 @@ class RAGService:
 
     @staticmethod
     def _calc_confidence(top_score: float) -> str:
-        """api-spec.md confidence 기준."""
-        if top_score >= 0.85:
+        """api-spec.md confidence 기준. 임계값은 config로 분리(provider별 점수 스케일 차이).
+
+        bge-m3 재보정(2026-06-16): high≥0.70 / medium≥0.50 / low.
+        기존 Gemini 기준 0.85/0.70은 bge-m3 점수 분포(max 0.78)에서 high가 안 떠 무의미.
+        """
+        if top_score >= settings.CONFIDENCE_HIGH_THRESHOLD:
             return "high"
-        if top_score >= 0.70:
+        if top_score >= settings.CONFIDENCE_MEDIUM_THRESHOLD:
             return "medium"
         return "low"
 

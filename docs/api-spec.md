@@ -65,11 +65,17 @@ data: {}
 }
 ```
 
-**confidence 기준:**
+**confidence 기준 (top 벡터 유사도, config로 분리 — `CONFIDENCE_*_THRESHOLD`):**
 
-- `high`: 유사도 0.85 이상, 출처 명확
-- `medium`: 유사도 0.70~0.85
-- `low`: 유사도 0.70 미만 → "편람에 포함되어 있지 않습니다" 안내
+- `high`: 유사도 0.70 이상, 출처 명확
+- `medium`: 유사도 0.50~0.70
+- `low`: 유사도 0.50 미만 → 출처 신뢰도 낮음(답변 거부 여부는 LLM이 컨텍스트로 판단)
+
+> ⚠️ **임계값은 임베딩 provider별로 재보정 필요.** 위 값은 **bge-m3(1024차원)** 기준
+> (2026-06-16 재보정). 기존 Gemini(3072) 기준 0.85/0.70은 bge-m3 점수 분포(정답 1위
+> 0.30~0.78, max 0.78)에서 high가 절대 안 떠 대부분 low로 깔리는 문제가 있었음.
+> 측정(`data/eval/accuracy_bge_m3_search_…`, 30문항): 0.70↑ 9건 / 0.50~0.70 14건 / 0.50↓ 7건.
+> provider 교체 시 점수 스케일이 달라지므로 환경변수로 재튜닝할 것.
 
 **응답 시간 목표:** 첫 토큰 1초 이내 (SSE), 전체 완료 5초 이내
 
@@ -281,6 +287,32 @@ def merge_scores(results: list[dict]) -> dict:
 
 > ⚠️ **Sum 방식을 쓰지 않는 이유:** 유사 제목이 3개인 문서가 1개인 문서보다 항상 점수가 높아지는 편향이 생김. Max Pooling은 제목을 많이 만들어도 점수에 불공정한 이득이 없음.
 
+**검색 쿼리 동의어 확장 (query_expand.py) — 2026-06-16 추가:**
+
+> 데모 중 발견: "미국 주식 하려면…"이 정답 문서 "(1) 해외주식 매매 개요 및 제도"를
+> 상위 5건에 못 올려 LLM이 "편람에 없음"으로 답함. ("해외주식 하는법"은 0.658로 정상)
+> 원인은 LLM 거부가 아니라 **retrieval 미스** — 임베딩이 '미국⊂해외주식'을 약하게 잡고,
+> BM25 bigram도 "미국/주식"이 "해외주식" 청크에 약하게 걸림.
+
+- 검색 **진입부**에서 `expand_query()`로 질문에 도메인 동의어를 덧붙임(추가만, 원문 미변형).
+- 확장 쿼리는 **임베딩 + BM25 양쪽**에만 사용. LLM에 가는 사용자 질문 원문은 그대로 두어
+  답변 표시·출처 인용에 영향 없음.
+- 순수 파이썬 사전(`QUERY_EXPANSIONS`) — 무료·오프라인(폐쇄망), 결정적(데모 재현성).
+  LLM 쿼리 재작성은 '첫 토큰 1초' 목표 위반 + 비결정적이라 PoC에서 제외.
+- `QUERY_EXPANSION_ENABLED`(config, 기본 true)로 끌 수 있음 — 정확도 A/B용.
+- ⚠️ 사전이 비대해지면 BM25/임베딩 노이즈 유입 → '명백한 동의어/상위어'만 추가하고
+  `tests/test_questions.json` 정확도로 검증할 것.
+
+**출처 페이지 중복 제거 — 페이지당 청크 캡 (2026-06-16 추가):**
+
+> "해외주식 하는법"의 출처가 표시 5건인데 고유 페이지는 2건 — 같은 FAQ 페이지 청크가
+> top_k를 독식해 출처 패널이 한 문서로 도배되고 LLM 컨텍스트 다양성도 떨어짐.
+
+- top_k 선택 시 **페이지(`source_url` 우선)당 최대 `PER_PAGE_CHUNK_CAP`개(기본 1)** 청크만 채택.
+- **컨텍스트 단계**에서 줄여야 citation `[n]`(컨텍스트 순번)과 출처 목록이 1:1로 정합.
+  캡>1이면 출처에 동일 페이지가 다시 보일 수 있으나 번호 정합은 유지됨.
+- 자세한 시도/근거 로그: [ANSWER_QUALITY.md](ANSWER_QUALITY.md)
+
 ---
 
 ## 4. LLM 서비스 추상화
@@ -418,7 +450,7 @@ prompt: 채점 프롬프트 필수항목 가중치 60→70% 조정
 □ API 요청/응답 형식 OK?
 □ PoC Single-turn + SSE 스트리밍 OK? (섹션 1)
 □ SSE sources 선전송 순서 OK? (섹션 1)
-□ confidence 기준 (0.85 / 0.70) OK?
+□ confidence 기준 (bge-m3: 0.70 / 0.50, config 분리) OK?
 □ FAQ JSON 스키마 OK?
 □ 카테고리 목록 OK?
 □ ChromaDB 2개 컬렉션 분리 구조 OK?
@@ -566,7 +598,7 @@ python scripts/sync_manual.py --source crawl --incremental
 | 결정 | 내용 |
 |------|------|
 | 토크나이저 = 한국어 문자 bigram | 영문/숫자는 단어 토큰("K-OTC", "80~89" 보존), 한국어는 bigram("고객번호는"↔"고객번호" 조사 무관 매칭). kiwipiepy는 한글 사용자명 경로 세그폴트로 제외 (TROUBLESHOOTING 2026-06-11) |
-| 정렬은 RRF, score는 벡터 유사도 유지 | confidence 임계값(0.85/0.70)이 벡터 점수 기준 — RRF 점수(~0.016)와 섞으면 깨짐. confidence는 contexts의 max 벡터 점수 사용 |
+| 정렬은 RRF, score는 벡터 유사도 유지 | confidence 임계값(bge-m3: 0.70/0.50, config)이 벡터 점수 기준 — RRF 점수(~0.016)와 섞으면 깨짐. confidence는 contexts의 max 벡터 점수 사용 |
 | `HYBRID_ENABLED` 플래그 | 명시적 true 체크. false면 기존 순수 벡터 경로 그대로 |
 | 인덱스 신선도 | 컬렉션 count 변화 감지 → 다음 검색 때 자동 재구축 (401청크 기준 수십 ms) |
 
@@ -598,6 +630,9 @@ python scripts/sync_manual.py --source crawl --incremental
 | v8   | 2026-05-08 | 산출물 5종 신규 작성: `architecture.md`, `data-flow.md`, `api-spec-formal.md`, `db-design.md`, `adr/0001~0009`. 기존 설계 결정을 ADR 양식으로 정리(역추적용). 본 문서가 여전히 단일 진실 소스. |
 | v9   | 2026-06-10 | 섹션 9 신규 — 위키(Confluence) 수집 + 증분(diff) 인제스트. 수집 커넥터(dir/crawl), HTML 파서, hash chunk_id 기반 diff, SQLite 메타DB, sync_manual.py 배치 CLI. 청킹 로직을 `backend/services/ingest.py`로 공용화 (ingest_manual.py 동작 불변). ADR 0010 |
 | v10  | 2026-06-11 | 섹션 10 신규 — Hybrid Search (BM25 bigram + 벡터 RRF 융합, `HYBRID_ENABLED`). 실측 hit@1 62%→81%. 파서 실데이터 보강(개조식 헤딩/br 분리/1×1표 notice), 크롤러 pagetree 자동 순회(rootPageId 추출), 진단 도구 test_accuracy.py + 16문항, CRAWLER_GUIDE.md |
+| v11  | 2026-06-16 | 섹션 3 — 검색 쿼리 동의어 확장(`query_expand.py`, `QUERY_EXPANSION_ENABLED`). 데모 버그("미국 주식"→"해외주식" 문서 미검색) 수정. 임베딩·BM25 쿼리만 확장, LLM 질문 원문 불변. tests/test_query_expand.py |
+| v12  | 2026-06-16 | 섹션 1·3 — confidence 임계값 bge-m3 재보정(0.85/0.70 → **0.70/0.50**) + config 분리(`CONFIDENCE_HIGH/MEDIUM_THRESHOLD`). 기존 Gemini 기준은 bge-m3 점수 분포(max 0.78)에서 high가 안 떠 대부분 low로 깔리는 문제. 30문항 측정 분포 기반. |
+| v13  | 2026-06-16 | 섹션 3 — 출처 페이지 중복 제거(페이지당 청크 캡 `PER_PAGE_CHUNK_CAP`, 기본 1). 같은 페이지 청크가 top_k 독식("출처 5건"=고유 2건) 해소. 컨텍스트 단계에서 적용해 citation [n] 정합 유지. 답변 품질 시도 로그 신설: [ANSWER_QUALITY.md](ANSWER_QUALITY.md) |
 
 ---
 

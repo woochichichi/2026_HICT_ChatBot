@@ -17,6 +17,13 @@
 
 ---
 
+## 2026-06-16 | 챗봇 SSE 500 — Collection expecting embedding with dimension of 1024, got 3072
+
+- **증상**: `uvicorn backend.main:app` 새로 띄우고 `/api/chat` 호출 시 SSE `error` 이벤트 + 서버 로그 `chromadb.errors.InvalidArgumentError: Collection expecting embedding with dimension of 1024, got 3072`
+- **원인**: 현재 ChromaDB는 **bge-m3 로컬 임베딩(1024차원)**으로 인제스트돼 있는데, `config.py`의 `EMBEDDING_PROVIDER` 기본값이 `gemini`(3072차원)라 **쿼리 임베딩 차원이 DB와 불일치**. `.env`에 `EMBEDDING_PROVIDER` 설정이 없어 fresh 실행 시 기본값(gemini)으로 떠서 발생. (기존에 돌던 인스턴스는 셸에서 `EMBEDDING_PROVIDER=local`로 떠 있었음)
+- **해결**: `EMBEDDING_PROVIDER=local`로 백엔드 기동(`EMBEDDING_PROVIDER=local uvicorn backend.main:app`). 영구적으로는 **`.env`에 `EMBEDDING_PROVIDER=local` 명시** 권장 — 현재 적재된 DB와 정합
+- **교훈**: 임베딩 제공자/모델을 바꾸면 차원이 바뀌므로 **인제스트와 쿼리는 반드시 같은 provider**여야 함. 커밋된 기본값(gemini)과 실제 적재 DB(bge-m3)가 어긋나 있으면 팀원이 fresh 실행 시 바로 막힘 → `.env`에 provider를 못박아 둘 것
+
 ## 2026-06-13 | Gemini 답변 생성도 무료 일일 한도(20/일)로 측정 중단 → 로컬 임베딩 전환
 
 - **증상**: 로컬 임베딩(bge-m3)으로 검색은 무제한이 됐으나, 30문항 답변 측정이 ~20번째에서 `429 ... generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash`로 중단. `gemini-2.0-flash`도 429, `gemini-1.5-flash`는 404(단종)
