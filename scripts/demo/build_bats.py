@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""시연용 BAT 2종을 CP949+CRLF로 생성하는 빌더.
+"""시연용 BAT 3종을 CP949+CRLF로 생성하는 빌더.
 
 bat-file-craft 스킬 패턴(#11) — 한글 출력 BAT은 CP949+CRLF로 저장해야
 CMD 파서/콘솔에서 깨지지 않는다. echo 내부 괄호/리다이렉트 문자는 제거(ASCII만).
 zip 생성/해제는 Windows 내장 bsdtar(%WINDIR%\\System32\\tar.exe)를 '명시 경로'로 호출.
-(PATH에 Git의 GNU tar가 먼저 잡히면 zip 생성이 깨질 수 있어 절대경로 사용. 2GB 초과 안전.)
 
 생성물:
-  scripts/demo/1_시연번들_내보내기.bat   (소스 PC: gitignore된 DB/.env/모델을 demo_bundle.zip 한 파일로)
-  scripts/demo/2_시연_설치_및_실행.bat    (시연 PC: zip 해제 + 배치 + venv/pip/npm + 서버 기동)
+  scripts/demo/1_시연번들_내보내기.bat   (소스 PC: DB/.env/meta.db를 demo_bundle.zip 한 파일로)
+  scripts/demo/2_시연_환경설정.bat        (시연 PC: zip 해제 + venv/pip/모델/npm 설치까지. 최초 1회)
+  scripts/demo/3_시연_실행.bat            (시연 PC: 백엔드/프론트 기동 + 브라우저. 시연 때마다)
 """
 import os
 
@@ -81,20 +81,20 @@ export_lines = [
     'if exist "%ROOT%\\data\\meta.db" copy /y "%ROOT%\\data\\meta.db" "%BUNDLE%\\data\\meta.db" >nul',
     'if exist "%BUNDLE%\\data\\meta.db" echo   [완료] data\\meta.db',
     'if not exist "%ROOT%\\data\\meta.db" echo   [건너뜀] meta.db 없음',
-    "echo   (bge-m3 모델은 묶지 않음 - 시연 PC에서 2번 BAT이 자동 다운로드)",
+    "echo   (bge-m3 모델은 묶지 않음 - 시연 PC에서 환경설정 BAT이 자동 다운로드)",
     "echo.",
     "",
     "rem === 안내문 생성 ===",
     'set "RM=%BUNDLE%\\READ_ME_먼저.txt"',
     '>"%RM%" echo [AI 코치 시연 번들]',
     '>>"%RM%" echo.',
-    '>>"%RM%" echo 1. 시연 PC에서 git pull 로 소스를 최신화',
+    '>>"%RM%" echo 1. 시연 PC에서 main 브랜치 git pull 로 소스 최신화',
     '>>"%RM%" echo 2. demo_bundle.zip 을 프로젝트 루트에 복사',
-    '>>"%RM%" echo 3. scripts\\demo\\2_시연_설치_및_실행.bat 더블클릭',
-    '>>"%RM%" echo 4. 브라우저가 열리면 시연 시작',
+    '>>"%RM%" echo 3. scripts\\demo\\2_시연_환경설정.bat 실행 (최초 1회 설치)',
+    '>>"%RM%" echo 4. scripts\\demo\\3_시연_실행.bat 실행 (시연 때마다 서버 기동)',
     "",
     "rem === zip 압축 + staging 삭제 ===",
-    "echo [압축] demo_bundle.zip 생성 중... 모델 포함 시 수 분 소요",
+    "echo [압축] demo_bundle.zip 생성 중...",
     'if exist "%ZIP%" del /q "%ZIP%"',
     '"%TAR%" -a -c -f "%ZIP%" -C "%BUNDLE%" .',
     'if not exist "%ZIP%" (',
@@ -115,13 +115,13 @@ export_lines = [
 
 
 # ============================================================
-# 2) 설치+실행 BAT (시연 PC) <- demo_bundle.zip
+# 2) 환경설정 BAT (시연 PC) — 설치까지만, 서버 기동 안 함
 # ============================================================
 setup_lines = [
     "@echo off",
     "setlocal enabledelayedexpansion",
     "chcp 949 >nul",
-    "title AI 코치 - 시연 설치 및 실행",
+    "title AI 코치 - 시연 환경설정",
     "",
     'pushd "%~dp0..\\.."',
     'set "ROOT=%CD%"',
@@ -132,13 +132,14 @@ setup_lines = [
     'set "TAR=%WINDIR%\\System32\\tar.exe"',
     "",
     "echo ============================================================",
-    "echo  AI 코치 - 시연 설치 및 실행  [시연 PC에서 실행]",
+    "echo  AI 코치 - 시연 환경설정  [최초 1회 · 설치만]",
+    "echo  끝나면 3_시연_실행.bat 으로 서버를 띄웁니다.",
     "echo ============================================================",
     "echo  프로젝트 루트: %ROOT%",
     "echo.",
     "",
-    "rem === 0. demo_bundle.zip 압축 해제 + 파일 배치 ===",
-    "echo [0/6] 전달받은 zip 압축 해제 및 배치",
+    "rem === 1. demo_bundle.zip 압축 해제 + 파일 배치 ===",
+    "echo [1/5] 전달받은 zip 압축 해제 및 배치",
     'set "SRC="',
     'if exist "%ZIP%" goto :unzip',
     'if exist "%ROOT%\\demo_bundle\\data\\chroma_db\\chroma.sqlite3" goto :usefolder',
@@ -169,8 +170,8 @@ setup_lines = [
     "echo.",
     ":envok",
     "",
-    "rem === 1. Python 확인 ===",
-    "echo [1/6] Python 확인",
+    "rem === 2. Python 확인 ===",
+    "echo [2/5] Python 확인",
     "where python >nul 2>nul",
     "if errorlevel 1 (",
     "    echo   [오류] Python 미설치. python.org 에서 3.12 설치 후 다시 실행.",
@@ -180,8 +181,8 @@ setup_lines = [
     "echo   [OK] Python 있음",
     "echo.",
     "",
-    "rem === 2. 가상환경 + 패키지 ===",
-    "echo [2/6] 가상환경/패키지  - 처음만 수 분 소요",
+    "rem === 3. 가상환경 + 패키지 ===",
+    "echo [3/5] 가상환경/패키지  - 처음만 수 분 소요",
     'if not exist "%PY%" python -m venv "%ROOT%\\.venv"',
     'if exist "%PY%" echo   [OK] .venv 준비됨',
     '"%PY%" -m pip install --upgrade pip >nul',
@@ -191,8 +192,8 @@ setup_lines = [
     '"%PY%" -m pip install -r "%ROOT%\\requirements.txt"',
     "echo.",
     "",
-    "rem === 3. bge-m3 임베딩 모델 다운로드 (최초 1회, 인터넷 필요, 약 2.2GB) ===",
-    "echo [3/6] bge-m3 모델 준비  - 최초만 다운로드, 수 분 소요",
+    "rem === 4. bge-m3 임베딩 모델 다운로드 (최초 1회, 인터넷 필요, 약 2.2GB) ===",
+    "echo [4/5] bge-m3 모델 준비  - 최초만 다운로드, 수 분 소요",
     'if exist "%USERPROFILE%\\.cache\\huggingface\\hub\\models--BAAI--bge-m3" goto :modeldone',
     "echo   [다운로드] bge-m3 ... 인터넷 필요. 시연 중 끊기지 않게 지금 받아둡니다.",
     '"%PY%" -c "from sentence_transformers import SentenceTransformer; SentenceTransformer(\'BAAI/bge-m3\')"',
@@ -200,8 +201,8 @@ setup_lines = [
     "echo   [OK] bge-m3 모델 준비됨",
     "echo.",
     "",
-    "rem === 4. Node / 프론트엔드 ===",
-    "echo [4/6] 프론트엔드 패키지",
+    "rem === 5. Node / 프론트엔드 ===",
+    "echo [5/5] 프론트엔드 패키지",
     "where npm >nul 2>nul",
     "if errorlevel 1 (",
     "    echo   [오류] Node.js npm 미설치. nodejs.org 에서 LTS 설치 후 다시 실행.",
@@ -222,20 +223,60 @@ setup_lines = [
     "rem === 정리 ===",
     'if exist "%TMP%" rmdir /s /q "%TMP%" 2>nul',
     "",
-    "rem === 5. 서버 기동 - 새 창 2개 ===",
-    "echo [5/6] 백엔드/프론트엔드 기동",
+    "echo ============================================================",
+    "echo  환경설정 완료!",
+    "echo  시연하려면  scripts\\demo\\3_시연_실행.bat  을 실행하세요.",
+    "echo ============================================================",
+    "echo.",
+    "pause",
+    "endlocal",
+]
+
+
+# ============================================================
+# 3) 실행 BAT (시연 PC) — 서버 기동 + 브라우저
+# ============================================================
+run_lines = [
+    "@echo off",
+    "setlocal enabledelayedexpansion",
+    "chcp 949 >nul",
+    "title AI 코치 - 시연 실행",
+    "",
+    'pushd "%~dp0..\\.."',
+    'set "ROOT=%CD%"',
+    "popd",
+    'set "PY=%ROOT%\\.venv\\Scripts\\python.exe"',
+    "",
+    "echo ============================================================",
+    "echo  AI 코치 - 시연 실행  [서버 기동 + 브라우저]",
+    "echo ============================================================",
+    "echo.",
+    "",
+    "rem === 환경설정 됐는지 확인 ===",
+    'if exist "%PY%" goto :ready',
+    "echo   [오류] 가상환경(.venv)이 없습니다.",
+    "echo          먼저 2_시연_환경설정.bat 을 실행하세요.",
+    "pause",
+    "exit /b 1",
+    ":ready",
+    'if not exist "%ROOT%\\data\\chroma_db\\chroma.sqlite3" echo   [경고] ChromaDB 없음 - 검색이 빈 결과. demo_bundle 배치/환경설정을 확인하세요.',
+    "echo.",
+    "",
+    "rem === 1. 서버 기동 - 새 창 2개 ===",
+    "echo [1/2] 백엔드/프론트엔드 기동",
     'start "AI코치 백엔드" cmd /k "cd /d %ROOT% && set EMBEDDING_PROVIDER=local && %PY% -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"',
     'start "AI코치 프론트" cmd /k "cd /d %ROOT%\\frontend && npm run dev"',
     "echo.",
     "",
-    "rem === 6. 브라우저 ===",
-    "echo [6/6] 서버 기동 대기 후 브라우저 열기",
+    "rem === 2. 브라우저 ===",
+    "echo [2/2] 서버 기동 대기 후 브라우저 열기",
     "timeout /t 8 /nobreak >nul",
     'start "" http://localhost:3000/',
     "echo.",
     "echo ============================================================",
     "echo  완료! 브라우저에서 http://localhost:3000 확인",
     "echo  첫 질문은 bge-m3 로딩으로 잠깐 걸릴 수 있습니다.",
+    "echo  종료하려면 백엔드/프론트 창 2개를 닫으세요.",
     "echo ============================================================",
     "echo.",
     "pause",
@@ -244,5 +285,6 @@ setup_lines = [
 
 
 save("1_시연번들_내보내기.bat", export_lines)
-save("2_시연_설치_및_실행.bat", setup_lines)
+save("2_시연_환경설정.bat", setup_lines)
+save("3_시연_실행.bat", run_lines)
 print("done")

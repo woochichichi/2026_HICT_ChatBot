@@ -49,20 +49,20 @@ echo [3/3] meta.db 수집...
 if exist "%ROOT%\data\meta.db" copy /y "%ROOT%\data\meta.db" "%BUNDLE%\data\meta.db" >nul
 if exist "%BUNDLE%\data\meta.db" echo   [완료] data\meta.db
 if not exist "%ROOT%\data\meta.db" echo   [건너뜀] meta.db 없음
-echo   (bge-m3 모델은 묶지 않음 - 시연 PC에서 2번 BAT이 자동 다운로드)
+echo   (bge-m3 모델은 묶지 않음 - 시연 PC에서 환경설정 BAT이 자동 다운로드)
 echo.
 
 rem === 안내문 생성 ===
 set "RM=%BUNDLE%\READ_ME_먼저.txt"
 >"%RM%" echo [AI 코치 시연 번들]
 >>"%RM%" echo.
->>"%RM%" echo 1. 시연 PC에서 git pull 로 소스를 최신화
+>>"%RM%" echo 1. 시연 PC에서 main 브랜치 git pull 로 소스 최신화
 >>"%RM%" echo 2. demo_bundle.zip 을 프로젝트 루트에 복사
->>"%RM%" echo 3. scripts\demo\2_시연_설치_및_실행.bat 더블클릭
->>"%RM%" echo 4. 브라우저가 열리면 시연 시작
+>>"%RM%" echo 3. scripts\demo\2_시연_환경설정.bat 실행 (최초 1회 설치)
+>>"%RM%" echo 4. scripts\demo\3_시연_실행.bat 실행 (시연 때마다 서버 기동)
 
 rem === zip 압축 + staging 삭제 ===
-echo [압축] demo_bundle.zip 생성 중... 모델 포함 시 수 분 소요
+echo [압축] demo_bundle.zip 생성 중...
 if exist "%ZIP%" del /q "%ZIP%"
 "%TAR%" -a -c -f "%ZIP%" -C "%BUNDLE%" .
 if not exist "%ZIP%" (

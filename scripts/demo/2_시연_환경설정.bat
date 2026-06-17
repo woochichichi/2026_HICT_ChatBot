@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 chcp 949 >nul
-title AI 코치 - 시연 설치 및 실행
+title AI 코치 - 시연 환경설정
 
 pushd "%~dp0..\.."
 set "ROOT=%CD%"
@@ -12,13 +12,14 @@ set "PY=%ROOT%\.venv\Scripts\python.exe"
 set "TAR=%WINDIR%\System32\tar.exe"
 
 echo ============================================================
-echo  AI 코치 - 시연 설치 및 실행  [시연 PC에서 실행]
+echo  AI 코치 - 시연 환경설정  [최초 1회 · 설치만]
+echo  끝나면 3_시연_실행.bat 으로 서버를 띄웁니다.
 echo ============================================================
 echo  프로젝트 루트: %ROOT%
 echo.
 
-rem === 0. demo_bundle.zip 압축 해제 + 파일 배치 ===
-echo [0/6] 전달받은 zip 압축 해제 및 배치
+rem === 1. demo_bundle.zip 압축 해제 + 파일 배치 ===
+echo [1/5] 전달받은 zip 압축 해제 및 배치
 set "SRC="
 if exist "%ZIP%" goto :unzip
 if exist "%ROOT%\demo_bundle\data\chroma_db\chroma.sqlite3" goto :usefolder
@@ -49,8 +50,8 @@ echo         EMBEDDING_PROVIDER=local
 echo.
 :envok
 
-rem === 1. Python 확인 ===
-echo [1/6] Python 확인
+rem === 2. Python 확인 ===
+echo [2/5] Python 확인
 where python >nul 2>nul
 if errorlevel 1 (
     echo   [오류] Python 미설치. python.org 에서 3.12 설치 후 다시 실행.
@@ -60,8 +61,8 @@ if errorlevel 1 (
 echo   [OK] Python 있음
 echo.
 
-rem === 2. 가상환경 + 패키지 ===
-echo [2/6] 가상환경/패키지  - 처음만 수 분 소요
+rem === 3. 가상환경 + 패키지 ===
+echo [3/5] 가상환경/패키지  - 처음만 수 분 소요
 if not exist "%PY%" python -m venv "%ROOT%\.venv"
 if exist "%PY%" echo   [OK] .venv 준비됨
 "%PY%" -m pip install --upgrade pip >nul
@@ -71,8 +72,8 @@ echo   [설치] requirements.txt
 "%PY%" -m pip install -r "%ROOT%\requirements.txt"
 echo.
 
-rem === 3. bge-m3 임베딩 모델 다운로드 (최초 1회, 인터넷 필요, 약 2.2GB) ===
-echo [3/6] bge-m3 모델 준비  - 최초만 다운로드, 수 분 소요
+rem === 4. bge-m3 임베딩 모델 다운로드 (최초 1회, 인터넷 필요, 약 2.2GB) ===
+echo [4/5] bge-m3 모델 준비  - 최초만 다운로드, 수 분 소요
 if exist "%USERPROFILE%\.cache\huggingface\hub\models--BAAI--bge-m3" goto :modeldone
 echo   [다운로드] bge-m3 ... 인터넷 필요. 시연 중 끊기지 않게 지금 받아둡니다.
 "%PY%" -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3')"
@@ -80,8 +81,8 @@ echo   [다운로드] bge-m3 ... 인터넷 필요. 시연 중 끊기지 않게 지금 받아둡니다.
 echo   [OK] bge-m3 모델 준비됨
 echo.
 
-rem === 4. Node / 프론트엔드 ===
-echo [4/6] 프론트엔드 패키지
+rem === 5. Node / 프론트엔드 ===
+echo [5/5] 프론트엔드 패키지
 where npm >nul 2>nul
 if errorlevel 1 (
     echo   [오류] Node.js npm 미설치. nodejs.org 에서 LTS 설치 후 다시 실행.
@@ -102,20 +103,9 @@ echo.
 rem === 정리 ===
 if exist "%TMP%" rmdir /s /q "%TMP%" 2>nul
 
-rem === 5. 서버 기동 - 새 창 2개 ===
-echo [5/6] 백엔드/프론트엔드 기동
-start "AI코치 백엔드" cmd /k "cd /d %ROOT% && set EMBEDDING_PROVIDER=local && %PY% -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
-start "AI코치 프론트" cmd /k "cd /d %ROOT%\frontend && npm run dev"
-echo.
-
-rem === 6. 브라우저 ===
-echo [6/6] 서버 기동 대기 후 브라우저 열기
-timeout /t 8 /nobreak >nul
-start "" http://localhost:3000/
-echo.
 echo ============================================================
-echo  완료! 브라우저에서 http://localhost:3000 확인
-echo  첫 질문은 bge-m3 로딩으로 잠깐 걸릴 수 있습니다.
+echo  환경설정 완료!
+echo  시연하려면  scripts\demo\3_시연_실행.bat  을 실행하세요.
 echo ============================================================
 echo.
 pause
