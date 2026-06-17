@@ -1,7 +1,8 @@
 # 다른 PC 시연 셋업 가이드
 
 > 다른 자리/다른 사람도 **동일하게 시연**할 수 있게 하는 절차.
-> 핵심: ChromaDB·`.env`·임베딩 모델은 git에 없으므로(고객 데이터 보호) **번들 zip으로 전달**한다.
+> 핵심: ChromaDB·`.env`는 git에 없으므로(고객 데이터 보호) **번들 zip으로 전달**하고,
+> bge-m3 임베딩 모델은 묶지 않고 **시연 PC에서 설치 BAT이 자동 다운로드**한다.
 >
 > BAT 위치: [`scripts/demo/`](../scripts/demo/)
 > - `1_시연번들_내보내기.bat` — **소스 PC**에서 실행 → `demo_bundle.zip` 생성
@@ -14,7 +15,7 @@
 ```
 [소스 PC]                          [USB/네트워크]          [시연 PC]
 1_시연번들_내보내기.bat  ──>  demo_bundle.zip  ──>  git pull
-   (chroma_db+.env+모델)                              demo_bundle.zip 루트에 복사
+   (chroma_db + .env)                                 demo_bundle.zip 루트에 복사
                                                       2_시연_설치_및_실행.bat
                                                       브라우저 시연
 ```
@@ -33,10 +34,8 @@
 ## 소스 PC: 번들 내보내기
 
 `scripts/demo/1_시연번들_내보내기.bat` 더블클릭.
-- ChromaDB(`data/chroma_db`) + `.env` + `meta.db`를 모아 **`demo_bundle.zip`** 한 파일로 압축
-- **bge-m3 모델 캐시 포함 여부**를 물음:
-  - 시연 PC에 **인터넷 있음** → `N` (첫 실행 시 모델 자동 다운로드, zip 작음 ~수십 MB)
-  - 시연 PC가 **인터넷 없음(폐쇄망)** → `Y` (모델 ~2.2GB 포함, zip 커짐)
+- ChromaDB(`data/chroma_db`) + `.env` + `meta.db`를 모아 **`demo_bundle.zip`** 한 파일로 압축 (~수십 MB)
+- **bge-m3 모델(2.2GB)은 묶지 않는다** — 시연 PC에서 설치 BAT이 자동 다운로드하므로 zip이 가볍다.
 
 ---
 
@@ -47,12 +46,13 @@
 3. `scripts/demo/2_시연_설치_및_실행.bat` 더블클릭
 
 BAT가 자동으로:
-- zip 압축 해제 → `data/chroma_db`, `.env`, (있으면) bge-m3 모델 캐시 배치
-- `.venv` 생성 + 패키지 설치
+- zip 압축 해제 → `data/chroma_db`, `.env` 배치
+- `.venv` 생성 + 패키지 설치(torch CPU + requirements)
+- **bge-m3 모델 자동 다운로드**(최초 1회, 인터넷 필요, ~2.2GB) — 시연 중 안 끊기게 설치 단계에서 미리 받음
 - `frontend/node_modules` 설치
 - 백엔드(8000) + 프론트(3000) 새 창으로 기동 + 브라우저 오픈
 
-> 첫 질문은 bge-m3 로딩으로 **수십 초** 걸릴 수 있음(이후엔 빠름).
+> 모델은 설치 단계에서 미리 받으므로, 첫 질문도 빠릅니다(이미 받았으면 다운로드 건너뜀).
 
 ### 사전 요구사항 (시연 PC에 미리 설치)
 | 항목 | 비고 |
@@ -81,11 +81,15 @@ python -m venv .venv
 cd frontend && npm install && cd ..
 ```
 
-**bge-m3 임베딩 모델(약 2.2GB)** — 둘 중 하나:
-- **인터넷 O**: 백엔드 첫 실행 시 `sentence-transformers`가 자동 다운로드
-  (캐시 위치: `%USERPROFILE%\.cache\huggingface\hub\models--BAAI--bge-m3`)
-- **인터넷 X(폐쇄망)**: 위 캐시 폴더를 소스 PC에서 복사해 같은 경로에 둠
-  (내보내기 BAT에서 `Y` 선택 시 zip에 포함됨)
+**bge-m3 임베딩 모델(약 2.2GB)** — `2_시연_설치_및_실행.bat`이 설치 단계 `[3/6]`에서 자동 다운로드:
+
+```bat
+:: BAT이 내부적으로 실행하는 명령 (수동으로도 가능)
+.venv\Scripts\python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3')"
+```
+
+- **인터넷 O**: 위 명령이 자동 다운로드 (캐시: `%USERPROFILE%\.cache\huggingface\hub\models--BAAI--bge-m3`). 이미 있으면 건너뜀.
+- **인터넷 X(폐쇄망)**: 위 캐시 폴더를 인터넷 되는 PC에서 받아 같은 경로에 복사해 반입(실도입 단계 방식, [ONPREM_ROADMAP](ONPREM_ROADMAP.md) §5).
 
 ---
 

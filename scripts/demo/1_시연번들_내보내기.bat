@@ -31,42 +31,25 @@ if exist "%BUNDLE%" rmdir /s /q "%BUNDLE%"
 mkdir "%BUNDLE%"
 
 rem === 1. ChromaDB 복사 - 필수 ===
-echo [1/4] ChromaDB 수집...
+echo [1/3] ChromaDB 수집...
 if not exist "%ROOT%\data\chroma_db\chroma.sqlite3" echo   [경고] ChromaDB가 비어있음. 인제스트 먼저 하세요.
 robocopy "%ROOT%\data\chroma_db" "%BUNDLE%\data\chroma_db" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
 echo   [완료] data\chroma_db
 echo.
 
 rem === 2. .env 복사 - API 키 포함, 취급 주의 ===
-echo [2/4] .env 수집...
+echo [2/3] .env 수집...
 if exist "%ROOT%\.env" copy /y "%ROOT%\.env" "%BUNDLE%\.env" >nul
 if exist "%BUNDLE%\.env" echo   [완료] .env  - 주의: API 키 포함, 외부 유출 금지
 if not exist "%ROOT%\.env" echo   [건너뜀] .env 없음
 echo.
 
 rem === 3. meta.db - 재인제스트용, 선택 ===
-echo [3/4] meta.db 수집...
+echo [3/3] meta.db 수집...
 if exist "%ROOT%\data\meta.db" copy /y "%ROOT%\data\meta.db" "%BUNDLE%\data\meta.db" >nul
 if exist "%BUNDLE%\data\meta.db" echo   [완료] data\meta.db
 if not exist "%ROOT%\data\meta.db" echo   [건너뜀] meta.db 없음
-echo.
-
-rem === 4. bge-m3 모델 캐시 - 폐쇄망/인터넷 없는 PC용, 약 2.2GB ===
-echo [4/4] bge-m3 모델 캐시 포함 여부
-echo   시연 PC에 인터넷이 없으면 Y  [약 2.2GB, 시간 걸림]
-echo   인터넷이 되면 N  [첫 실행 시 자동 다운로드]
-set "INCMODEL=N"
-set /p "INCMODEL=  포함할까요? Y/N [기본 N]: "
-if /i not "!INCMODEL!"=="Y" goto :skipmodel
-set "HFHUB=%USERPROFILE%\.cache\huggingface\hub\models--BAAI--bge-m3"
-if not exist "!HFHUB!" goto :nomodel
-echo   [수집] bge-m3 모델 캐시... 잠시만 기다리세요
-robocopy "!HFHUB!" "%BUNDLE%\hf_cache\hub\models--BAAI--bge-m3" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
-echo   [완료] hf_cache\hub\models--BAAI--bge-m3
-goto :skipmodel
-:nomodel
-echo   [경고] 모델 캐시 없음: !HFHUB!
-:skipmodel
+echo   (bge-m3 모델은 묶지 않음 - 시연 PC에서 2번 BAT이 자동 다운로드)
 echo.
 
 rem === 안내문 생성 ===
