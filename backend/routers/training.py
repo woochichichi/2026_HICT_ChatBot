@@ -1,4 +1,12 @@
-"""훈련 모드 API."""
+"""훈련 모드(AI 코치) API.
+
+- /question, /score : 기존 LLM/데모 출제·채점 경로
+- /scenarios        : 큐레이션 시나리오 뱅크(런타임 LLM 0). 커리큘럼/복습용 — 프론트가
+                      순서·진도·규칙채점을 클라이언트에서 수행(편람 출처 source_url 포함).
+"""
+
+import json
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -6,6 +14,9 @@ from pydantic import BaseModel
 from ..services import question_gen, scorer
 
 router = APIRouter()
+
+# 시나리오 뱅크 파일 (사전 제작, LLM 미사용). tests/training_scenarios.json
+_SCENARIOS_PATH = Path(__file__).resolve().parents[2] / "tests" / "training_scenarios.json"
 
 
 class QuestionRequest(BaseModel):
@@ -22,6 +33,7 @@ class QuestionResponse(BaseModel):
     question_id: str
     source_content_id: str
     reference: str = ""
+    source_url: str = ""  # 편람 위치 클릭 → 위키 페이지 링크
     difficulty: str
     is_reset: bool
 
@@ -42,7 +54,18 @@ class ScoreResponse(BaseModel):
     missing_items: list[str]
     feedback: str
     reference: str
+    source_url: str = ""  # 편람 위치 클릭 → 위키 페이지 링크
     model_answer: str
+
+
+@router.get("/scenarios")
+async def list_scenarios():
+    """큐레이션 시나리오 뱅크 반환(커리큘럼/복습용). 런타임 LLM 미사용."""
+    try:
+        items = json.loads(_SCENARIOS_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        items = []
+    return {"items": items}
 
 
 @router.post("/question", response_model=QuestionResponse)

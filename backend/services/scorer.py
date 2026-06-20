@@ -77,6 +77,7 @@ async def _call_scorer_llm(
     trainee_answer: str,
     llm: LLMService,
     persona: str = "general",
+    source_url: str = "",
 ) -> dict:
     """training_scorer.txt 프롬프트로 LLM 채점. persona로 CS 관점 보강."""
     prompt_path = Path(__file__).resolve().parent.parent / "prompts" / "training_scorer.txt"
@@ -115,6 +116,7 @@ async def _call_scorer_llm(
         "missing_items": data.get("missing_items", []),
         "feedback": data.get("feedback", ""),
         "reference": data.get("reference", reference),
+        "source_url": source_url,  # 편람 위치 링크용(메타데이터, LLM 출력 아님)
         "model_answer": data.get("model_answer", reference_answer),
     }
 
@@ -143,6 +145,7 @@ async def score_answer(
         reference_answer = golden.get("golden_answer", "")
         required_items = golden.get("required_items", [])
         reference = golden.get("reference", "")
+        source_url = golden.get("source_url", "")
     else:
         # 2. Direct Fetch
         source_content_id = _derive_source_content_id(question_id)
@@ -153,6 +156,7 @@ async def score_answer(
         reference_answer = content["content"]
         required_items = []
         reference = f"{content.get('source_document', '')} {content.get('source_page', '')}".strip()
+        source_url = content.get("source_url", "")
 
     # 3. LLM 채점
     return await _call_scorer_llm(
@@ -163,4 +167,5 @@ async def score_answer(
         trainee_answer=trainee_answer,
         llm=llm,
         persona=persona,
+        source_url=source_url,
     )

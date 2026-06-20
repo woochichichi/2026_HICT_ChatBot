@@ -157,6 +157,7 @@ def get_content_by_id(content_id: str) -> dict:
         "content": content,
         "source_document": meta.get("source_document", ""),
         "source_page": meta.get("source_page", ""),
+        "source_url": meta.get("source_url", ""),  # 편람 위치 링크용
     }
 
 
@@ -248,6 +249,7 @@ async def generate_training_question(
             "question_id": demo_item["question_id"],
             "source_content_id": demo_item.get("source_content_id", demo_item["question_id"]),
             "reference": demo_item.get("reference", ""),
+            "source_url": demo_item.get("source_url", ""),
             "difficulty": difficulty,
             "is_reset": is_reset,
         }
@@ -265,6 +267,7 @@ async def generate_training_question(
         "question_id": question_id,
         "source_content_id": selected_id,
         "reference": reference,
+        "source_url": content.get("source_url", ""),
         "difficulty": difficulty,
         "is_reset": is_reset,
     }
