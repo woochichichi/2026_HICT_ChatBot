@@ -12,7 +12,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>증권 상담원 AI 코치 — PoC 4주 회고</title>
+<title>증권 상담원 AI 코치 — 5분 요약</title>
 <style>
 :root {
   --bg: #fafaf8; --surface: #ffffff; --surface-2: #f1f0ec;
@@ -297,18 +297,14 @@ code {
 
 <nav>
   <div class="nav-inner">
-    <b>AI 코치 PoC</b>
-    <a data-jump="2">01 무엇을</a>
-    <a data-jump="13">02 왜 그렇게</a>
-    <a data-jump="19">03 왜 바꿨나</a>
-    <a data-jump="22">04 폐쇄망</a>
-    <a id="ovBtn">☰ 전체 구조 (o)</a>
+    <b>AI 코치 PoC · 5분 요약</b>
+    <a id="ovBtn">☰ 전체 (o)</a>
     <div id="progress"></div>
   </div>
 </nav>
 
 <div class="dots" id="dots"></div>
-<div id="counter">1 / 28</div>
+<div id="counter">1 / 10</div>
 
 <div id="overview">
   <div class="ov-head"><h3>전체 구조</h3><span>클릭하면 해당 페이지로 이동 · ESC로 닫기</span></div>
@@ -318,27 +314,14 @@ code {
 <!-- 1 -->
 <section class="slide cover" data-ch="도입" data-title="타이틀">
   <div class="inner">
-    <div class="kicker">사내 기술 공유 · 4주 PoC(개념 검증) 회고</div>
+    <div class="kicker">사내 기술 공유 · 5분 핵심 요약</div>
     <h1>증권 상담원 AI 코치</h1>
     <p class="lead">&ldquo;물어보면 답하고, 답하면 채점하는 AI&rdquo;</p>
     <div class="bottom-line" style="font-size:17px;font-weight:700;color:#fff">
       상담원이 300초 걸려 찾던 답이 3초에 나옵니다.<br>
-      그런데 오늘의 진짜 이야기는 <span class="mark">&lsquo;왜 그렇게 만들었나&rsquo;</span>입니다.
+      무엇을 만들었고, 얼마나 좋아지는지 — <span class="mark">5분에 핵심만</span>.
     </div>
     <div class="hint">↓ 휠 또는 방향키로 한 장씩 · <b>o</b> 키로 전체 구조 보기</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="도입" data-title="목차">
-  <div class="inner">
-    <div class="kicker">AGENDA</div>
-    <h2>오늘 이야기 <em class="mark">4가지</em></h2>
-    <div class="toc">
-      <a data-jump="2"><span class="no">01</span><span class="t">무엇을, 어떻게 만들었나</span><span class="d">문제 · 작동 방식 · 시연 · 기대 효과</span></a>
-      <a data-jump="13"><span class="no">02</span><span class="t">왜 그렇게 만들었나</span><span class="d">여러분이라면 뭘 골랐을까요?</span></a>
-      <a data-jump="19"><span class="no">03</span><span class="t">왜 이렇게 바꿨나</span><span class="d">로컬 임베딩 · 위키 수집</span></a>
-      <a data-jump="22"><span class="no">04</span><span class="t">폐쇄망에서 어떻게 쓰나</span><span class="d">도입 작업 · 교체는 단 1곳</span></a>
-    </div>
   </div>
 </section>
 
@@ -372,26 +355,6 @@ code {
   </div>
 </section>
 
-<section class="slide" data-ch="01 무엇을" data-title="해결 — 두 가지 모드">
-  <div class="inner">
-    <div class="kicker">01 · 무엇을 만들었나</div>
-    <h2>그래서 만들었다 — 편람을 통째로 아는 <em class="mark">AI 동료</em></h2>
-    <div class="grid g2">
-      <div class="card" style="border-color:var(--navy);background:var(--surface)">
-        <h3>💬 챗봇 모드</h3>
-        <p>질문하면 → <b>즉시 답변 + 출처</b></p>
-        <p class="sub">상담원의 300초를 3초로</p>
-      </div>
-      <div class="card" style="border-color:var(--teal);background:var(--surface)">
-        <h3 style="color:var(--teal)">🎓 훈련 모드</h3>
-        <p>AI가 출제 → 신입이 답변 → <b>AI가 채점</b></p>
-        <p class="sub">선배 없이도 돌아가는 OJT</p>
-      </div>
-    </div>
-    <div class="bottom-line">묻는 사람에겐 <b>사전(챗봇)</b>, 배우는 사람에겐 <b>선생님(훈련)</b> — 같은 편람 데이터 하나로. <b>어떻게? ↓</b></div>
-  </div>
-</section>
-
 <section class="slide" data-ch="01 무엇을" data-title="한눈에 — 무엇을·얼만큼">
   <div class="inner">
     <div class="kicker">01 · 한눈에</div>
@@ -409,148 +372,25 @@ code {
 
 <section class="slide" data-ch="01 무엇을" data-title="실제 화면 (챗봇)">
   <div class="inner">
-    <div class="kicker">01 · 챗봇 ① 먼저 실물로</div>
+    <div class="kicker">시연 · 챗봇 모드</div>
     <h2>같은 고객 질문, 이번엔 <em class="mark">챗봇</em>이 답한다</h2>
     <p class="lead">조금 전 상담원이 해석·검색하던 그 모호한 질문. <b>고객 말을 그대로</b> 넣으면 → 편람 출처 + 답변 + <b>고객에게 읽어줄 추천 멘트</b>까지 한 번에 (자동 재생)</p>
     <iframe title="챗봇 시연" src="data:text/html;base64,PCFET0NUWVBFIGh0bWw+DQo8IS0tDQogIOyxl+u0hyDrqqjrk5wg7J6Q64+ZIOyLnOyXsCAo7KO97J2AIOyLnOqwhCAwLCDtmITsnqwgVUkg7J6s7ZiEKSDigJQg64W57ZmUL+yehOuyoOuTnOyaqS4NCiAg7Iuk7KCcIENoYXRTY3JlZW4g7Iqk7YOA7J28IOq4sOykgC4gc2VsZi1jb250YWluZWQsIOyZuOu2gCDsnZjsobQg7JeG7J2MLg0KLS0+DQo8aHRtbCBsYW5nPSJrbyI+DQo8aGVhZD4NCjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4NCjx0aXRsZT5BSSDsvZTsuZgg4oCUIOyxl+u0hyDsnpDrj5kg7Iuc7JewPC90aXRsZT4NCjxzdHlsZT4NCip7Ym94LXNpemluZzpib3JkZXItYm94O30NCmJvZHl7bWFyZ2luOjA7YmFja2dyb3VuZDojZjFmNWY5O2ZvbnQtZmFtaWx5Oi1hcHBsZS1zeXN0ZW0sQmxpbmtNYWNTeXN0ZW1Gb250LCJNYWxndW4gR290aGljIiwiTm90byBTYW5zIEtSIixzYW5zLXNlcmlmOw0KICBkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7aGVpZ2h0OjEwMHZoO3BhZGRpbmc6MTBweDtvdmVyZmxvdzpoaWRkZW47fQ0KLmFwcHt3aWR0aDoxMDAlO21heC13aWR0aDoxMDAlO21heC1oZWlnaHQ6MTAwJTtkaXNwbGF5OmZsZXg7ZmxleC1kaXJlY3Rpb246Y29sdW1uO2JhY2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjE0cHg7Ym94LXNoYWRvdzowIDRweCAyNHB4IHJnYmEoMCwwLDAsLjEpO292ZXJmbG93OmhpZGRlbjt9DQoudG9we3BhZGRpbmc6MTZweCAyMnB4O2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNlMmU4ZjA7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTBweDt9DQoudG9wIGgxe2ZvbnQtc2l6ZToyMHB4O21hcmdpbjowO2ZvbnQtd2VpZ2h0OjcwMDtjb2xvcjojMGYxNzJhO30NCi5saXZle21hcmdpbi1sZWZ0OmF1dG87Zm9udC1zaXplOjExcHg7Y29sb3I6IzE2YTM0YTtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo1cHg7Zm9udC13ZWlnaHQ6NjAwO30NCi5saXZlIC5ibGlwe3dpZHRoOjhweDtoZWlnaHQ6OHB4O2JvcmRlci1yYWRpdXM6NTAlO2JhY2tncm91bmQ6IzE2YTM0YTthbmltYXRpb246YmxpcCAxLjRzIGluZmluaXRlO30NCkBrZXlmcmFtZXMgYmxpcHswJSwxMDAle29wYWNpdHk6MX01MCV7b3BhY2l0eTouM319DQouY2hhdHtmbGV4OjE7bWluLWhlaWdodDowO292ZXJmbG93LXk6YXV0bztwYWRkaW5nOjIwcHggMjJweDtkaXNwbGF5OmZsZXg7ZmxleC1kaXJlY3Rpb246Y29sdW1uO2dhcDoxMnB4O30NCi5yb3d7ZGlzcGxheTpmbGV4O30NCi5yb3cubWV7anVzdGlmeS1jb250ZW50OmZsZXgtZW5kO30NCi5idWJibGV7bWF4LXdpZHRoOjgwJTtwYWRkaW5nOjEwcHggMTRweDtib3JkZXItcmFkaXVzOjEycHg7Zm9udC1zaXplOjE4cHg7bGluZS1oZWlnaHQ6MS43O30NCi5tZSAuYnViYmxle2JhY2tncm91bmQ6IzI1NjNlYjtjb2xvcjojZmZmO30NCi5haSAuYnViYmxle2JhY2tncm91bmQ6I2YxZjVmOTtjb2xvcjojMWUyOTNiO2JvcmRlcjoxcHggc29saWQgI2UyZThmMDt9DQouY3Vyc29ye2Rpc3BsYXk6aW5saW5lLWJsb2NrO3dpZHRoOjFweDthbmltYXRpb246YmxpbmsgMXMgaW5maW5pdGU7b3BhY2l0eTouNTt9DQpAa2V5ZnJhbWVzIGJsaW5rezUwJXtvcGFjaXR5OjB9fQ0KLnNvdXJjZXN7bWFyZ2luOjJweCAwIDAgNnB4O30NCi5zYnRue2Rpc3BsYXk6aW5saW5lLWZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo1cHg7cGFkZGluZzozcHggMTBweDtib3JkZXItcmFkaXVzOjZweDtib3JkZXI6MXB4IHNvbGlkICNmZWQ3YWE7DQogIGJhY2tncm91bmQ6I2ZmZjdlZDtmb250LXNpemU6MTRweDtjb2xvcjojYzI0MTBjO2ZvbnQtd2VpZ2h0OjYwMDt9DQouc2JveHttYXJnaW4tdG9wOjZweDtwYWRkaW5nOjhweCAxMnB4O2JhY2tncm91bmQ6I2ZmZjdlZDtib3JkZXItcmFkaXVzOjhweDtib3JkZXI6MXB4IHNvbGlkICNmZWQ3YWE7Zm9udC1zaXplOjE0cHg7Y29sb3I6IzlhMzQxMjt9DQouc2l0ZW17bWFyZ2luLXRvcDo1cHg7bGluZS1oZWlnaHQ6MS41O30NCi5zaXRlbTpmaXJzdC1jaGlsZHttYXJnaW4tdG9wOjA7fQ0KLnNpdGVtIGF7Y29sb3I6IzI1NjNlYjt0ZXh0LWRlY29yYXRpb246bm9uZTt9DQouc2l0ZW0gLnBjdHttYXJnaW4tbGVmdDo2cHg7Zm9udC1zaXplOjExcHg7Y29sb3I6Izk0YTNiODt9DQouYmFye3BhZGRpbmc6MTRweCAyMnB4O2JvcmRlci10b3A6MXB4IHNvbGlkICNlMmU4ZjA7ZGlzcGxheTpmbGV4O2dhcDo4cHg7fQ0KLmlucHtmbGV4OjE7cGFkZGluZzoxMHB4IDE0cHg7Ym9yZGVyLXJhZGl1czo4cHg7Ym9yZGVyOjFweCBzb2xpZCAjZTJlOGYwO2ZvbnQtc2l6ZToxN3B4O2NvbG9yOiMxZTI5M2I7bWluLWhlaWdodDoyMHB4O30NCi5pbnAgLnBoe2NvbG9yOiM5NGEzYjg7fQ0KLnNlbmR7cGFkZGluZzoxMHB4IDIwcHg7Ym9yZGVyLXJhZGl1czo4cHg7Ym9yZGVyOm5vbmU7YmFja2dyb3VuZDojMjU2M2ViO2NvbG9yOiNmZmY7Zm9udC1zaXplOjE2cHg7Zm9udC13ZWlnaHQ6NTAwO30NCi5yZWN7YWxpZ24tc2VsZjpmbGV4LXN0YXJ0O21heC13aWR0aDo5MiU7bWFyZ2luLXRvcDoycHg7YmFja2dyb3VuZDojZjBmZGY0O2JvcmRlcjoxcHggc29saWQgI2JiZjdkMDtib3JkZXItcmFkaXVzOjEycHg7cGFkZGluZzoxMXB4IDE1cHg7fQ0KLnJlYy1oe2ZvbnQtc2l6ZToxM3B4O2ZvbnQtd2VpZ2h0OjcwMDtjb2xvcjojMTU4MDNkO21hcmdpbi1ib3R0b206NnB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjVweDt9DQoucmVjLWJ7Zm9udC1zaXplOjE0cHg7bGluZS1oZWlnaHQ6MS43NTtjb2xvcjojMTY2NTM0O30NCjwvc3R5bGU+DQo8L2hlYWQ+DQo8Ym9keT4NCjxkaXYgY2xhc3M9ImFwcCI+DQogIDxkaXYgY2xhc3M9InRvcCI+DQogICAgPGgxPuymneq2jCDsg4Hri7Tsm5AgQUkg7L2U7LmYPC9oMT4NCiAgICA8c3BhbiBjbGFzcz0ibGl2ZSI+PHNwYW4gY2xhc3M9ImJsaXAiPjwvc3Bhbj7si6Tsi5zqsIQg7Iuc7JewPC9zcGFuPg0KICA8L2Rpdj4NCiAgPGRpdiBjbGFzcz0iY2hhdCIgaWQ9ImNoYXQiPjwvZGl2Pg0KICA8ZGl2IGNsYXNzPSJiYXIiPg0KICAgIDxkaXYgY2xhc3M9ImlucCIgaWQ9ImlucCI+PHNwYW4gY2xhc3M9InBoIj7sp4jrrLjsnYQg7J6F66Cl7ZWY7IS47JqULi4uPC9zcGFuPjwvZGl2Pg0KICAgIDxidXR0b24gY2xhc3M9InNlbmQiPuyghOyGoTwvYnV0dG9uPg0KICA8L2Rpdj4NCjwvZGl2Pg0KDQo8c2NyaXB0Pg0KKGZ1bmN0aW9uKCl7DQogIHZhciBjaGF0ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImNoYXQiKSwgaW5wID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImlucCIpOw0KICB2YXIgU0NSSVBUID0gWw0KICAgIHsNCiAgICAgIHE6ICLsl6zrs7TshLjsmpR+IOygnOqwgCDrqbDsuaAg7KCE7JeQIOyjvOyLneydhCDsooAg7IOA64qU642w7JqULCDrj4jsnbQg66qo7J6Q656A64uk6rOgIOucqOuNlOudvOqzoOyalC4g6re4656Y7IScIOyVnuycvOuhnCDqsbDrnpjtlaAg65WMIOutlOqwgCDsoJztlZzsnbQg6rG466aw64uk64qU642w4oCmIOydtOqyjCDrqbDsuaDsnbTrgpgg6re465+wIOqxsOyYiOyalD8iLA0KICAgICAgc291cmNlczogWw0KICAgICAgICB7dDoiMykg66+47IiY64+Z6rKw6rOE7KKMIOygnOuPhCAg6rCALiDrr7jsiJjrsJzsg53tiKzsnpDsnpAiLCB1OiJ2aWV3cGFnZS5hY3Rpb24/cGFnZUlkPTIzMDcxMDU1IiwgcDo3OH0sDQogICAgICAgIHt0OiIzKSDrr7jsiJjrj5nqsrDqs4Tsoowg7KCc64+EICDri6QuIOyjvOusuCDsoJztlZwiLCB1OiJ2aWV3cGFnZS5hY3Rpb24/cGFnZUlkPTIzMDcxMDU1IiwgcDo2NH0NCiAgICAgIF0sDQogICAgICBhOiAi66eQ7JSA7ZWY7IugIOyDge2ZqeydgCAqKuuvuOyImOuPmeqysOqzhOyijCDsoJzrj4QqKuyXkCDtlbTri7ntlanri4jri6QgWzFdLiDqsrDsoJzrjIDquIjsnbQg67aA7KGx7ZWY66m0IOuvuOyImOuwnOyDneydvCjqsrDsoJzsnbwpIOuLpOydjOuCoOu2gO2EsCAqKjMw7J286rCEKiog7JyE7YOB7Kad6rGw6riI7J2EICoq7ZiE6riI7Jy866GcIDEwMCUqKiDrgqnrtoDtlZjshZTslbwg7ZWp64uI64ukIFsxXS4g66+47IiY6riI7J2EIOuqqOuRkCDrs4DsoJztlZjquLAg7KCE6rmM7KeA64qUIOyLoOq3nCDrp6TsiJgg7KO866y47J20IOygnO2VnOuQqeuLiOuLpCBbMl0uIiwNCiAgICAgIHJlYzogIuqzoOqwneuLmCwg6rKw7KCc64yA6riI7J20IOu2gOyhse2VmOyFqOuNmCDrtoDrtoTsnYAgJ+uvuOyImOuPmeqysOqzhOyijCfroZwg7KeA7KCV65CY64qUIOyCrOycoOyeheuLiOuLpC4g66+47IiY6rCAIOuwnOyDne2VnCDrgqDsnZgg64uk7J2M64Kg67aA7YSwIDMw7J286rCE7J2AIOyjvOyLneydhCDsgqzsi6Qg65WMIOuMgOq4iOydhCAxMDAlIO2YhOq4iOycvOuhnCDrgqnrtoDtlZjshZTslbwg7ZWY6rOgLCDqt7gg6riw6rCE7JeQ64qUIOuvuOyImOq4iOydhCDrqqjrkZAg6rCa7Jy87Iuc6riwIOyghOq5jOyngCDsi6Dqt5wg66ek7IiY6rCAIOygnO2VnOuQqeuLiOuLpC4g7Jik64qYIOykkeycvOuhnCDrr7jsiJjquIjsnYQg7J6F6riI7ZW0IOyjvOyLnOuptCDqsIDsnqUg67mg66W06rKMIO2VtOyGjOuQqeuLiOuLpC4g642UIOyViOuCtOqwgCDtlYTsmpTtlZjsi6TquYzsmpQ/Ig0KICAgIH0NCiAgXTsNCg0KICBmdW5jdGlvbiBlbChodG1sKXt2YXIgZD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCJkaXYiKTtkLmlubmVySFRNTD1odG1sO3JldHVybiBkLmZpcnN0Q2hpbGQ7fQ0KICBmdW5jdGlvbiBtZChzKXtyZXR1cm4gcy5yZXBsYWNlKC9cKlwqKC4rPylcKlwqL2csIjxiPiQxPC9iPiIpO30NCiAgZnVuY3Rpb24gc2Nyb2xsKCl7Y2hhdC5zY3JvbGxUb3A9Y2hhdC5zY3JvbGxIZWlnaHQ7fQ0KICBmdW5jdGlvbiB3YWl0KG1zKXtyZXR1cm4gbmV3IFByb21pc2UoZnVuY3Rpb24ocil7c2V0VGltZW91dChmdW5jdGlvbiB0KCl7d2luZG93Ll9fcGF1c2VkP3NldFRpbWVvdXQodCwxMjApOnIoKTt9LG1zKTt9KTt9DQoNCiAgYXN5bmMgZnVuY3Rpb24gdHlwZUludG8odGV4dCl7DQogICAgaW5wLmlubmVySFRNTD0iIjsNCiAgICBmb3IodmFyIGk9MDtpPHRleHQubGVuZ3RoO2krKyl7IGlucC50ZXh0Q29udGVudD10ZXh0LnNsaWNlKDAsaSsxKTsgYXdhaXQgd2FpdCgzNCk7IH0NCiAgfQ0KICBhc3luYyBmdW5jdGlvbiBydW4oKXsNCiAgICB3aGlsZSh0cnVlKXsNCiAgICAgIGZvcih2YXIgcz0wO3M8U0NSSVBULmxlbmd0aDtzKyspew0KICAgICAgICB2YXIgaXRlbT1TQ1JJUFRbc107DQogICAgICAgIC8vIDEpIOyniOusuCDtg4DsnbTtlZENCiAgICAgICAgYXdhaXQgdHlwZUludG8oaXRlbS5xKTsNCiAgICAgICAgYXdhaXQgd2FpdCg1MDApOw0KICAgICAgICAvLyAyKSDsp4jrrLgg66eQ7ZKN7ISgDQogICAgICAgIHZhciBtZT1lbCgnPGRpdiBjbGFzcz0icm93IG1lIj48ZGl2IGNsYXNzPSJidWJibGUiPjwvZGl2PjwvZGl2PicpOw0KICAgICAgICBtZS5xdWVyeVNlbGVjdG9yKCIuYnViYmxlIikudGV4dENvbnRlbnQ9aXRlbS5xOyBjaGF0LmFwcGVuZENoaWxkKG1lKTsgc2Nyb2xsKCk7DQogICAgICAgIGlucC5pbm5lckhUTUw9JzxzcGFuIGNsYXNzPSJwaCI+7KeI66y47J2EIOyeheugpe2VmOyEuOyalC4uLjwvc3Bhbj4nOw0KICAgICAgICBhd2FpdCB3YWl0KDMwMCk7DQogICAgICAgIC8vIDMpIOy2nOyymCDrqLzsoIAgKFNTRTogc291cmNlcyDshKDsoITshqEpDQogICAgICAgIHZhciBzcmM9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiZGl2Iik7IHNyYy5jbGFzc05hbWU9InNvdXJjZXMiOw0KICAgICAgICB2YXIgYm94PSc8ZGl2IGNsYXNzPSJzYm94Ij4nOw0KICAgICAgICBpdGVtLnNvdXJjZXMuZm9yRWFjaChmdW5jdGlvbih4LGkpew0KICAgICAgICAgIGJveCs9JzxkaXYgY2xhc3M9InNpdGVtIj48YiBzdHlsZT0iY29sb3I6I2VhNTgwYyI+WycrKGkrMSkrJ108L2I+ICcrDQogICAgICAgICAgICAgICAnPGEgaHJlZj0iaHR0cHM6Ly93aWtpLmhhbndoYXdtLmNvbS9wYWdlcy8nK3gudSsnIiB0YXJnZXQ9Il9ibGFuayI+Jyt4LnQrJyDihpc8L2E+JysNCiAgICAgICAgICAgICAgICc8c3BhbiBjbGFzcz0icGN0Ij4oJyt4LnArJyUpPC9zcGFuPjwvZGl2Pic7DQogICAgICAgIH0pOw0KICAgICAgICBib3grPSc8L2Rpdj4nOw0KICAgICAgICBzcmMuaW5uZXJIVE1MPSc8c3BhbiBjbGFzcz0ic2J0biI+7Lac7LKYICcraXRlbS5zb3VyY2VzLmxlbmd0aCsn6rG0IOKWvDwvc3Bhbj4nK2JveDsNCiAgICAgICAgY2hhdC5hcHBlbmRDaGlsZChzcmMpOyBzY3JvbGwoKTsNCiAgICAgICAgYXdhaXQgd2FpdCg3NTApOw0KICAgICAgICAvLyA0KSDri7Xrs4Ag7Iqk7Yq466as67CNDQogICAgICAgIHZhciBhaT1lbCgnPGRpdiBjbGFzcz0icm93IGFpIj48ZGl2IGNsYXNzPSJidWJibGUiPjxzcGFuIGNsYXNzPSJib2R5Ij48L3NwYW4+PHNwYW4gY2xhc3M9ImN1cnNvciI+fDwvc3Bhbj48L2Rpdj48L2Rpdj4nKTsNCiAgICAgICAgdmFyIGJvZHk9YWkucXVlcnlTZWxlY3RvcigiLmJvZHkiKTsgY2hhdC5hcHBlbmRDaGlsZChhaSk7IHNjcm9sbCgpOw0KICAgICAgICB2YXIgZnVsbD1pdGVtLmEsIHNob3duPSIiOw0KICAgICAgICBmb3IodmFyIGM9MDtjPGZ1bGwubGVuZ3RoO2MrKyl7IHNob3duPWZ1bGwuc2xpY2UoMCxjKzEpOyBib2R5LmlubmVySFRNTD1tZChzaG93bik7IHNjcm9sbCgpOyBhd2FpdCB3YWl0KDUwKTsgfQ0KICAgICAgICBhaS5xdWVyeVNlbGVjdG9yKCIuY3Vyc29yIikucmVtb3ZlKCk7DQogICAgICAgIGF3YWl0IHdhaXQoNzAwKTsNCiAgICAgICAgLy8gNSkg6rOg6rCdIOydkeuMgCDstpTsspwg66mY7Yq4IOKAlCDtjrjrnozsnYQg7LC+7JWE7KSEIOu/kCDslYTri4jrnbwsIOq3uOuMgOuhnCDsnb3slrTspIQg66mY7Yq46rmM7KeADQogICAgICAgIGlmKGl0ZW0ucmVjKXsNCiAgICAgICAgICB2YXIgcmVjPWVsKCc8ZGl2IGNsYXNzPSJyZWMiPjxkaXYgY2xhc3M9InJlYy1oIj7wn5KsIOqzoOqwneyXkOqyjCDsnbTroIfqsowg7JWI64K07ZWY7IS47JqUPC9kaXY+PGRpdiBjbGFzcz0icmVjLWIiPjwvZGl2PjwvZGl2PicpOw0KICAgICAgICAgIGNoYXQuYXBwZW5kQ2hpbGQocmVjKTsgc2Nyb2xsKCk7DQogICAgICAgICAgdmFyIHJiPXJlYy5xdWVyeVNlbGVjdG9yKCIucmVjLWIiKSwgcmZ1bGw9aXRlbS5yZWM7DQogICAgICAgICAgZm9yKHZhciBrPTA7azxyZnVsbC5sZW5ndGg7aysrKXsgcmIudGV4dENvbnRlbnQ9cmZ1bGwuc2xpY2UoMCxrKzEpOyBzY3JvbGwoKTsgYXdhaXQgd2FpdCgyNSk7IH0NCiAgICAgICAgfQ0KICAgICAgICBhd2FpdCB3YWl0KDI4MDApOw0KICAgICAgfQ0KICAgICAgLy8g66Oo7ZSEIOyghCDtmZTrqbQg7KCV66asDQogICAgICBhd2FpdCB3YWl0KDQwMCk7IGNoYXQuaW5uZXJIVE1MPSIiOw0KICAgIH0NCiAgfQ0KICBydW4oKTsNCn0pKCk7DQo8L3NjcmlwdD4NCg0KPHNjcmlwdD4NCihmdW5jdGlvbigpew0KICB3aW5kb3cuX19wYXVzZWQ9dHJ1ZTsNCiAgdmFyIGI9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnYnV0dG9uJyk7DQogIGIudGV4dENvbnRlbnQ9J+KWtiDsnqzsg50nOw0KICBiLnN0eWxlLmNzc1RleHQ9J21hcmdpbi1sZWZ0OjEwcHg7cGFkZGluZzo2cHggMTNweDtib3JkZXI6MXB4IHNvbGlkICNjYmQ1ZTE7Ym9yZGVyLXJhZGl1czo4cHg7Jw0KICAgICsnYmFja2dyb3VuZDojZmZmO2ZvbnQtc2l6ZToxNHB4O2ZvbnQtd2VpZ2h0OjYwMDtjb2xvcjojMzM0MTU1O2N1cnNvcjpwb2ludGVyO2ZsZXgtc2hyaW5rOjAnOw0KICBiLm9uY2xpY2s9ZnVuY3Rpb24oKXt3aW5kb3cuX19wYXVzZWQ9IXdpbmRvdy5fX3BhdXNlZDsNCiAgICBiLnRleHRDb250ZW50PXdpbmRvdy5fX3BhdXNlZD8n4pa2IOyerOyDnSc6J+KPuCDsoJXsp4AnO307DQogIHZhciB0b3A9ZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnRvcCcpO2lmKHRvcCl0b3AuYXBwZW5kQ2hpbGQoYik7DQp9KSgpOw0KPC9zY3JpcHQ+DQo8L2JvZHk+DQo8L2h0bWw+DQo=" style="width:100%;max-width:1160px;height:560px;border:1px solid var(--border);border-radius:12px;margin:6px auto 0;display:block;background:#fff"></iframe>
   </div>
 </section>
 
-<section class="slide" data-ch="01 무엇을" data-title="작동 ① 챗봇 모드">
-  <div class="inner">
-    <div class="kicker">01 · 챗봇 ② 그 원리 (RAG)</div>
-    <h2>챗봇 모드 — 따로 학습 없이 <em class="mark">검색으로 답한다</em> <span style="font-size:14px;font-weight:400;color:var(--muted)">(RAG)</span></h2>
-    <p class="lead">AI를 새로 학습시키지 않고, 질문이 올 때마다 관련 문서를 찾아 AI에게 건네 답하게 한다 — 그래서 편람이 바뀌어도 문서만 갈아주면 된다</p>
-    <div class="demo">
-      <svg viewBox="0 0 760 200" style="width:100%;height:auto" role="img">
-        <title>챗봇 모드(RAG) 데이터 흐름</title>
-        <desc>질문이 임베딩과 ChromaDB를 거쳐 LLM으로, 답변이 상담원에게 돌아오는 흐름.</desc>
-        <defs>
-          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/>
-          </marker>
-        </defs>
-        <path d="M 150 62 L 225 62" fill="none" stroke="var(--border)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <path d="M 340 62 L 415 62" fill="none" stroke="var(--border)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <path d="M 530 62 L 605 62" fill="none" stroke="var(--border)" stroke-width="1.5" marker-end="url(#arr)"/>
-        <path d="M 660 84 L 660 160 L 95 160 L 95 90" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr)"/>
-
-        <rect x="40" y="40" width="110" height="44" rx="9" fill="var(--c-client)"/>
-        <text x="95" y="66" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">상담원</text>
-        <rect x="230" y="40" width="110" height="44" rx="9" fill="var(--c-service)"/>
-        <text x="285" y="60" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">임베딩</text>
-        <text x="285" y="75" text-anchor="middle" font-size="10" fill="#fff" opacity="0.8">문장 → 숫자 벡터</text>
-        <rect x="420" y="40" width="110" height="44" rx="9" fill="var(--c-storage)"/>
-        <text x="475" y="60" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">ChromaDB</text>
-        <text x="475" y="75" text-anchor="middle" font-size="10" fill="#fff" opacity="0.8">유사 문서 검색</text>
-        <rect x="605" y="40" width="110" height="44" rx="9" fill="var(--c-service)"/>
-        <text x="660" y="60" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">LLM</text>
-        <text x="660" y="75" text-anchor="middle" font-size="10" fill="#fff" opacity="0.8">참고해 답 쓰는 AI</text>
-
-        <text x="187" y="50" text-anchor="middle" font-size="10.5" fill="var(--muted)">① 질문</text>
-        <text x="377" y="50" text-anchor="middle" font-size="10.5" fill="var(--muted)">② 벡터 검색</text>
-        <text x="567" y="50" text-anchor="middle" font-size="10.5" fill="var(--muted)">③ 문서 top5</text>
-        <text x="380" y="153" text-anchor="middle" font-size="10.5" fill="var(--muted)">④ 답변 + 출처</text>
-
-        <circle r="7" fill="var(--c-client)" opacity="0">
-          <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear"
-            keyPoints="0;0;1;1" keyTimes="0;0.02;0.30;1"
-            path="M 150 62 L 225 62 M 340 62 L 415 62"/>
-          <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.03;0.28;0.31;1" dur="9s" repeatCount="indefinite"/>
-        </circle>
-        <circle r="7" fill="var(--c-storage)" opacity="0">
-          <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear"
-            keyPoints="0;0;1;1" keyTimes="0;0.36;0.52;1"
-            path="M 530 62 L 605 62"/>
-          <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.36;0.38;0.50;0.53;1" dur="9s" repeatCount="indefinite"/>
-        </circle>
-        <circle r="7" fill="var(--c-service)" opacity="0">
-          <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear"
-            keyPoints="0;0;1;1" keyTimes="0;0.60;0.95;1"
-            path="M 660 84 L 660 160 L 95 160 L 95 90"/>
-          <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.60;0.62;0.93;0.96" dur="9s" repeatCount="indefinite"/>
-        </circle>
-      </svg>
-      <div class="legend">
-        <span><span class="dot" style="background:var(--c-client)"></span>질문</span>
-        <span><span class="dot" style="background:var(--c-storage)"></span>검색된 문서</span>
-        <span><span class="dot" style="background:var(--c-service)"></span>답변 + 출처</span>
-      </div>
-    </div>
-    <div class="chips">
-      <span class="chip">고객 말 <b>그대로 입력</b> — 키워드로 안 바꿔도 의미로 검색</span>
-      <span class="chip">편람이 바뀌면 → <b>문서만 다시 넣으면 끝</b></span>
-      <span class="chip">검색한 문서 = <b>출처</b></span>
-      <span class="chip">문서에 없으면 <b>&ldquo;모른다&rdquo;</b>고 답함</span>
-    </div>
-  </div>
-</section>
-
 <section class="slide" data-ch="01 무엇을" data-title="실제 화면 (훈련)">
   <div class="inner">
-    <div class="kicker">01 · 훈련 ① 먼저 실물로</div>
+    <div class="kicker">시연 · 훈련(코치) 모드</div>
     <h2>훈련(코치) 모드 — <em class="mark">AI가 채점</em></h2>
     <p class="lead">AI 고객이 질문 → 신입이 답변 → 점수 근거 + 모범답변 (자동 재생)</p>
     <iframe title="훈련 시연" src="data:text/html;base64,PCFET0NUWVBFIGh0bWw+DQo8IS0tIO2biOugqCjsvZTsuZgpIOuqqOuTnCDsnpDrj5kg7Iuc7JewIOKAlCBBSSDqs6DqsJ0g7KeI66y4IOKGkiDsi6DsnoUg64u167OAIOKGkiDssYTsoJAo7KCQ7IiYIOq3vOqxsCvrqqjrspTri7Xrs4ApLiDso73snYAg7Iuc6rCEIDAuIC0tPg0KPGh0bWwgbGFuZz0ia28iPg0KPGhlYWQ+DQo8bWV0YSBjaGFyc2V0PSJVVEYtOCI+DQo8dGl0bGU+QUkg7L2U7LmYIOKAlCDtm4jroKgg66qo65OcIOyekOuPmSDsi5zsl7A8L3RpdGxlPg0KPHN0eWxlPg0KKntib3gtc2l6aW5nOmJvcmRlci1ib3g7fQ0KYm9keXttYXJnaW46MDtiYWNrZ3JvdW5kOiNmMWY1Zjk7Zm9udC1mYW1pbHk6LWFwcGxlLXN5c3RlbSxCbGlua01hY1N5c3RlbUZvbnQsIk1hbGd1biBHb3RoaWMiLCJOb3RvIFNhbnMgS1IiLHNhbnMtc2VyaWY7DQogIGRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtoZWlnaHQ6MTAwdmg7cGFkZGluZzoxMHB4O292ZXJmbG93OmhpZGRlbjt9DQouYXBwe3dpZHRoOjEwMCU7bWF4LXdpZHRoOjEwMCU7bWF4LWhlaWdodDoxMDAlO2Rpc3BsYXk6ZmxleDtmbGV4LWRpcmVjdGlvbjpjb2x1bW47YmFja2dyb3VuZDojZmZmO2JvcmRlci1yYWRpdXM6MTRweDtib3gtc2hhZG93OjAgNHB4IDI0cHggcmdiYSgwLDAsMCwuMSk7b3ZlcmZsb3c6aGlkZGVuO30NCi50b3B7cGFkZGluZzoxNnB4IDIycHg7Ym9yZGVyLWJvdHRvbToxcHggc29saWQgI2UyZThmMDtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMHB4O30NCi50b3AgaDF7Zm9udC1zaXplOjIwcHg7bWFyZ2luOjA7Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOiMwZjE3MmE7fQ0KLnRhYnN7bWFyZ2luLWxlZnQ6YXV0bztkaXNwbGF5OmZsZXg7Z2FwOjZweDt9DQoudGFie2ZvbnQtc2l6ZToxMnB4O3BhZGRpbmc6NXB4IDEycHg7Ym9yZGVyLXJhZGl1czo3cHg7Ym9yZGVyOjFweCBzb2xpZCAjZTJlOGYwO2NvbG9yOiM2NDc0OGI7fQ0KLnRhYi5vbntiYWNrZ3JvdW5kOiMwZjc2NmU7Y29sb3I6I2ZmZjtib3JkZXItY29sb3I6IzBmNzY2ZTt9DQouYm9keXtwYWRkaW5nOjE0cHggMjJweDtmbGV4OjE7bWluLWhlaWdodDowO292ZXJmbG93LXk6YXV0bzt9DQouY3RybHN7ZGlzcGxheTpmbGV4O2dhcDoxNHB4O2FsaWduLWl0ZW1zOmNlbnRlcjttYXJnaW4tYm90dG9tOjE0cHg7Zm9udC1zaXplOjEzcHg7Y29sb3I6IzY0NzQ4Yjt9DQouY3RybHMgLnBpbGx7Ym9yZGVyOjFweCBzb2xpZCAjZTJlOGYwO2JvcmRlci1yYWRpdXM6NnB4O3BhZGRpbmc6NXB4IDEwcHg7fQ0KLm5ld3F7cGFkZGluZzo4cHggMTZweDtib3JkZXI6bm9uZTtib3JkZXItcmFkaXVzOjdweDtiYWNrZ3JvdW5kOiMyNTYzZWI7Y29sb3I6I2ZmZjtmb250LXNpemU6MTNweDtmb250LXdlaWdodDo1MDA7fQ0KLnFib3h7cGFkZGluZzoxNHB4IDE2cHg7YmFja2dyb3VuZDojZjhmYWZjO2JvcmRlci1sZWZ0OjRweCBzb2xpZCAjMjU2M2ViO2JvcmRlci1yYWRpdXM6OHB4O21hcmdpbi1ib3R0b206MTRweDtvcGFjaXR5OjA7dHJhbnNpdGlvbjpvcGFjaXR5IC4zczt9DQoucWJveC5zaG93e29wYWNpdHk6MTt9DQoucWJveCAubGFie2ZvbnQtc2l6ZToxMXB4O2NvbG9yOiM2NDc0OGI7bGV0dGVyLXNwYWNpbmc6LjVweDttYXJnaW46MCAwIDZweDt9DQoucWJveCAucXtmb250LXNpemU6MThweDtjb2xvcjojMWUyOTNiO21hcmdpbjowO2xpbmUtaGVpZ2h0OjEuNjt9DQoucWJveCAucmVme21hcmdpbjoxMHB4IDAgMDtmb250LXNpemU6MTJweDtjb2xvcjojNDc1NTY5O2JhY2tncm91bmQ6I2UyZThmMDtwYWRkaW5nOjZweCA5cHg7Ym9yZGVyLXJhZGl1czo2cHg7ZGlzcGxheTppbmxpbmUtYmxvY2s7fQ0KLmFucy1sYWJ7Zm9udC1zaXplOjEzcHg7Y29sb3I6IzMzNDE1NTtmb250LXdlaWdodDo1MDA7bWFyZ2luOjAgMCA2cHg7fQ0KLmFuc3t3aWR0aDoxMDAlO21pbi1oZWlnaHQ6NjBweDtwYWRkaW5nOjExcHg7Ym9yZGVyOjFweCBzb2xpZCAjZTJlOGYwO2JvcmRlci1yYWRpdXM6OHB4O2ZvbnQtc2l6ZToxNnB4O2xpbmUtaGVpZ2h0OjEuNjtjb2xvcjojMWUyOTNiO2JhY2tncm91bmQ6I2ZmZjt9DQouYW5zIC5waHtjb2xvcjojOTRhM2I4O30NCi5zdWJtaXR7bWFyZ2luLXRvcDoxMHB4O3BhZGRpbmc6OXB4IDIycHg7Ym9yZGVyOm5vbmU7Ym9yZGVyLXJhZGl1czo4cHg7YmFja2dyb3VuZDojMDU5NjY5O2NvbG9yOiNmZmY7Zm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6NTAwO30NCi5yZXN1bHR7bWFyZ2luLXRvcDoxMnB4O3BhZGRpbmc6MTRweDtiYWNrZ3JvdW5kOiNmMGZkZjQ7Ym9yZGVyOjFweCBzb2xpZCAjYmJmN2QwO2JvcmRlci1yYWRpdXM6MTJweDtvcGFjaXR5OjA7dHJhbnNpdGlvbjpvcGFjaXR5IC4zNXM7fQ0KLnJlc3VsdC5zaG93e29wYWNpdHk6MTt9DQoucmVzdWx0IGgze21hcmdpbjowIDAgMTRweDtmb250LXNpemU6MjFweDtjb2xvcjojMTY2NTM0O30NCi5iZC1sYWJ7Zm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6NjAwO2NvbG9yOiMxNjY1MzQ7bWFyZ2luOjAgMCA4cHg7fQ0KLmJke21hcmdpbi1ib3R0b206OXB4O30NCi5iZCAudG9wMntkaXNwbGF5OmZsZXg7anVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47Zm9udC1zaXplOjE0cHg7Y29sb3I6IzMzNDE1NTt9DQouYmQgLnRvcDIgYntmb250LXdlaWdodDo2MDA7fQ0KLmJkIC50cmFja3toZWlnaHQ6NnB4O2JhY2tncm91bmQ6I2RjZmNlNztib3JkZXItcmFkaXVzOjNweDttYXJnaW4tdG9wOjNweDtvdmVyZmxvdzpoaWRkZW47fQ0KLmJkIC5maWxse2hlaWdodDoxMDAlO2JhY2tncm91bmQ6IzE2YTM0YTt3aWR0aDowO3RyYW5zaXRpb246d2lkdGggLjdzIGN1YmljLWJlemllciguMiwuOCwuMiwxKTt9DQouYmQgLndoeXttYXJnaW46NHB4IDAgMDtmb250LXNpemU6MTJweDtjb2xvcjojNjQ3NDhiO2xpbmUtaGVpZ2h0OjEuNTt9DQouZmJ7bWFyZ2luOjEycHggMDtmb250LXNpemU6MTZweDtjb2xvcjojMWUyOTNiO2xpbmUtaGVpZ2h0OjEuNjt9DQoubWlzc3tmb250LXNpemU6MTNweDtjb2xvcjojYjkxYzFjO21hcmdpbjowIDAgOHB4O30NCi5tb2RlbHttYXJnaW4tdG9wOjhweDtwYWRkaW5nOjEzcHggMTZweDtiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyLXJhZGl1czo4cHg7Zm9udC1zaXplOjE2cHg7Y29sb3I6IzMzNDE1NTtsaW5lLWhlaWdodDoxLjc7fQ0KLm1vZGVsIGJ7Y29sb3I6IzBmMTcyYTt9DQoubW9kZWwgLm1sYWJ7Zm9udC1zaXplOjEzcHg7Y29sb3I6IzQ3NTU2OTtmb250LXdlaWdodDo2MDA7bWFyZ2luOjAgMCA2cHg7fQ0KLmN1cnNvcntkaXNwbGF5OmlubGluZS1ibG9jazt3aWR0aDoxcHg7YW5pbWF0aW9uOmJsaW5rIDFzIGluZmluaXRlO30NCkBrZXlmcmFtZXMgYmxpbmt7NTAle29wYWNpdHk6MH19DQo8L3N0eWxlPg0KPC9oZWFkPg0KPGJvZHk+DQo8ZGl2IGNsYXNzPSJhcHAiPg0KICA8ZGl2IGNsYXNzPSJ0b3AiPg0KICAgIDxoMT7spp3qtowg7IOB64u07JuQIEFJIOy9lOy5mDwvaDE+DQogICAgPGRpdiBjbGFzcz0idGFicyI+PHNwYW4gY2xhc3M9InRhYiI+7LGX67SHIOuqqOuTnDwvc3Bhbj48c3BhbiBjbGFzcz0idGFiIG9uIj7tm4jroKgg66qo65OcPC9zcGFuPjwvZGl2Pg0KICA8L2Rpdj4NCiAgPGRpdiBjbGFzcz0iYm9keSI+DQogICAgPGRpdiBjbGFzcz0iY3RybHMiPg0KICAgICAgPHNwYW4gY2xhc3M9InBpbGwiPuuCnOydtOuPhCDstIjquIk8L3NwYW4+DQogICAgICA8c3BhbiBjbGFzcz0icGlsbCI+4pyTIOuNsOuqqCDrqqjrk5w8L3NwYW4+DQogICAgICA8YnV0dG9uIGNsYXNzPSJuZXdxIj7sg4gg7KeI66y4PC9idXR0b24+DQogICAgPC9kaXY+DQogICAgPGRpdiBjbGFzcz0icWJveCIgaWQ9InFib3giPg0KICAgICAgPHAgY2xhc3M9ImxhYiI+6rOg6rCdIOyniOusuCDCtyDstIjquIk8L3A+DQogICAgICA8cCBjbGFzcz0icSIgaWQ9InEiPjwvcD4NCiAgICAgIDxzcGFuIGNsYXNzPSJyZWYiIGlkPSJyZWYiIHN0eWxlPSJkaXNwbGF5Om5vbmUiPjwvc3Bhbj4NCiAgICA8L2Rpdj4NCiAgICA8ZGl2IGlkPSJhbnNBcmVhIiBzdHlsZT0iZGlzcGxheTpub25lIj4NCiAgICAgIDxwIGNsYXNzPSJhbnMtbGFiIj7rgrQg64u167OAPC9wPg0KICAgICAgPGRpdiBjbGFzcz0iYW5zIiBpZD0iYW5zIj48c3BhbiBjbGFzcz0icGgiPuqzoOqwnSDsp4jrrLjsl5Ag64yA7ZWcIOuLteuzgOydhCDsnoXroKXtlZjshLjsmpQuLi48L3NwYW4+PC9kaXY+DQogICAgICA8YnV0dG9uIGNsYXNzPSJzdWJtaXQiPuygnOy2nDwvYnV0dG9uPg0KICAgIDwvZGl2Pg0KICAgIDxkaXYgY2xhc3M9InJlc3VsdCIgaWQ9InJlc3VsdCI+PC9kaXY+DQogIDwvZGl2Pg0KPC9kaXY+DQoNCjxzY3JpcHQ+DQooZnVuY3Rpb24oKXsNCiAgdmFyIERBVEEgPSB7DQogICAgcTogIuygnOqwgCDrr7jsiJjqsIAg67Cc7IOd7ZaI64qU642wLCDslZ7snLzroZwg7KCcIOqzhOyijOyXkCDqsbDrnpgg7KCc7ZWc7J20IOyDneq4sOuCmOyalD8iLA0KICAgIHJlZjogIvCfk5Yg7Y64656MOiDrp6Trp6QgPiAzKSDrr7jsiJjrj5nqsrDqs4Tsoowg7KCc64+EIiwNCiAgICBhbnN3ZXI6ICLrhKQsIOuvuOyImOqwgCDrsJzsg53tlZjrqbQg66+47IiY64+Z6rKw6rOE7KKM66GcIOyngOygleuQmOyWtCAzMOydvOqwhCDsnITtg4Hspp3qsbDquIjsnYQg7ZiE6riI7Jy866GcIDEwMCUg64K07IWU7JW8IO2VqeuLiOuLpC4iLA0KICAgIHNjb3JlOiA3MiwNCiAgICBicmVha2Rvd246IFsNCiAgICAgIHtsYWJlbDoi7ZWE7IiYIO2VreuqqSDtj6ztlaggKDYw7KCQKSIsIHNjb3JlOjQyLCBtYXg6NjAsIHdoeToiMzDsnbzCt+2YhOq4iDEwMCXripQg7KCV7ZmVLiDso7zrrLgg7KCc7ZWcwrftg4Dsgqwg7KCB7Jqp7J2AIOuIhOudvSJ9LA0KICAgICAge2xhYmVsOiLsnZjrr7jsoIEg7KCV7ZmV7ISxICgzMOygkCkiLCBzY29yZToyNSwgbWF4OjMwLCB3aHk6Iu2VteyLrCDsgqzsi6TsnbQg7Y64656M6rO8IOydvOy5mCJ9LA0KICAgICAge2xhYmVsOiLqs6DqsJ0g7Lmc7ZmU7KCBIO2RnO2YhCAoMTDsoJApIiwgc2NvcmU6NSwgbWF4OjEwLCB3aHk6IuuLpOyGjCDsgqzrrLTsoIEg4oCUIOqzoOqwnSDsnoXsnqUg67Cw66CkIO2RnO2YhCDrtoDsobEifQ0KICAgIF0sDQogICAgZmVlZGJhY2s6ICLtlbXsi6woMzDsnbzCt+2YhOq4iCAxMDAlKeydgCDsoJXtmZXtlanri4jri6QuIOuLpOunjCDrr7jsiJjquIgg67OA7KCc6rCAIOyZhOujjOuQoCDrlYzquYzsp4Ag7KO866y47J20IOygnO2VnOuQnOuLpOuKlCDsoJDsnbQg67mg7KGM7Iq164uI64ukLiIsDQogICAgbWlzczogIuyjvOusuCDsoJztlZwsIOuvuOyImOq4iCDrs4DsoJwg7Iuc7KCQIiwNCiAgICBtb2RlbDogIuqzoOqwneuLmCwg66+47IiY64+Z6rKw6rOE7KKMIOygnOuPhOyXkCDrjIDtlbQg7JWI64K065Oc66a964uI64ukLlxuXG4xLiAqKuyngOyglSDquLDqsIQqKjog66+47IiYIOuwnOyDneydvCDri6TsnYzrgqDrtoDthLAgMzDsnbzqsIQg7KCB7Jqp65Cp64uI64ukLlxuMi4gKirspp3qsbDquIgqKjog6re4IOq4sOqwhCDrj5nslYgg7JyE7YOB7Kad6rGw6riI7J2EIO2YhOq4iOycvOuhnCAxMDAlIOuCqeu2gO2VmOyFlOyVvCDtlanri4jri6QuXG4zLiAqKuyjvOusuCDsoJztlZwqKjog66+47IiY6riIIOuzgOygnOqwgCDsmYTro4zrkKAg65WM6rmM7KeAIOyLoOq3nCDso7zrrLjsnbQg7KCc7ZWc65Cp64uI64ukLiINCiAgfTsNCiAgdmFyIHE9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInEiKSwgcmVmPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJyZWYiKSwNCiAgICAgIHFib3g9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInFib3giKSwgYW5zQXJlYT1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiYW5zQXJlYSIpLA0KICAgICAgYW5zPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJhbnMiKSwgcmVzdWx0PWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJyZXN1bHQiKTsNCiAgZnVuY3Rpb24gd2FpdChtcyl7cmV0dXJuIG5ldyBQcm9taXNlKGZ1bmN0aW9uKHIpe3NldFRpbWVvdXQoZnVuY3Rpb24gdCgpe3dpbmRvdy5fX3BhdXNlZD9zZXRUaW1lb3V0KHQsMTIwKTpyKCk7fSxtcyk7fSk7fQ0KICBmdW5jdGlvbiBtZChzKXtyZXR1cm4gcy5yZXBsYWNlKC9cKlwqKC4rPylcKlwqL2csIjxiPiQxPC9iPiIpLnJlcGxhY2UoL1xuL2csIjxicj4iKTt9DQogIGZ1bmN0aW9uIG1kTGlzdChzKXsNCiAgICB2YXIgcGFydHM9cy5zcGxpdCgiXG4iKS5maWx0ZXIoZnVuY3Rpb24oeCl7cmV0dXJuIHgudHJpbSgpO30pOw0KICAgIHZhciBodG1sPSIiLCBpbkxpc3Q9ZmFsc2U7DQogICAgcGFydHMuZm9yRWFjaChmdW5jdGlvbihwKXsNCiAgICAgIGlmKC9eXGQrXC5ccy8udGVzdChwKSl7IGlmKCFpbkxpc3Qpe2h0bWwrPSI8b2wgc3R5bGU9J21hcmdpbjo2cHggMDtwYWRkaW5nLWxlZnQ6MjBweCc+Ijtpbkxpc3Q9dHJ1ZTt9IGh0bWwrPSI8bGkgc3R5bGU9J21hcmdpbjo0cHggMCc+IittZChwLnJlcGxhY2UoL15cZCtcLlxzLywiIikpKyI8L2xpPiI7IH0NCiAgICAgIGVsc2UgeyBpZihpbkxpc3Qpe2h0bWwrPSI8L29sPiI7aW5MaXN0PWZhbHNlO30gaHRtbCs9IjxwIHN0eWxlPSdtYXJnaW46NnB4IDAnPiIrbWQocCkrIjwvcD4iOyB9DQogICAgfSk7DQogICAgaWYoaW5MaXN0KWh0bWwrPSI8L29sPiI7DQogICAgcmV0dXJuIGh0bWw7DQogIH0NCg0KICBhc3luYyBmdW5jdGlvbiBydW4oKXsNCiAgICB3aGlsZSh0cnVlKXsNCiAgICAgIC8vIOy0iOq4sO2ZlA0KICAgICAgcWJveC5jbGFzc0xpc3QucmVtb3ZlKCJzaG93Iik7IGFuc0FyZWEuc3R5bGUuZGlzcGxheT0ibm9uZSI7IHJlZi5zdHlsZS5kaXNwbGF5PSJub25lIjsNCiAgICAgIHJlc3VsdC5jbGFzc0xpc3QucmVtb3ZlKCJzaG93Iik7IHJlc3VsdC5pbm5lckhUTUw9IiI7IHEudGV4dENvbnRlbnQ9IiI7DQogICAgICBhbnMuaW5uZXJIVE1MPSc8c3BhbiBjbGFzcz0icGgiPuqzoOqwnSDsp4jrrLjsl5Ag64yA7ZWcIOuLteuzgOydhCDsnoXroKXtlZjshLjsmpQuLi48L3NwYW4+JzsNCiAgICAgIGF3YWl0IHdhaXQoNjAwKTsNCiAgICAgIC8vIDEpIOyDiCDsp4jrrLgg4oaSIEFJIOqzoOqwnSDsp4jrrLgNCiAgICAgIHEudGV4dENvbnRlbnQ9REFUQS5xOyBxYm94LmNsYXNzTGlzdC5hZGQoInNob3ciKTsNCiAgICAgIGF3YWl0IHdhaXQoMzAwKTsgcmVmLnRleHRDb250ZW50PURBVEEucmVmOyByZWYuc3R5bGUuZGlzcGxheT0iaW5saW5lLWJsb2NrIjsNCiAgICAgIGF3YWl0IHdhaXQoNzAwKTsNCiAgICAgIC8vIDIpIOuLteuzgCDsnoXroKUg7JiB7JetICsg7YOA7J207ZWRDQogICAgICBhbnNBcmVhLnN0eWxlLmRpc3BsYXk9ImJsb2NrIjsgYW5zLmlubmVySFRNTD0iIjsNCiAgICAgIGZvcih2YXIgaT0wO2k8REFUQS5hbnN3ZXIubGVuZ3RoO2krKyl7IGFucy50ZXh0Q29udGVudD1EQVRBLmFuc3dlci5zbGljZSgwLGkrMSk7IGF3YWl0IHdhaXQoNDgpOyB9DQogICAgICBhd2FpdCB3YWl0KDcwMCk7DQogICAgICAvLyAzKSDssYTsoJAg6rKw6rO8DQogICAgICB2YXIgYmQ9IiI7DQogICAgICBEQVRBLmJyZWFrZG93bi5mb3JFYWNoKGZ1bmN0aW9uKGIpew0KICAgICAgICBiZCs9JzxkaXYgY2xhc3M9ImJkIj48ZGl2IGNsYXNzPSJ0b3AyIj48c3Bhbj4nK2IubGFiZWwrJzwvc3Bhbj48Yj4nK2Iuc2NvcmUrJyAvICcrYi5tYXgrJ+ygkDwvYj48L2Rpdj4nKw0KICAgICAgICAgICAgJzxkaXYgY2xhc3M9InRyYWNrIj48ZGl2IGNsYXNzPSJmaWxsIiBkYXRhLXc9IicrTWF0aC5yb3VuZChiLnNjb3JlL2IubWF4KjEwMCkrJyI+PC9kaXY+PC9kaXY+JysNCiAgICAgICAgICAgICc8cCBjbGFzcz0id2h5Ij4nK2Iud2h5Kyc8L3A+PC9kaXY+JzsNCiAgICAgIH0pOw0KICAgICAgcmVzdWx0LmlubmVySFRNTCA9DQogICAgICAgICc8aDM+7LGE7KCQIOqysOqzvCDigJQgJytEQVRBLnNjb3JlKyfsoJA8L2gzPicrDQogICAgICAgICc8cCBjbGFzcz0iYmQtbGFiIj7soJDsiJgg6re86rGwPC9wPicrYmQrDQogICAgICAgICc8cCBjbGFzcz0iZmIiPicrREFUQS5mZWVkYmFjaysnPC9wPicrDQogICAgICAgICc8cCBjbGFzcz0ibWlzcyI+4pyXIOuIhOudvTogJytEQVRBLm1pc3MrJzwvcD4nKw0KICAgICAgICAnPGRpdiBjbGFzcz0ibW9kZWwiPjxwIGNsYXNzPSJtbGFiIj7rqqjrspQg64u167OAPC9wPicrbWRMaXN0KERBVEEubW9kZWwpKyc8L2Rpdj4nOw0KICAgICAgcmVzdWx0LmNsYXNzTGlzdC5hZGQoInNob3ciKTsNCiAgICAgIGF3YWl0IHdhaXQoNjApOw0KICAgICAgLy8g66eJ64yAIOyVoOuLiOuplOydtOyFmA0KICAgICAgcmVzdWx0LnF1ZXJ5U2VsZWN0b3JBbGwoIi5maWxsIikuZm9yRWFjaChmdW5jdGlvbihmKXsgZi5zdHlsZS53aWR0aD1mLmRhdGFzZXQudysiJSI7IH0pOw0KICAgICAgLy8g6rKw6rO86rCAIOuCtOu2gCDsiqTtgazroaQg7JiB7JetIOyVhOuemOyXkCDsnojsnLzrqbQg67aA65Oc65+96rKMIOyKpO2BrOuhpO2VtCDrs7Tsl6zspIwgKOuwlOq5pSBpZnJhbWUg7Iqk7YGs66GkIOuwqeyngCkNCiAgICAgIHZhciBib2R5RWw9ZG9jdW1lbnQucXVlcnlTZWxlY3RvcigiLmJvZHkiKTsNCiAgICAgIGF3YWl0IHdhaXQoNzAwKTsgYm9keUVsLnNjcm9sbFRvKHt0b3A6Ym9keUVsLnNjcm9sbEhlaWdodCxiZWhhdmlvcjoic21vb3RoIn0pOw0KICAgICAgYXdhaXQgd2FpdCgyNzAwKTsgYm9keUVsLnNjcm9sbFRvKHt0b3A6MCxiZWhhdmlvcjoic21vb3RoIn0pOw0KICAgIH0NCiAgfQ0KICBydW4oKTsNCn0pKCk7DQo8L3NjcmlwdD4NCg0KPHNjcmlwdD4NCihmdW5jdGlvbigpew0KICB3aW5kb3cuX19wYXVzZWQ9dHJ1ZTsNCiAgdmFyIGI9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnYnV0dG9uJyk7DQogIGIudGV4dENvbnRlbnQ9J+KWtiDsnqzsg50nOw0KICBiLnN0eWxlLmNzc1RleHQ9J21hcmdpbi1sZWZ0OjEwcHg7cGFkZGluZzo2cHggMTNweDtib3JkZXI6MXB4IHNvbGlkICNjYmQ1ZTE7Ym9yZGVyLXJhZGl1czo4cHg7Jw0KICAgICsnYmFja2dyb3VuZDojZmZmO2ZvbnQtc2l6ZToxNHB4O2ZvbnQtd2VpZ2h0OjYwMDtjb2xvcjojMzM0MTU1O2N1cnNvcjpwb2ludGVyO2ZsZXgtc2hyaW5rOjAnOw0KICBiLm9uY2xpY2s9ZnVuY3Rpb24oKXt3aW5kb3cuX19wYXVzZWQ9IXdpbmRvdy5fX3BhdXNlZDsNCiAgICBiLnRleHRDb250ZW50PXdpbmRvdy5fX3BhdXNlZD8n4pa2IOyerOyDnSc6J+KPuCDsoJXsp4AnO307DQogIHZhciB0b3A9ZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnRvcCcpO2lmKHRvcCl0b3AuYXBwZW5kQ2hpbGQoYik7DQp9KSgpOw0KPC9zY3JpcHQ+DQo8L2JvZHk+DQo8L2h0bWw+DQo=" style="width:100%;max-width:1160px;height:600px;border:1px solid var(--border);border-radius:12px;margin:6px auto 0;display:block;background:#fff"></iframe>
   </div>
 </section>
 
-<section class="slide" data-ch="01 무엇을" data-title="작동 ② 훈련 모드">
-  <div class="inner">
-    <div class="kicker">01 · 훈련 ② 그 원리</div>
-    <h2>훈련 모드 — AI가 <em class="mark">고객이 된다</em></h2>
-    <div class="demo">
-      <svg id="trainSeq" viewBox="0 0 760 250" style="width:100%;height:auto" role="img">
-        <title>훈련 모드 시퀀스</title>
-        <desc>AI 고객이 출제하고, 신입이 답변하면, 채점기가 출제 문서 기준으로 채점하는 순서.</desc>
-        <defs>
-          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
-          </marker>
-        </defs>
-        <!-- 참여자 -->
-        <rect x="55" y="10" width="120" height="32" rx="6" fill="var(--accent)"/>
-        <text x="115" y="30" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">AI 고객</text>
-        <rect x="320" y="10" width="120" height="32" rx="6" fill="var(--c-client)"/>
-        <text x="380" y="30" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">신입 상담원</text>
-        <rect x="585" y="10" width="120" height="32" rx="6" fill="var(--c-service)"/>
-        <text x="645" y="30" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="600">채점기</text>
-        <!-- 라이프라인 -->
-        <line x1="115" y1="42" x2="115" y2="240" stroke="var(--border)" stroke-dasharray="3 3"/>
-        <line x1="380" y1="42" x2="380" y2="240" stroke="var(--border)" stroke-dasharray="3 3"/>
-        <line x1="645" y1="42" x2="645" y2="240" stroke="var(--border)" stroke-dasharray="3 3"/>
-
-        <g class="msg" opacity="0">
-          <line x1="115" y1="80" x2="380" y2="80" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ar2)"/>
-          <text x="247" y="72" text-anchor="middle" font-size="11.5" fill="var(--text)">① 편람 기반 질문 출제 — &ldquo;양도세 언제 내요?&rdquo;</text>
-          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="0.3s" fill="freeze"/>
-        </g>
-        <g class="msg" opacity="0">
-          <line x1="380" y1="123" x2="645" y2="123" stroke="var(--c-client)" stroke-width="1.5" marker-end="url(#ar2)"/>
-          <text x="512" y="115" text-anchor="middle" font-size="11.5" fill="var(--text)">② 답변 제출</text>
-          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="1.3s" fill="freeze"/>
-        </g>
-        <g class="msg" opacity="0">
-          <rect x="455" y="142" width="290" height="34" rx="7" fill="var(--surface-2)" stroke="var(--c-service)"/>
-          <text x="600" y="157" text-anchor="middle" font-size="11" fill="var(--text)">③ 미리 적어둔 모범답안 우선, 없으면</text>
-          <text x="600" y="170" text-anchor="middle" font-size="11" fill="var(--text)" font-weight="700">출제에 쓴 문서 그대로 채점 (DB 재검색 ❌)</text>
-          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.3s" fill="freeze"/>
-        </g>
-        <g class="msg" opacity="0">
-          <line x1="645" y1="210" x2="380" y2="210" stroke="var(--c-service)" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#ar2)"/>
-          <text x="512" y="202" text-anchor="middle" font-size="11.5" fill="var(--text)">④ 점수 + 부족한 부분 피드백</text>
-          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="3.4s" fill="freeze"/>
-        </g>
-      </svg>
-      <button class="replay-btn" onclick="document.getElementById('trainSeq').setCurrentTime(0)">↻ 재생</button>
-    </div>
-    <div class="bottom-line"><span class="why-tag">왜 재검색 금지?</span>채점할 때 DB를 다시 검색하면 <b>출제 때와 다른 문서</b>가 나올 수 있다 — 채점 기준이 흔들리는 사고 방지</div>
-  </div>
-</section>
-
 <section class="slide" data-ch="01 무엇을" data-title="기대 효과 (Before→After)">
   <div class="inner">
-    <div class="kicker">01 · 그래서 뭐가 달라지나</div>
+    <div class="kicker">효과 · 측정 결과</div>
     <h2>기대 효과 — <em class="mark">Before → After</em></h2>
     <div class="ba">
       <div></div>
@@ -574,282 +414,24 @@ code {
   </div>
 </section>
 
-<section class="slide" data-ch="01 무엇을" data-title="정량 효과 (ROI)">
+<section class="slide" data-ch="핵심" data-title="왜 믿을 만한가">
   <div class="inner">
-    <div class="kicker">01 · 그래서 뭐가 달라지나</div>
-    <h2>효과를 숫자로 — 분기 <em class="mark">약 2.7~3.8 M/M</em> 절감</h2>
-    <p class="lead">임의 가정 없이 <b>현장 자료 + 공개 연구</b>로만 환산. 측정 응답 <b>3초</b>가 검색을 사실상 제거합니다.</p>
+    <div class="kicker">왜 믿을 만한가</div>
+    <h2>폐쇄망에서 끝까지 — <em class="mark">외부로 안 나간다</em></h2>
+    <p class="lead">검색·임베딩·DB는 전부 사내에서 동작. 외부로 나가는 건 답변 생성 1곳뿐이고, 그것도 사내 모델로 교체 예정.</p>
     <div class="grid g3">
-      <div class="card"><h3>① 현장 자료</h3><p class="sub">상담사 39명 · 1일 38콜 · 분기 53영업일</p><p><b>= 분기 78,546콜</b></p></div>
-      <div class="card"><h3>② 공개 연구</h3><p class="sub">검색에 근무시간 20~30% (McKinsey·IDC)</p><p><b>지식베이스가 검색시간 최대 35%↓ (콜센터 연구)</b></p></div>
-      <div class="card win"><h3>✅ 환산</h3><p class="verdict ok">39명 × 검색 1.8~2.5h/일 × 53일 × 35%↓<br>= 분기 <b>1,300~1,810h ≈ 2.7~3.8 M/M</b></p></div>
+      <div class="card win"><h3>🔒 폐쇄망 사내(native)</h3><p class="verdict ok">검색·임베딩·DB 전부 사내 — 외부는 답변 생성 1곳(교체 예정)</p></div>
+      <div class="card"><h3>🌐 범용 — 수집 방식 그대로</h3><p class="verdict ok">사내 위키를 <b>HTTP로 통째 수집</b>(Windows 인증) — 게시판·파일서버·PDF도 같은 방식 + 파서만 추가</p></div>
+      <div class="card"><h3>📊 검증됨</h3><p class="verdict ok">검색 hit@3 100% · 답변 80% · 틀려도 출처로 확인</p></div>
     </div>
-    <div class="bottom-line"><span class="why-tag">팩트 기반</span>모든 입력값이 <b>현장 데이터 또는 공개 연구</b> — 임의 숫자 없음. 측정값 3초는 35%보다 큰 단축이 가능해 <b>보수적</b></div>
-    <p class="fn">※ 검색시간: McKinsey 1.8h/일 · IDC 2.5h/일 / 단축율: 콜센터 KB 연구 &lsquo;최대 35%&rsquo; / <b>M/M</b> = 1인 1개월(분기 480h). 정확값은 <b>현장 검색시간 측정으로 확정 예정</b></p>
-  </div>
-</section>
-
-<section class="slide" data-ch="01 무엇을" data-title="범용성 (확장)">
-  <div class="inner">
-    <div class="kicker">01 · 그래서 어디까지</div>
-    <h2>위키만? — <em class="mark">어디든</em> 붙는 구조</h2>
-    <p class="lead">&lsquo;어디서 가져오나(수집)&rsquo;와 &lsquo;무슨 형식이냐(해석)&rsquo;를 분리해 둬서 → 게시판·그룹웨어·파일서버가 와도 <b>그 부분만 새로 추가</b>. 조각내기·임베딩·검색은 그대로 재사용.</p>
-    <div class="grid g3">
-      <div class="card"><h3>소스 무관</h3><p class="verdict ok">커넥터만 추가 — 위키·게시판·파일서버</p></div>
-      <div class="card"><h3>포맷 무관</h3><p class="verdict ok">파서만 추가 — HTML · <b>PDF·이미지 글자 인식(OCR) 이미 구현</b></p></div>
-      <div class="card win"><h3>✅ 이후 동일</h3><p class="verdict ok">조각내기·임베딩·검색 재사용</p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">현황</span>지금은 위키 HTML. <b>PDF·표·이미지 글자(OCR) 파서는 이미 구현돼 있어</b> 첨부 확장도 그 부분만 추가하면 가능</div>
-  </div>
-</section>
-
-<section class="slide cover" data-ch="02 왜 그렇게" data-title="Q. 여러분이라면?">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>Q. 폐쇄망에 들어갈 <em class="mark">벡터DB</em>,<br>여러분이라면 뭘 고르시겠습니까?</h2>
-    <p class="lead">벡터DB = 문서를 의미 좌표(벡터)로 저장해, 뜻이 비슷한 문서를 찾아주는 DB — 방금 흐름도의 ChromaDB 자리</p>
-    <div class="chips">
-      <span class="chip">조건 1 — 외부 클라우드 불가</span>
-      <span class="chip">조건 2 — 4주 안에 PoC 완성</span>
-      <span class="chip">조건 3 — 개발자 2명</span>
-    </div>
-    <div class="bottom-line">Pinecone · Milvus · FAISS · ChromaDB — 정답은 다음 장에 ↓</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="02 왜 그렇게" data-title="왜 ChromaDB">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>기준은 단 하나 — <em class="mark">폐쇄망 이식성</em></h2>
-    <div class="grid g4">
-      <div class="card"><h3>Pinecone</h3><p class="verdict no">클라우드 전용 → 반입 불가</p></div>
-      <div class="card"><h3>Milvus</h3><p class="verdict no">설치 복잡, PoC에 과함</p></div>
-      <div class="card"><h3>FAISS</h3><p class="verdict no">검색 엔진일 뿐 — 문서 관리는 직접 구현</p></div>
-      <div class="card win"><h3>✅ ChromaDB</h3><p class="verdict ok">설치 한 줄 + 폴더 복사 = 끝</p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">왜?</span>폐쇄망 반입은 <b>&ldquo;파일 복사&rdquo;</b>가 가장 강력한 배포 수단 — 서버가 없는 DB를 골랐다</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="02 왜 그렇게" data-title="검색 5단계 (인터랙티브)">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>검색은 <em class="mark">5단계</em> — 직접 눌러보세요</h2>
-    <p class="lead">&ldquo;양도세&rdquo;로 물어도 &ldquo;주식 양도 세금&rdquo; 문서를 찾는 비결 &nbsp;(상단 박스 클릭 또는 → 키)<br><span style="font-size:.8em;color:var(--muted)">이 &lsquo;제목+본문 분리&rsquo; 설계는 <b>사람인 HR 챗봇 사례(검색 정확도 87%)</b>를 참고해 채택했습니다.</span></p>
-    <div class="demo">
-      <div class="pills" id="pills"></div>
-      <svg viewBox="0 0 760 90" style="width:100%;height:auto;margin-bottom:12px" role="img">
-        <title>Dual Collection 검색 5단계</title>
-        <desc>질문 임베딩부터 가중 병합까지 단계별 시각화. 노드를 클릭하면 해당 단계로 이동.</desc>
-        <line class="sline" data-idx="0" x1="140" y1="45" x2="160" y2="45" stroke="var(--border)" stroke-width="2"/>
-        <line class="sline" data-idx="1" x1="290" y1="45" x2="310" y2="45" stroke="var(--border)" stroke-width="2"/>
-        <line class="sline" data-idx="2" x1="440" y1="45" x2="460" y2="45" stroke="var(--border)" stroke-width="2"/>
-        <line class="sline" data-idx="3" x1="590" y1="45" x2="610" y2="45" stroke="var(--border)" stroke-width="2"/>
-        <rect class="snode" data-idx="0" x="10"  y="23" width="130" height="44" rx="9" fill="var(--surface)" stroke="var(--border)"/>
-        <text class="stext" data-tidx="0" x="75"  y="50" text-anchor="middle" font-size="12.5" fill="var(--text)">질문 임베딩</text>
-        <rect class="snode" data-idx="1" x="160" y="23" width="130" height="44" rx="9" fill="var(--surface)" stroke="var(--border)"/>
-        <text class="stext" data-tidx="1" x="225" y="50" text-anchor="middle" font-size="12.5" fill="var(--text)">제목 검색</text>
-        <rect class="snode" data-idx="2" x="310" y="23" width="130" height="44" rx="9" fill="var(--surface)" stroke="var(--border)"/>
-        <text class="stext" data-tidx="2" x="375" y="50" text-anchor="middle" font-size="12.5" fill="var(--text)">Max Pooling</text>
-        <rect class="snode" data-idx="3" x="460" y="23" width="130" height="44" rx="9" fill="var(--surface)" stroke="var(--border)"/>
-        <text class="stext" data-tidx="3" x="525" y="50" text-anchor="middle" font-size="12.5" fill="var(--text)">본문 검색</text>
-        <rect class="snode" data-idx="4" x="610" y="23" width="140" height="44" rx="9" fill="var(--surface)" stroke="var(--border)"/>
-        <text class="stext" data-tidx="4" x="680" y="50" text-anchor="middle" font-size="12.5" fill="var(--text)">병합 → TOP5</text>
-      </svg>
-      <div class="step-content" id="stepContent"></div>
-      <div class="controls">
-        <button class="btn" id="prevBtn">← 이전</button>
-        <button class="btn primary" id="nextBtn">다음 →</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" data-ch="02 왜 그렇게" data-title="왜 Max Pooling">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>같은 문서가 여러 번 검색되면? —<br>점수는 <em class="mark">최댓값</em> 하나만</h2>
-    <p class="lead">한 문서에 동의어 제목을 여러 개 달아둔다(예: &lsquo;양도세&rsquo; = &lsquo;주식 양도 세금&rsquo; = &lsquo;양도소득세&rsquo;) → 같은 문서가 검색에 여러 번 걸린다. <b>예: &lsquo;양도세&rsquo; 문서가 제목 3개로 각각 0.9 · 0.8 · 0.7점 매칭됐을 때 —</b></p>
-    <div class="grid g3">
-      <div class="card"><h3>합산</h3><p class="verdict no">0.9+0.8+0.7=<b>2.4점</b> → 제목 많은 문서가 무조건 이김</p></div>
-      <div class="card"><h3>평균</h3><p class="verdict no">2.4÷3=<b>0.8점</b> → 강한 0.9 신호가 희석</p></div>
-      <div class="card win"><h3>✅ 최댓값</h3><p class="verdict ok"><b>0.9점</b> → 제목 개수 무관, 동의어 무한 추가 OK</p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">주의</span>순서는 <b>Max Pooling 먼저 → 점수 합치기(가중 병합)</b> — 순서를 바꾸면 제목 많은 문서가 부당하게 점수를 더 받는다</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="02 왜 그렇게" data-title="왜 출처 선전송 (SSE)">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>답변의 <em class="mark">출처</em> — 어떻게 저장하고,<br>왜 먼저 보여주나</h2>
-    <p class="lead">출처는 검색된 문서 그 자체다. 청크(문서 조각)마다 <b>문서명·제목·위키 주소</b>를 함께 저장 → 답변보다 출처 카드를 먼저 띄우고, 클릭하면 위키 원문으로 이동한다.</p>
-    <div class="demo">
-      <div class="sse-wrap">
-        <div class="chat plain" id="chatA">
-          <div class="chat-head"><span class="name">❌ 한 번에 응답</span><span class="timer" id="timerA">0.0s</span></div>
-          <div class="bubble user">양도세 언제 내요?</div>
-          <div class="bubble ai" id="bodyA"><span class="spinner">생성 중</span></div>
-          <div class="first-paint">첫 화면 표시 <b id="fpA">—</b></div>
-        </div>
-        <div class="chat winner" id="chatB">
-          <div class="chat-head"><span class="name">✅ 출처 먼저 + 답변 이어서</span><span class="timer" id="timerB">0.0s</span></div>
-          <div class="bubble user">양도세 언제 내요?</div>
-          <div class="bubble src" id="srcB"><b>📄 출처 2건</b><br><span style="color:var(--accent);font-weight:700">[1]</span> 양도소득세 신고 절차 ↗ <span style="color:var(--muted)">(78%)</span><br><span style="color:var(--accent);font-weight:700">[2]</span> 주식 양도 세금 ↗ <span style="color:var(--muted)">(64%)</span></div>
-          <div class="bubble ai" id="bodyB"></div>
-          <div class="first-paint">첫 화면 표시 <b id="fpB">—</b></div>
-        </div>
-      </div>
-      <button class="replay-btn" id="sseReplay">↻ 다시 재생</button>
-    </div>
-    <div class="bottom-line"><span class="why-tag">왜 먼저?</span>검색이 끝난 순간 출처는 이미 확정 — <b>답변(LLM)을 기다릴 필요 없이</b> 상담사가 출처부터 확인·검증</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="02 왜 그렇게" data-title="왜 모델 교체 대비">
-  <div class="inner">
-    <div class="kicker">02 · 왜 그렇게 만들었나</div>
-    <h2>모델을 갈아끼워도 코드는 그대로 —<br><em class="mark">LLM 호출 창구 통일</em></h2>
-    <p class="lead">LLM을 부르는 창구를 함수 4개로 통일 → PoC는 외부 API(Gemini), 실도입은 사내 모델이라 <b>교체가 예정된 미래</b>이기 때문</p>
-    <div class="grid g3">
-      <div class="card"><h3>SDK 직접 호출</h3><p class="verdict no">교체 시 호출처 전부 수정</p></div>
-      <div class="card"><h3>LangChain</h3><p class="verdict no">4주 PoC에 과함, 디버깅 어려움</p></div>
-      <div class="card win"><h3>✅ 자체 인터페이스</h3><p class="verdict ok">교체 = 새 모델 코드 1개 + 연결부 한 곳</p></div>
-    </div>
-    <div class="bottom-line"><code>generate</code> · <code>generate_stream</code> · <code>embed</code> · <code>count_tokens</code> — 딱 4개.
-      <b>그리고 이 설계, 일주일 뒤에 진짜 쓸모가 터집니다 ↓</b></div>
-  </div>
-</section>
-
-<section class="slide" data-ch="03 왜 바꿨나" data-title="① 왜 bge-m3">
-  <div class="inner">
-    <div class="kicker">03 · 왜 바꿨나</div>
-    <h2>임베딩은 처음부터 <em class="mark">로컬</em> — 그중 왜 bge-m3?</h2>
-    <p class="lead">폐쇄망은 외부 API 불가. 게다가 편람은 한국어에 <b>영문·코드(K-OTC·ELW·[11124] 화면번호)</b>가 섞여 있다 — 이 조건에 맞는 임베딩을 골라야 했다.</p>
-    <div class="grid g3">
-      <div class="card"><h3>외부 API <span style="font-weight:400;color:var(--muted)">(OpenAI·Gemini)</span></h3><p class="verdict no">폐쇄망 반입 불가 + 일일 한도</p></div>
-      <div class="card"><h3>한국어 전용 <span style="font-weight:400;color:var(--muted)">(KoSimCSE 등)</span></h3><p class="verdict no">영문·코드 섞인 편람에 약함</p></div>
-      <div class="card win"><h3>✅ bge-m3 <span style="font-weight:400;color:var(--muted)">(다국어 검색)</span></h3><p class="verdict ok">한국어+영문+코드 모두 안정적 · 로컬 실행 · 무료(MIT = 상업적 무료 라이선스)</p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">교훈</span>폐쇄망 + 혼합 표기 편람 → <b>다국어 검색 특화 로컬 모델</b>이 정답. 측정 <b>hit@3=100%</b>(정답 문서가 검색 상위 3개 안에 든 비율)로 검증</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="03 왜 바꿨나" data-title="② 편람 수집">
-  <div class="inner">
-    <div class="kicker">03 · 왜 바꿨나</div>
-    <h2>편람을 하나씩 PDF로? — <em class="mark">위키에서 통째로</em></h2>
-    <p class="lead">편람은 사내 위키에 있는데 페이지마다 PDF로 출력하는 건 비현실적. 그래서 위키 HTML을 자동으로 가져오게 만들었다 — 이 수집이 매일 배치에도 그대로 쓰인다.</p>
-    <div class="grid g2">
-      <div class="card" style="border-color:var(--bad);background:var(--surface)">
-        <h3 style="color:var(--bad)">❌ PDF 하나씩 출력</h3>
-        <p>수백 페이지를 수동으로 — <b style="color:var(--bad)">표 깨지고, 바뀔 때마다 다시 출력</b></p>
-      </div>
-      <div class="card win">
-        <h3>✅ 위키 HTML 자동 수집</h3>
-        <p class="verdict ok">크롤러 / PowerShell + Windows 인증 → <b>변경분만</b> 가져옴</p>
-      </div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">핵심</span>이 &lsquo;위키 HTML 수집&rsquo;이 곧 <b>매일 배치의 1단계</b> — 한 번 만들어 적재·갱신에 모두 재사용</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="03 왜 바꿨나" data-title="어떻게 인증·수집">
-  <div class="inner">
-    <div class="kicker">03 · 왜 바꿨나</div>
-    <h2>어떻게 가져오나 — <em class="mark">Windows 로그인 그대로</em></h2>
-    <p class="lead">별도 로그인·OTP 없이, 실행한 사람의 <b>Windows 계정 자격</b>으로 위키에 접속(통합 인증). 그 사람이 볼 수 있는 페이지만 가져온다.</p>
-    <div class="grid g2">
-      <div class="card"><h3>🔑 인증 = Windows 로그인</h3><p class="sub">통합 인증(SSO)으로 자동 — 위키 별도 로그인 없음</p><p><b>자주 바뀌는 OTP·세션 입력이 불필요</b></p></div>
-      <div class="card"><h3>🛡️ 권한 안에서만</h3><p class="sub">실행 계정이 볼 수 있는 페이지만</p><p><b>아무나·권한 밖 페이지는 못 가져옴</b></p></div>
-      <div class="card"><h3>📄 HTML → 구조화</h3><p class="sub">받은 HTML을 제목·문단·표·공지로 분해</p><p><b>표·서식 유지한 채 조각으로</b></p></div>
-      <div class="card"><h3>🌐 어디든 — 공간만 지정</h3><p class="sub">공간 키만 바꾸면 다른 부서 위키도</p><p><b>트리 자동 순회로 하위 페이지 발견</b></p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">유지보수</span>매일 배치도 같은 통합 인증으로 <b>무인 동작</b> — 사람이 매번 로그인·인증할 필요 없음</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="04 폐쇄망" data-title="실도입 로드맵">
-  <div class="inner">
-    <div class="kicker">04 · 폐쇄망 실도입</div>
-    <h2>도입 시 바꿀 건 단 <em class="mark">1곳</em> — 답변 생성 모델뿐</h2>
-    <div class="swap change">
-      <span class="name">LLM (답변 생성)</span>
-      <span class="from">Gemini API <b>(현재 유일한 외부망)</b></span> → <span class="to">사내 LLM 자체 호스팅 (예: Qwen3)</span>
-      <span class="keep">이것만 바꾸면 완전 사내(native) — GPU 확보는 예산 확정 후</span>
-    </div>
-    <div class="swap">
-      <span class="name">임베딩 (검색)</span>
-      <span class="from">bge-m3 로컬</span> → <span class="keep">그대로 (이미 로컬 — 도입 시 변경 없음)</span>
-    </div>
-    <div class="swap">
-      <span class="name">벡터DB</span>
-      <span class="from">ChromaDB</span> → <span class="keep">그대로 (폴더 복사로 이식 끝)</span>
-    </div>
-    <div class="swap">
-      <span class="name">백엔드/UI</span>
-      <span class="from">FastAPI + React <span style="font-weight:400;color:var(--muted)">(백엔드+화면)</span></span> → <span class="keep">그대로 (공통 틀 뒤라 변경 없음)</span>
-    </div>
-    <div class="bottom-line"><span class="why-tag">핵심</span>PoC에서 미리 한 것(로컬 임베딩·위키 수집·공통 틀 설계)이 <b>그대로 폐쇄망 전환 매뉴얼</b>이 된다</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="04 폐쇄망" data-title="매일 자동 최신화">
-  <div class="inner">
-    <div class="kicker">04 · 폐쇄망 실도입</div>
-    <h2>매일 새벽, <em class="mark">바뀐 편람만</em> 자동 반영 — 사람 손 0</h2>
-    <p class="lead">사내 서버의 새벽 배치(스케줄러)가 위키 &lsquo;최근 업데이트&rsquo;를 확인 → <b>바뀐 페이지만</b> 다시 넣는다. 변경 여부는 <b>내용 지문(해시) 비교</b>로 판별한다.</p>
-    <div class="flow-row">
-      <div class="flow-box">① 변경 감지<span>위키 &lsquo;최근 업데이트&rsquo; 조회</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-box">② 지문 대조<span>안 바뀐 문서는 건너뜀</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-box">③ 조각으로 나눔<span>바뀐 문서만</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-box hl">④ 로컬 임베딩<span>바뀐 조각만 숫자화(bge-m3)</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-box">⑤ ChromaDB<span>추가/삭제 반영</span></div>
-    </div>
-    <div class="grid g2">
-      <div class="card stat">
-        <div class="lbl">편람 한 줄 고치면 다시 처리하는 양</div>
-        <div class="num acc">조각 1개</div>
-        <div class="desc">내용이 같은 조각은 지문(해시)으로 알아채 건너뜀 — 매일 돌려도 가볍다</div>
-      </div>
-      <div class="card stat">
-        <div class="lbl">외부 인터넷 의존</div>
-        <div class="num">0</div>
-        <div class="desc">임베딩이 로컬(bge-m3)이라 수집→저장 전 과정이 폐쇄망 안에서 완결</div>
-      </div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">핵심</span>매일 전체를 다시 넣는 게 아니라 <b>바뀐 조각만</b> — 그래서 매일 돌려도 가볍다</div>
-  </div>
-</section>
-
-<section class="slide" data-ch="04 폐쇄망" data-title="상담사 제공 방식">
-  <div class="inner">
-    <div class="kicker">04 · 폐쇄망 실도입</div>
-    <h2>실제 도입에 필요한 건 — <em class="mark">사내 서버 1대</em></h2>
-    <p class="lead">지금은 개발 PC에서 동작 확인 단계. 실도입 시 사내 서버 1대에 전체(화면+백엔드+검색DB+임베딩)를 올리면, 상담사는 설치 없이 내부 URL로 접속한다.</p>
-    <div class="flow-row">
-      <div class="flow-box">상담사 PC<span>브라우저 — 설치 0</span></div>
-      <div class="flow-arrow">→ 사내망 →</div>
-      <div class="flow-box hl">사내 서버 1대<span>화면+백엔드+검색DB+임베딩</span></div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-box">답변 LLM<span>사내 모델 (GPU 권장)</span></div>
-    </div>
-    <div class="grid g3">
-      <div class="card"><h3>① 서버 1대</h3><p class="sub">화면+백엔드+검색DB+임베딩 한 묶음</p><p><b>지금은 개발 PC로 확인 → 도입 시 사내 서버 필요</b></p></div>
-      <div class="card"><h3>② 답변 LLM</h3><p class="sub">현재 Gemini(외부) → 사내 모델로 교체</p><p><b>GPU 있으면 빠름 · 없으면 CPU로도 되나 답변 느림</b></p></div>
-      <div class="card"><h3>③ 상담사 PC</h3><p class="sub">설치 0, 내부 URL만</p><p><b>보안 검토 부담 최소</b></p></div>
-    </div>
-    <div class="bottom-line"><span class="why-tag">다음 단계(1차 완료)</span>물리적으로 필요한 것 = <b>사내 서버 1대 + (사내 LLM용) GPU</b>. 코드는 이미 폐쇄망 대응 완료 — 띄우기만 하면 됨</div>
+    <div class="bottom-line"><span class="why-tag">핵심</span>금융사 폐쇄망 통과 조건을 이미 충족 — 도입 시 바꿀 건 답변 모델 1곳뿐</div>
+    <p class="fn">※ <b>실제 HTML 수집</b>: PowerShell이 사내 위키에 Windows 통합 인증으로 접속 → 페이지 트리를 순회하며 각 페이지 HTML을 통째로 받아 저장. 별도 로그인·API 없이, 게시판·파일서버도 같은 방식. &nbsp;·&nbsp; <b>hit@3</b> = 정답이 검색 상위 3개 안에 든 비율</p>
   </div>
 </section>
 
 <section class="slide" data-ch="04 폐쇄망" data-title="앞으로의 계획 (일정)">
   <div class="inner">
-    <div class="kicker">04 · 폐쇄망 실도입</div>
+    <div class="kicker">앞으로 · 일정</div>
     <h2>앞으로의 계획 — <em class="mark">완성 → 환경 마련 → 선제안</em></h2>
     <p class="lead">측정으로 검증된 PoC를 실서비스로. 완성 7월 · 환경 마련 8월 · 고객사 선제안 9월 일정에 맞춰 단계화.</p>
     <div class="flow-row">
@@ -869,33 +451,20 @@ code {
   </div>
 </section>
 
-<section class="slide" data-ch="04 폐쇄망" data-title="'왜'의 기록">
+<section class="slide cover" data-ch="마무리" data-title="요약">
   <div class="inner">
-    <div class="kicker">마무리</div>
-    <h2>코드보다 오래 남는 것 — <em class="mark">&lsquo;왜&rsquo;의 기록</em></h2>
-    <div class="grid g3">
-      <div class="card"><h3>📐 ADR(설계 결정 기록) 9건</h3><p class="sub">탈락한 대안까지 기록</p><p><b>6개월 뒤에도 &ldquo;왜?&rdquo;에 답함</b></p></div>
-      <div class="card"><h3>🔧 TROUBLESHOOTING</h3><p class="sub">에러→원인→해결→교훈</p><p><b>같은 삽질 반복 방지</b></p></div>
-      <div class="card"><h3>📝 PROMPT_HISTORY</h3><p class="sub">프롬프트만 분리 커밋</p><p><b>정확도 하락 원인 즉시 추적</b></p></div>
-    </div>
-    <div class="bottom-line">AI가 짠 코드도 <b>&ldquo;작성자가 설명할 수 있어야 한다&rdquo;</b> — 2인 팀이 4주를 버틴 비결</div>
-  </div>
-</section>
-
-<section class="slide cover" data-ch="04 폐쇄망" data-title="요약 + 오늘 가져갈 것">
-  <div class="inner">
-    <div class="kicker">다시 처음으로 — '왜 그렇게 만들었나'</div>
-    <p class="lead">첫 장의 약속 — <b style="color:#fff">&ldquo;물어보면 답하고, 답하면 채점하는 AI&rdquo;</b>. 만들었고, 오늘 그 <b style="color:#fff">&lsquo;왜&rsquo;</b>를 함께 봤습니다.</p>
+    <div class="kicker">5분 요약 — 가져가실 것</div>
+    <p class="lead">첫 장의 약속 — <b style="color:#fff">&ldquo;물어보면 답하고, 답하면 채점하는 AI&rdquo;</b>. 만들었고, 측정으로 검증했습니다.</p>
     <ol>
-      <li>기술 선택의 기준은 처음부터 <span class="mark">폐쇄망 이식성</span></li>
-      <li>시행착오는 <span class="mark">기록하면 자산</span> — 무료 한도·로컬 전환·위키 수집 전부 문서로</li>
-      <li>검색으로 답하는 AI의 품질은 모델이 아니라 <span class="mark">구조</span>에서 나온다</li>
+      <li>상담원 편람 검색 <span class="mark">5분 → 3초</span> · 답변 정확도 80%</li>
+      <li>폐쇄망 <span class="mark">사내(native)</span> — 외부로 나가는 건 답변 모델 1곳뿐</li>
+      <li>7월 <span class="mark">완성</span> → 8월 사내 환경 → 9월 고객사 선제안</li>
     </ol>
     <div class="bottom-line" style="font-size:16px">
-      <b style="color:#fff">상담원의 300초가 3초가 된 것</b>보다, <b style="color:#fff">왜 그렇게 만들었는지</b>가 더 오래 남습니다.<br>
-      다음 프로젝트엔 ADR 폴더부터 — 결정 하나당 10분이 6개월 뒤의 나를 구합니다.
+      <b style="color:#fff">분기 약 3 M/M 절감(연구 기반)</b> · 신입 교육 부담↓ — 코드는 이미 폐쇄망 대응 완료.<br>
+      다음 단계는 <b style="color:#fff">7월 완성</b>입니다.
     </div>
-    <div class="hint" style="margin-top:40px;opacity:.5;font-size:13.5px">Q&amp;A &nbsp;|&nbsp; 자세한 근거는 리포지토리 docs/adr/ 에 전부 있습니다</div>
+    <div class="hint" style="margin-top:30px;opacity:.5;font-size:13.5px">Q&amp;A &nbsp;|&nbsp; 풀버전 발표·근거 자료 별도 보유</div>
   </div>
 </section>
 

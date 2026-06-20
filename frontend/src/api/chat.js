@@ -25,11 +25,12 @@ const API_BASE = "/api";
  *   onDone() — 스트리밍 완료 시
  *   onError(message) — 에러 발생 시
  */
-export async function streamChat(question, { onSources, onToken, onDone, onError }) {
+export async function streamChat(question, { onSources, onToken, onDone, onError, signal }) {
   const res = await fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
+    signal, // 중지(AbortController) 지원 — 사용자가 생성 중단 가능
   });
 
   if (!res.ok) {

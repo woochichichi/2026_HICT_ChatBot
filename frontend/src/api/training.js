@@ -10,6 +10,7 @@ export async function fetchQuestion({
   category = "",
   solvedContentIds = [],
   isDemo = false,
+  persona = "general",
 }) {
   const res = await fetch(`${API_BASE}/training/question`, {
     method: "POST",
@@ -19,6 +20,7 @@ export async function fetchQuestion({
       category,
       solved_content_ids: solvedContentIds,
       is_demo: isDemo,
+      persona,
     }),
   });
 
@@ -33,13 +35,14 @@ export async function fetchQuestion({
 /**
  * POST /api/training/score — 답변 채점
  */
-export async function fetchScore({ questionId, traineeAnswer }) {
+export async function fetchScore({ questionId, traineeAnswer, persona = "general" }) {
   const res = await fetch(`${API_BASE}/training/score`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question_id: questionId,
       trainee_answer: traineeAnswer,
+      persona,
     }),
   });
 

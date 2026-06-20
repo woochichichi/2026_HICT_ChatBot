@@ -13,6 +13,8 @@ class QuestionRequest(BaseModel):
     category: str
     solved_content_ids: list[str] = []
     is_demo: bool = False
+    # 고객 상황(페르소나) — general/verbose/hasty/angry/novice (api-spec.md 섹션 1)
+    persona: str = "general"
 
 
 class QuestionResponse(BaseModel):
@@ -27,10 +29,15 @@ class QuestionResponse(BaseModel):
 class ScoreRequest(BaseModel):
     question_id: str
     trainee_answer: str
+    # 채점 시에도 persona 전달 — 데모(고정질문)도 채점은 CS 관점 반영 (api-spec.md 섹션 1)
+    persona: str = "general"
 
 
 class ScoreResponse(BaseModel):
     score: int
+    # 루브릭 분해(스코어카드) + 코칭 팁 — AI 코치 강화(api-spec.md 섹션 1). 기본 빈 리스트.
+    criteria: list[dict] = []
+    coaching_tips: list[str] = []
     included_items: list[str]
     missing_items: list[str]
     feedback: str
@@ -46,6 +53,7 @@ async def generate_question(request: QuestionRequest):
             category=request.category,
             solved_content_ids=request.solved_content_ids,
             is_demo=request.is_demo,
+            persona=request.persona,
         )
         return QuestionResponse(**result)
     except ValueError as e:
@@ -58,6 +66,7 @@ async def score_answer(request: ScoreRequest):
         result = await scorer.score_answer(
             question_id=request.question_id,
             trainee_answer=request.trainee_answer,
+            persona=request.persona,
         )
         return ScoreResponse(**result)
     except ValueError as e:

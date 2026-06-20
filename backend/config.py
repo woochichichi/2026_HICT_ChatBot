@@ -92,5 +92,35 @@ class Settings:
         str(_PROJECT_ROOT / "data" / "meta.db"),
     )
 
+    # 오답 제보(피드백) 저장소 (api-spec.md 섹션 11) — 폐쇄망 대비 로컬 SQLite.
+    # backend/services/feedback_store.py 의 FeedbackStore 가 사용.
+    FEEDBACK_DB_PATH: str = os.getenv(
+        "FEEDBACK_DB_PATH",
+        str(_PROJECT_ROOT / "data" / "feedback.db"),
+    )
+
+    # AI 코치 TTS (routers/tts.py) — 엔진 교체형. TTS_ENGINE으로 선택.
+    #   "xtts"   : Coqui XTTS-v2 (무료 오픈소스·자체호스팅·완전 오프라인=폐쇄망, 자연스러운
+    #              남성 음성/클로닝). CPU는 느림(GPU 권장). 실패 시 edge로 폴백.
+    #   "openai" : gpt-4o-mini-tts (감정 instructions, 유효 OPENAI_API_KEY 필요, 유료)
+    #   "edge"   : edge-tts (무료 신경망, 인터넷 필요, 감정 평탄)
+    #   "auto"   : openai(키 있으면) → edge
+    # 모든 엔진 실패 시 프론트가 브라우저 Web Speech(OS 로컬)로 폴백.
+    # ⚠️ XTTS는 torch/torchaudio/transformers가 bge-m3와 충돌해 '같은 venv'에 동거 불가 +
+    #    CPU는 느림 → 별도 격리 venv/컨테이너(가능하면 GPU)에서 TTS_ENGINE=xtts로 구동 권장.
+    #    이 PC(통합 venv)는 auto=edge로 동작. (docs: requirements-xtts.txt / wiki 참조)
+    TTS_ENGINE: str = os.getenv("TTS_ENGINE", "auto")
+
+    # XTTS-v2 — 자체호스팅 신경망 TTS. 모델은 최초 1회 다운로드(~2GB, 인터넷). CPML(비상업) 라이선스.
+    XTTS_MODEL: str = os.getenv("XTTS_MODEL", "tts_models/multilingual/multi-dataset/xtts_v2")
+    XTTS_SPEAKER: str = os.getenv("XTTS_SPEAKER", "Damien Black")  # 깊은 남성(없으면 첫 화자)
+    XTTS_DEVICE: str = os.getenv("XTTS_DEVICE", "cpu")  # GPU 있으면 "cuda"
+
+    # OpenAI TTS (TTS_ENGINE=openai)
+    OPENAI_TTS_MODEL: str = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts")
+    OPENAI_TTS_VOICE: str = os.getenv("OPENAI_TTS_VOICE", "onyx")  # 깊은 남성 → 고령 남성 톤
+    # edge-tts 폴백 음성 — 한국어 남성(Hyunsu, 자연스러움). 대안 ko-KR-InJoonNeural.
+    TTS_VOICE: str = os.getenv("TTS_VOICE", "ko-KR-HyunsuMultilingualNeural")
+
 
 settings = Settings()

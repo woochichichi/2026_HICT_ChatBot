@@ -1,0 +1,24 @@
+# XTTS-v2 (Coqui) 자체호스팅 TTS — '별도 격리 환경 전용' 의존성
+# =============================================================
+# ⚠️ 메인 venv(requirements.txt: bge-m3/sentence-transformers)와 같이 설치하지 말 것.
+#    coqui-tts가 요구하는 torch/torchaudio/transformers 버전이 bge-m3와 충돌하여
+#    검색 임베딩이 깨집니다. 반드시 '별도 venv 또는 컨테이너'에서 설치하세요.
+#    (가능하면 GPU. CPU는 합성이 매우 느려 시연 부적합.)
+#
+# 설치 예 (별도 venv):
+#   python -m venv .venv-xtts
+#   .venv-xtts\Scripts\pip install -r requirements-xtts.txt
+#   # torchaudio는 torch와 '같은 버전'이어야 함:
+#   #   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu  (또는 cu121)
+#
+# 실행:
+#   set TTS_ENGINE=xtts
+#   (백엔드를 이 격리 venv로 띄우거나, XTTS를 별도 TTS 마이크로서비스로 분리)
+#
+# 라이선스: XTTS-v2 모델은 CPML(비상업) — PoC/내부용 OK, 상업 배포 시 라이선스 확인.
+
+coqui-tts>=0.27.0
+torch>=2.1.0
+torchaudio>=2.1.0
+soundfile>=0.12.0
+numpy

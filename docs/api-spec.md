@@ -94,13 +94,16 @@ POST /api/training/question
   "difficulty": "beginner",
   "category": "계좌",
   "solved_content_ids": ["faq-account-001", "faq-account-002"],
-  "is_demo": false
+  "is_demo": false,
+  "persona": "general"
 }
 ```
 
 > `solved_content_ids`: 프론트엔드가 로컬 state로 관리하는 이미 출제된 문서 ID 목록. 서버는 Stateless로 유지하고, 중복 방지 책임은 프론트에 둠. 빈 배열이면 아무 문서나 출제.
 >
 > `is_demo`: 데모 모드 여부. `true`이면 LLM 즉석 출제를 하지 않고 `training_golden_answers.json`에서 질문을 직접 꺼내서 반환.
+>
+> `persona`(v14): 고객 상황/유형 8종 — `standard`(일반) / `angry`(화난) / `impatient`(급한) / `elderly`(고령) / `anxious`(불안) / `demanding`(무리한 요구) / `talkative`(말 많은) / `skeptical`(따지는). 콜센터에서 자주 겪고 상담사가 애먹는 유형을 반영(AI 코치 시뮬레이션). **비대칭 적용**: 일반 출제는 `persona`를 질문 생성 프롬프트에 주입, **데모 모드(고정 질문)는 페르소나 '말투 스킨'(`PERSONA_DEMO_TEMPLATE`, LLM 미사용)으로 결정적 적용**해 상황별로 문구가 달라짐. 채점은 전 경로에서 persona별 CS 관점 반영. 기본값 `standard`(빈 가이드 → 기존 동작).
 
 **Response:**
 
@@ -173,15 +176,24 @@ POST /api/training/score
 ```json
 {
   "question_id": "q-001",
-  "trainee_answer": "신분증이랑 통장 가져오시면 됩니다."
+  "trainee_answer": "신분증이랑 통장 가져오시면 됩니다.",
+  "persona": "general"
 }
 ```
+
+> `persona`(v14): 채점 시에도 고객 상황을 전달. 데모 모드는 질문이 고정이라 출제엔 persona를 못 쓰지만, **채점은 persona별 CS 관점(예: 불만 고객엔 공감·진정, 초보 고객엔 쉬운 설명)을 반영**해야 하므로 프론트가 선택된 persona를 채점 호출에도 동봉. 점수 구성(필수60/의미30/친화10)·JSON 스키마·`required_items` 로직은 불변이며, persona는 "친화 표현" 항목의 평가 관점만 구체화.
 
 **Response:**
 
 ```json
 {
   "score": 65,
+  "criteria": [
+    {"name": "필수 항목", "score": 60, "weight": 60},
+    {"name": "의미 정확성", "score": 80, "weight": 30},
+    {"name": "고객 친화·응대", "score": 70, "weight": 10}
+  ],
+  "coaching_tips": ["CDD 서류를 먼저 안내하세요", "비대면은 영상통화 절차를 덧붙이세요"],
   "included_items": ["신분증 필요"],
   "missing_items": ["CDD 서류", "비대면 시 영상통화 필요"],
   "feedback": "신분증 안내는 정확하지만, CDD 서류와 비대면 절차 안내가 누락되었습니다.",
@@ -189,6 +201,8 @@ POST /api/training/score
   "model_answer": "계좌 개설에는 신분증이 필요하며, 고객확인(CDD) 서류도 함께 징구합니다. 비대면의 경우 영상통화 본인확인 절차가 추가됩니다."
 }
 ```
+
+> `criteria`(v14): 루브릭 3축(필수항목/의미정확/친화·응대) 분해 점수 — 스코어카드 바 표시. `coaching_tips`(v14): '다음에 적용할 구체 행동' 리스트. 둘 다 옵션(LLM이 안 주면 빈 리스트 → 하위호환).
 
 **채점 정답 소스 (우선순위):**
 
@@ -616,6 +630,77 @@ python scripts/sync_manual.py --source crawl --incremental
 
 ---
 
+## 11. 오답 제보(피드백) API
+
+> 2026-06-20(v14) 신규. 응대 모드 답변의 정합성을 상담사가 직접 제보 → 로컬 SQLite 축적 → 검토. 답변 품질 개선의 데이터 선순환 출발점. 폐쇄망 대비 외부 의존 없이 파일 DB 1개(`data/feedback.db`).
+
+### 엔드포인트
+
+| Method | Path | 용도 |
+|--------|------|------|
+| POST | `/api/feedback` | 오답 제보 등록 (사유 필수) |
+| GET | `/api/feedback?status=open\|resolved` | 제보 목록 조회(검토 화면용). `status` 생략 시 전체 |
+| POST | `/api/feedback/{id}/resolve` | 제보를 처리완료로 전환 (검토자) |
+
+> 경로명이 `/chat`·`/training`과 겹치지 않아 `/api` prefix 공유 무방.
+
+**POST /api/feedback — Request:**
+
+```json
+{
+  "question": "미국 주식 어떻게 사나요?",
+  "answer": "해외주식 매매는 ...",
+  "reason": "수수료 안내가 편람과 다릅니다.",
+  "suggested": "온라인 0.25%가 맞습니다.",
+  "sources": [{"title": "해외주식 매매 개요", "url": null, "relevance_score": 0.71}],
+  "confidence": "medium"
+}
+```
+
+> `reason` 필수(빈 값 400). `suggested`(정답 제안)·`sources`·`confidence`는 선택. `sources`/`confidence`는 제보 시점 답변 스냅샷(프론트가 메시지 객체에서 그대로 첨부).
+
+**Response:** `{"id": 12, "status": "open"}`
+
+**GET /api/feedback — Response:** `{"items": [ {id, created_at, question, answer, reason, suggested, sources_json, confidence, status, resolved_at, resolver_note}, ... ]}` (id 내림차순)
+
+**POST /api/feedback/{id}/resolve — Response:** `{"id": 12, "status": "resolved"}` (이미 처리/미존재면 404)
+
+### 저장소 설계 (`backend/services/feedback_store.py`)
+
+`meta_sqlite.py`의 `MetaStore` 패턴 미러(WAL, row_factory, executescript). 단일 테이블 `feedback`.
+
+| 컬럼 | 비고 |
+|------|------|
+| id | PK AUTOINCREMENT |
+| created_at | UTC ISO (시간대 이중변환 방지) |
+| question / answer | 제보 대상 질문·답변 스냅샷 |
+| reason | 제보 사유(필수) |
+| suggested | 정답 제안(선택) |
+| sources_json | sources[] JSON 직렬화 |
+| confidence | high\|medium\|low 스냅샷 |
+| status | open \| resolved (idx) |
+| resolved_at / resolver_note | 처리 기록 |
+
+**동시성**: 요청 단위 인스턴스 + `with` 컨텍스트, `sqlite3.connect(timeout=5.0)`. `resolve`는 `WHERE id=? AND status='open'` 조건부 UPDATE + `rowcount`로 이중 처리(레이스) 방지(dev-harness 선점 상태변경 패턴). 모듈 전역 단일 connection 공유 금지(`check_same_thread`).
+
+---
+
+## 12. TTS API (AI 코치 시나리오 음성)
+
+> 2026-06-20(v15) 신규. AI 코치에서 고객 시나리오를 '실제 고객 음성'으로 낭독.
+
+```
+POST /api/tts
+```
+**Request:** `{ "text": "...", "persona": "elderly" }`
+**Response:** `audio/mpeg` (mp3 바이트)
+
+- 엔진: `edge-tts`(Microsoft Neural TTS), 한국어 **남성** 음성 `ko-KR-InJoonNeural`(env `TTS_VOICE`) 기본 + **고령 톤**(피치·속도 낮춤). 페르소나별 prosody(`routers/tts.py PERSONA_PROSODY`).
+- ⚠️ **폐쇄망**: edge-tts는 인터넷(MS 서버) 필요 → 사외망 시연용. 실도입 시 동일 엔드포인트로 사내 온프레미스 신경망 TTS(MeloTTS/Coqui 등)로 교체(엔진/`TTS_VOICE`만). 프론트는 서버 TTS 실패 시 브라우저 Web Speech(OS 로컬 음성)로 자동 폴백 → 완전 오프라인도 음성 제공(품질만↓).
+- 프론트: `lib/tts.js`(서버 우선 → 폴백), `TrainingScreen`(새 시나리오 시 자동 낭독 + 🔊 재생/중지 + 음성 자동재생 토글).
+
+---
+
 ## 변경 이력
 
 | 버전 | 날짜       | 변경 내용                                                                                                              |
@@ -633,6 +718,7 @@ python scripts/sync_manual.py --source crawl --incremental
 | v11  | 2026-06-16 | 섹션 3 — 검색 쿼리 동의어 확장(`query_expand.py`, `QUERY_EXPANSION_ENABLED`). 데모 버그("미국 주식"→"해외주식" 문서 미검색) 수정. 임베딩·BM25 쿼리만 확장, LLM 질문 원문 불변. tests/test_query_expand.py |
 | v12  | 2026-06-16 | 섹션 1·3 — confidence 임계값 bge-m3 재보정(0.85/0.70 → **0.70/0.50**) + config 분리(`CONFIDENCE_HIGH/MEDIUM_THRESHOLD`). 기존 Gemini 기준은 bge-m3 점수 분포(max 0.78)에서 high가 안 떠 대부분 low로 깔리는 문제. 30문항 측정 분포 기반. |
 | v13  | 2026-06-16 | 섹션 3 — 출처 페이지 중복 제거(페이지당 청크 캡 `PER_PAGE_CHUNK_CAP`, 기본 1). 같은 페이지 청크가 top_k 독식("출처 5건"=고유 2건) 해소. 컨텍스트 단계에서 적용해 citation [n] 정합 유지. 답변 품질 시도 로그 신설: [ANSWER_QUALITY.md](ANSWER_QUALITY.md) |
+| v14  | 2026-06-20 | **고객사(한화투자증권) PoC 리포지셔닝.** 제품명 "한화투자증권 AI 상담 어시스턴트", 모드명 챗봇→응대, 훈련→AI 코치. ① 섹션 11 신규 — 오답 제보(피드백) API 3종 + `feedback_store.py`(로컬 SQLite). ② 섹션 1 — training 질문/채점에 `persona`(고객 상황) 필드(비대칭 적용, demo/golden 무손상). ③ UI 한화 브랜딩(오렌지 #F37321). 30분 PoC 발표자료(.pptx) 별도 산출. |
 
 ---
 

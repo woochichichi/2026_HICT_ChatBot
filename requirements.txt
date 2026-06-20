@@ -32,5 +32,9 @@ rank_bm25>=0.2.2
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
 sentence-transformers>=3.0.0
 
+# AI 코치 TTS (routers/tts.py) — 한국어 남성 신경망 음성. edge-tts는 인터넷 필요(사외망 시연용).
+# 폐쇄망 실도입 시 사내 온프레미스 TTS(MeloTTS/Coqui 등)로 교체.
+edge-tts>=6.1.0
+
 # 테스트
 pytest>=8.0.0
