@@ -735,6 +735,23 @@ a.src-card:hover {
   font-size: 13.5px;
 }
 
+/* 답변 자리(AI 말풍선)에 뜨는 에러 카드 — 원인을 명확히 노출. ChatScreen onError */
+.answer-error {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 1px solid #fecdd3;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.answer-error strong {
+  font-size: 14px;
+}
+
 /* ============================ 모달 ============================ */
 .overlay {
   position: fixed;

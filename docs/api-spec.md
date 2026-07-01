@@ -366,9 +366,17 @@ class LLMService(ABC):
 - Embedding: `gemini-embedding-001` (3072차원)
 - SDK: `google-genai` (sync → `asyncio.to_thread` 래핑)
 
-**백업 구현체:** `OpenAIService(LLMService)` — OpenAI 크레딧 부족으로 백업 전환
+**백업/대체 구현체:** `OpenAIService(LLMService)`
 
-- Chat: `gpt-4o` / Embedding: `text-embedding-3-small` (1536차원)
+- Chat: `gpt-4o-mini`(기본, env `OPENAI_CHAT_MODEL`) / Embedding: `text-embedding-3-small` (1536차원)
+
+**임베딩·생성 독립 선택 (2026-06-30):** 임베딩(검색 벡터)과 답변 생성(LLM)을 별도 환경변수로 분리.
+
+- `EMBEDDING_PROVIDER` = `local`(bge-m3) | `gemini` — 검색 벡터 담당
+- `LLM_PROVIDER` = `gemini`(기본) | `openai` — 답변 생성 담당
+- `LLM_PROVIDER=openai`면 `make_llm()`이 `OpenAIChatWrapper(embedder)`를 반환 — **임베딩은 기존 서비스(로컬/Gemini) 그대로 위임하고 `generate`/`generate_stream`만 OpenAI로 교체.** 검색 벡터 차원·스케일이 안 바뀌어 **ChromaDB 재인제스트 불필요.** (`LocalEmbeddingService`의 "임베딩 로컬 + 생성 Gemini" 하이브리드를 일반화)
+- OpenAI Chat 모델 기본값은 작문(RAG 답변·코칭) 용도라 **최저가 `gpt-4o-mini`** — 품질 필요 시 `OPENAI_CHAT_MODEL`로 상향.
+- `OPENAI_API_KEY` 미설정 상태에서 `LLM_PROVIDER=openai`면 `OpenAIService.__init__`이 즉시 `ValueError`(모호한 런타임 401 방지).
 
 **향후 추가:** 실도입 모델 확정 시 해당 구현체 추가 (예: `Qwen3Service`, `VLLMService` 등)
 

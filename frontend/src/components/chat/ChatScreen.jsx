@@ -30,6 +30,7 @@ export default function ChatScreen() {
   const [streamingText, setStreamingText] = useState("");
   const [currentSources, setCurrentSources] = useState(null);
   const [error, setError] = useState(null);
+  const [errorSources, setErrorSources] = useState([]); // 에러 발생 시 보존된 출처
   const [reportTarget, setReportTarget] = useState(null);
   const [reportToast, setReportToast] = useState(null);
 
@@ -75,6 +76,7 @@ export default function ChatScreen() {
     setInput("");
     if (taRef.current) taRef.current.style.height = "auto";
     setError(null);
+    setErrorSources([]);
 
     // 예시 칩 = 사전 제작 답변 → 즉시 표시(LLM 미사용, 시연 안정)
     const canned = CANNED_ANSWERS[question];
@@ -120,7 +122,10 @@ export default function ChatScreen() {
         },
         onDone: () => commit(),
         onError: (m) => {
+          // 에러 원인을 그대로 표시. 받은 출처는 errorSources로 보존해
+          // 에러 블록과 함께 보여줌(출처만 남고 답변이 침묵하는 혼란 방지).
           setError(m || "답변 생성 중 오류가 발생했습니다.");
+          setErrorSources(sourcesRef.current || []);
           setStreamingText("");
           streamRef.current = "";
           setIsStreaming(false);
@@ -131,7 +136,8 @@ export default function ChatScreen() {
         if (streamRef.current) commit();
         else setIsStreaming(false);
       } else {
-        setError(err.message || "서버 연결에 실패했습니다.");
+        setError(err.message || "[연결 실패] 백엔드 서버에 연결하지 못했습니다.");
+        setErrorSources(sourcesRef.current || []);
         setIsStreaming(false);
       }
     }
@@ -233,9 +239,32 @@ export default function ChatScreen() {
               </div>
             )}
 
+            {/* 에러 — 답변이 와야 할 자리에 명확히 표시. 받은 출처가 있으면 함께 유지해
+                "출처만 주고 침묵"하는 혼란을 없앤다. 원인 문구는 백엔드 friendly_error_message 그대로. */}
             {error && (
-              <div className="banner-error">
-                <Icon name="shield" size={16} /> {error}
+              <div>
+                {errorSources && errorSources.length > 0 && <Sources sources={errorSources} />}
+                <div className="row">
+                  <span className="avatar">
+                    <Icon name="sparkles" size={18} />
+                  </span>
+                  <div className="bubble ai">
+                    <div className="answer-error" role="alert">
+                      <Icon name="shield" size={16} />
+                      <div>
+                        <strong>답변을 생성하지 못했습니다</strong>
+                        <p style={{ margin: "4px 0 0" }}>{error}</p>
+                        <button
+                          className="suggest"
+                          style={{ marginTop: 10 }}
+                          onClick={() => send(messages[messages.length - 1]?.content)}
+                        >
+                          <Icon name="sparkles" size={14} /> 다시 시도
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

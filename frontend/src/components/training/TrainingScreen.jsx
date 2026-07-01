@@ -49,7 +49,7 @@ const PERSONA_VOICE = {
 
 const MODES = [
   { value: "curriculum", label: "커리큘럼" },
-  { value: "random", label: "랜덤" },
+  // { value: "random", label: "랜덤" },  // 임시 숨김 — 채점 점검 중. 출제/채점 로직(next 213번)은 유지
   { value: "review", label: "복습" },
   { value: "ai", label: "AI 생성" },
 ];

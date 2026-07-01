@@ -33,10 +33,16 @@ class Settings:
     EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
     LOCAL_EMBEDDING_MODEL: str = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-m3")
 
-    # OpenAI (백업)
+    # 답변 생성(LLM) 제공자 (api-spec.md 섹션 4) — gemini | openai
+    # 임베딩(검색 벡터)과 독립. openai로 두면 "임베딩=기존(로컬/gemini) 그대로, 답변 생성만
+    # OpenAI"로 동작 → ChromaDB 재인제스트 불필요. embedder.make_llm()에서 분기.
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
+
+    # OpenAI (백업 → LLM_PROVIDER=openai 시 답변 생성 담당)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o")
+    # 작문(RAG 답변·코칭) 용도라 최저가 모델이 기본. 필요 시 env로 상향.
+    OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
 
     CHROMA_DB_PATH: str = os.getenv(
         "CHROMA_DB_PATH",

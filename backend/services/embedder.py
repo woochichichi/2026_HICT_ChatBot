@@ -167,8 +167,16 @@ class LocalEmbeddingService(LLMService):
     _model = None  # 클래스 캐시 — 모델 1회 로드
 
     def __init__(self) -> None:
-        self._gemini = GeminiService()  # generate/generate_stream 위임용
+        # 생성을 OpenAI가 맡으면(LLM_PROVIDER=openai) 이 Gemini는 안 쓰이므로 지연 생성.
+        # 즉시 생성하면 google-genai SDK·GOOGLE_API_KEY를 강제해 "OpenAI 키 하나로
+        # 작동"이 깨짐. 실제 Gemini 생성이 필요할 때만 만든다.
+        self._gemini: GeminiService | None = None
         self._model_name = settings.LOCAL_EMBEDDING_MODEL
+
+    def _get_gemini(self) -> "GeminiService":
+        if self._gemini is None:
+            self._gemini = GeminiService()
+        return self._gemini
 
     def _get_model(self):
         if LocalEmbeddingService._model is None:
@@ -196,14 +204,14 @@ class LocalEmbeddingService(LLMService):
         temperature: float = 0.1,
         response_format: dict | None = None,
     ) -> str:
-        return await self._gemini.generate(messages, temperature, response_format)
+        return await self._get_gemini().generate(messages, temperature, response_format)
 
     async def generate_stream(
         self,
         messages: list,
         temperature: float = 0.1,
     ) -> AsyncIterator[str]:
-        async for tok in self._gemini.generate_stream(messages, temperature):
+        async for tok in self._get_gemini().generate_stream(messages, temperature):
             yield tok
 
     def count_tokens(self, text: str) -> int:
@@ -212,17 +220,66 @@ class LocalEmbeddingService(LLMService):
 
 
 def make_llm() -> LLMService:
-    """설정에 따라 임베딩 제공자 선택 (api-spec.md 섹션 4).
+    """설정에 따라 임베딩·생성 제공자 선택 (api-spec.md 섹션 4).
 
-    EMBEDDING_PROVIDER=local → LocalEmbeddingService (임베딩 로컬 + 생성 Gemini)
-    그 외(기본)             → GeminiService
+    임베딩(검색 벡터)과 답변 생성(LLM)을 독립적으로 고름:
+      - 임베딩: EMBEDDING_PROVIDER=local → 로컬(bge-m3), 그 외 → Gemini
+      - 생성  : LLM_PROVIDER=openai → OpenAI(gpt-4o-mini 등), 그 외 → Gemini
+
+    LLM_PROVIDER=openai 면 임베딩 경로는 건드리지 않고 generate/generate_stream만
+    OpenAI로 위임 → ChromaDB 재인제스트 불필요. (LocalEmbeddingService가 임베딩 로컬 +
+    생성 Gemini였던 것과 같은 하이브리드 패턴의 일반화)
 
     이 팩토리를 사용하는 곳: scripts/sync_manual.py, scripts/test_accuracy.py,
     routers/chat.py — 한 곳에서 제공자를 갈아끼우기 위함.
     """
+    # 1) 임베딩 담당 서비스 선택 (검색 벡터 — 기존 동작 불변)
+    embedder: LLMService
     if settings.EMBEDDING_PROVIDER.lower() == "local":
-        return LocalEmbeddingService()
-    return GeminiService()
+        embedder = LocalEmbeddingService()
+    else:
+        embedder = GeminiService()
+
+    # 2) 생성(LLM)만 OpenAI로 교체 — 임베딩은 위 서비스 그대로 유지
+    if settings.LLM_PROVIDER.lower() == "openai":
+        return OpenAIChatWrapper(embedder)
+    return embedder
+
+
+class OpenAIChatWrapper(LLMService):
+    """임베딩은 위임 서비스(로컬/Gemini) 그대로, 답변 생성만 OpenAI로 처리.
+
+    "지금 Gemini가 하던 답변 생성만 OpenAI로 교체" 요구에 대응 (api-spec.md 섹션 4).
+    검색 벡터는 base가 만든 것을 그대로 써 ChromaDB 재인제스트가 필요 없음.
+    make_llm()이 LLM_PROVIDER=openai 일 때 생성.
+    """
+
+    def __init__(self, base: LLMService) -> None:
+        self._base = base          # 임베딩 담당 (LocalEmbeddingService | GeminiService)
+        self._openai = OpenAIService()  # 생성(gpt-4o-mini 등) 담당
+
+    async def generate(
+        self,
+        messages: list,
+        temperature: float = 0.1,
+        response_format: dict | None = None,
+    ) -> str:
+        return await self._openai.generate(messages, temperature, response_format)
+
+    async def generate_stream(
+        self,
+        messages: list,
+        temperature: float = 0.1,
+    ) -> AsyncIterator[str]:
+        async for tok in self._openai.generate_stream(messages, temperature):
+            yield tok
+
+    async def embed(self, texts: list[str]) -> list[list[float]]:
+        # 검색 벡터는 base(로컬/Gemini)로 — 차원·스케일 유지 (재인제스트 불필요)
+        return await self._base.embed(texts)
+
+    def count_tokens(self, text: str) -> int:
+        return self._base.count_tokens(text)
 
 
 class OpenAIService(LLMService):
@@ -231,6 +288,12 @@ class OpenAIService(LLMService):
     def __init__(self) -> None:
         from openai import AsyncOpenAI
 
+        # 빈 키로 조용히 동작하다 호출 시점에 모호한 401이 나는 걸 방지 —
+        # LLM_PROVIDER=openai 인데 키 미설정이면 기동/팩토리 시점에 바로 알림.
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY가 비어 있습니다. .env에 키를 넣거나 LLM_PROVIDER를 gemini로 두세요."
+            )
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.chat_model = settings.OPENAI_CHAT_MODEL
         self.embedding_model = settings.OPENAI_EMBEDDING_MODEL
