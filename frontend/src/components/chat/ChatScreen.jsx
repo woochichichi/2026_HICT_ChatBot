@@ -1,406 +1,482 @@
 /**
- * 챗봇 모드 UI (api-spec.md 섹션 1).
+ * 응대 모드 — RAG 채팅(에이전트-코파일럿 패턴, api-spec.md 섹션 1).
  *
- * 기능:
- *   - 질문 입력 → SSE 스트리밍 답변 표시
- *   - 출처 패널 (sources 이벤트로 선수신)
- *   - confidence 뱃지 (high/medium/low)
- *   - 메시지 히스토리 (Single-turn이지만 화면에는 대화 형태로 누적)
- *   - AI 답변의 마크다운(**, *, 목록 등) 렌더링
+ * UX 패턴(웹 리서치 반영):
+ *   - 출처를 답변보다 먼저(SSE) + 클릭 가능한 출처 카드
+ *   - 신뢰도 칩(high/medium/low) 노출
+ *   - 토큰 스트리밍 + 타이핑 인디케이터 + 중지 버튼
+ *   - 답변마다 오답 제보(피드백) — 정합성 체크
+ *   - 빈 상태: 예시 프롬프트(capability transparency)
+ *   - 접근성: aria-live(스트리밍), aria-label(아이콘 버튼), focus 링
  *
- * SSE 연동: api/chat.js의 streamChat() 사용
- * 스타일: TrainingScreen.jsx와 동일한 inline style 패턴
+ * 스타일: index.css(.chat/.bubble/.src-card/.composer 등). 아이콘: Icon.jsx.
  */
 
 import { useState, useRef, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
 import { streamChat } from "../../api/chat";
+import { submitFeedback } from "../../api/feedback";
+import { CANNED_ANSWERS } from "../../data/cannedAnswers";
+import Icon from "../common/Icon";
+import Markdown from "../common/Markdown";
+import { CONFIDENCE_STYLE } from "../../theme";
 
-// confidence 수준별 시각 표시 — 현재 UI에서 신뢰도 뱃지는 미표시
-const CONFIDENCE_STYLE = {
-  high: { label: "높음", color: "#16a34a", bg: "#f0fdf4" },
-  medium: { label: "보통", color: "#ca8a04", bg: "#fefce8" },
-  low: { label: "낮음", color: "#dc2626", bg: "#fef2f2" },
-};
+// 예시 칩 = 사전 제작 답변 키 (LLM 미사용, 시연 안정)
+const SUGGESTIONS = Object.keys(CANNED_ANSWERS);
 
 export default function ChatScreen() {
-  // messages: 대화 히스토리 — { role, content, sources?, confidence? }
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  // 스트리밍 중 실시간 텍스트 누적용
   const [streamingText, setStreamingText] = useState("");
-  // 현재 스트리밍 중인 답변의 출처 정보
   const [currentSources, setCurrentSources] = useState(null);
-  const [currentConfidence, setCurrentConfidence] = useState(null);
   const [error, setError] = useState(null);
+  const [errorSources, setErrorSources] = useState([]); // 에러 발생 시 보존된 출처
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportToast, setReportToast] = useState(null);
 
-  // ref로 최신 sources/confidence 유지 — onDone closure에서 stale 값 방지
   const sourcesRef = useRef(null);
   const confidenceRef = useRef(null);
+  const streamRef = useRef(""); // 중지 시 부분 답변 확정용
+  const abortRef = useRef(null);
+  const taRef = useRef(null);
+  const endRef = useRef(null);
 
-  // 메시지 목록 자동 스크롤
-  const messagesEndRef = useRef(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingText]);
 
-  const handleSubmit = async () => {
-    const question = input.trim();
+  // textarea 자동 높이
+  const autosize = () => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  };
+
+  // 스트리밍 답변을 메시지로 확정(실제/캔드 공통)
+  const commit = () => {
+    setMessages((msgs) => [
+      ...msgs,
+      {
+        role: "assistant",
+        content: streamRef.current,
+        sources: sourcesRef.current,
+        confidence: confidenceRef.current,
+      },
+    ]);
+    setStreamingText("");
+    streamRef.current = "";
+    setIsStreaming(false);
+  };
+
+  const send = async (text) => {
+    const question = (text ?? input).trim();
     if (!question || isStreaming) return;
 
-    // 유저 메시지 추가
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
     setInput("");
+    if (taRef.current) taRef.current.style.height = "auto";
+    setError(null);
+    setErrorSources([]);
+
+    // 예시 칩 = 사전 제작 답변 → 즉시 표시(LLM 미사용, 시연 안정)
+    const canned = CANNED_ANSWERS[question];
+    if (canned) {
+      setMessages((p) => [
+        ...p,
+        { role: "user", content: question },
+        {
+          role: "assistant",
+          content: canned.answer,
+          sources: canned.sources || [],
+          confidence: canned.confidence || "high",
+        },
+      ]);
+      return;
+    }
+
+    // 일반 질문 = 실시간 RAG 스트리밍
+    setMessages((p) => [...p, { role: "user", content: question }]);
     setIsStreaming(true);
     setStreamingText("");
+    streamRef.current = "";
     setCurrentSources(null);
-    setCurrentConfidence(null);
-    setError(null);
+    sourcesRef.current = null;
+    confidenceRef.current = null;
+
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
 
     try {
       await streamChat(question, {
-        // 1. sources 이벤트 — 출처 + confidence 선수신
+        signal: ctrl.signal,
         onSources: (data) => {
           const sources = data.sources || [];
           const confidence = data.confidence || "low";
           setCurrentSources(sources);
-          setCurrentConfidence(confidence);
-          // ref에도 저장 — onDone closure에서 최신값 접근용
           sourcesRef.current = sources;
           confidenceRef.current = confidence;
         },
-        // 2. token 이벤트 — 실시간 텍스트 누적
-        onToken: (text) => {
-          setStreamingText((prev) => prev + text);
+        onToken: (t) => {
+          streamRef.current += t;
+          setStreamingText((p) => p + t);
         },
-        // 3. done 이벤트 — 스트리밍 완료, 메시지 히스토리에 확정
-        onDone: () => {
-          setStreamingText((prev) => {
-            // ref에서 최신값 읽기 (closure stale 문제 방지)
-            setMessages((msgs) => [
-              ...msgs,
-              {
-                role: "assistant",
-                content: prev,
-                sources: sourcesRef.current,
-                confidence: confidenceRef.current,
-              },
-            ]);
-            return "";
-          });
-          setIsStreaming(false);
-        },
-        // 4. error 이벤트
-        onError: (message) => {
-          setError(message || "답변 생성 중 에러가 발생했습니다.");
+        onDone: () => commit(),
+        onError: (m) => {
+          // 에러 원인을 그대로 표시. 받은 출처는 errorSources로 보존해
+          // 에러 블록과 함께 보여줌(출처만 남고 답변이 침묵하는 혼란 방지).
+          setError(m || "답변 생성 중 오류가 발생했습니다.");
+          setErrorSources(sourcesRef.current || []);
+          setStreamingText("");
+          streamRef.current = "";
           setIsStreaming(false);
         },
       });
     } catch (err) {
-      setError(err.message || "서버 연결 실패");
-      setIsStreaming(false);
+      if (err?.name === "AbortError") {
+        if (streamRef.current) commit();
+        else setIsStreaming(false);
+      } else {
+        setError(err.message || "[연결 실패] 백엔드 서버에 연결하지 못했습니다.");
+        setErrorSources(sourcesRef.current || []);
+        setIsStreaming(false);
+      }
     }
   };
 
-  // Enter로 전송, Shift+Enter로 줄바꿈
-  const handleKeyDown = (e) => {
+  const stop = () => abortRef.current?.abort();
+
+  const onKey = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      send();
     }
   };
 
+  const showEmpty = messages.length === 0 && !isStreaming && !error;
+
   return (
-    <section
-      style={{
-        background: "#fff",
-        borderRadius: 12,
-        padding: 24,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-        display: "flex",
-        flexDirection: "column",
-        height: "calc(100vh - 160px)",
-      }}
-    >
-      {/* 메시지 목록 */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          marginBottom: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
-        {messages.length === 0 && !isStreaming && (
-          <p style={{ color: "#94a3b8", fontSize: 14, textAlign: "center", marginTop: 40 }}>
-            업무 편람에 대해 질문해 보세요.
-          </p>
-        )}
-
-        {messages.map((msg, i) => (
-          <div key={i}>
-            {/* 메시지 본문 */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-              }}
-            >
-              <div
-                style={{
-                  maxWidth: "80%",
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  ...(msg.role === "user"
-                    ? { background: "#2563eb", color: "#fff", whiteSpace: "pre-wrap" }
-                    : { background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0" }),
-                }}
-              >
-                {/* AI 답변은 마크다운 렌더링, 유저 메시지는 plain text */}
-                {msg.role === "assistant" ? (
-                  <MarkdownContent content={msg.content} />
-                ) : (
-                  msg.content
-                )}
-              </div>
-            </div>
-
-            {/* AI 답변의 출처 패널 */}
-            {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
-              <SourcePanel sources={msg.sources} />
-            )}
-          </div>
-        ))}
-
-        {/* 스트리밍 중인 답변 */}
-        {isStreaming && (
-          <div>
-            {/* 출처 선표시 (sources 이벤트 수신 후) */}
-            {currentSources && currentSources.length > 0 && (
-              <SourcePanel sources={currentSources} />
-            )}
-            <div style={{ display: "flex", justifyContent: "flex-start" }}>
-              <div
-                style={{
-                  maxWidth: "80%",
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  fontSize: 15,
-                  lineHeight: 1.6,
-                  background: "#f1f5f9",
-                  color: "#1e293b",
-                  border: "1px solid #e2e8f0",
-                }}
-              >
-                {streamingText ? (
-                  <MarkdownContent content={streamingText} />
-                ) : (
-                  "답변 생성 중..."
-                )}
-                <span style={{ animation: "blink 1s infinite", opacity: 0.5 }}>|</span>
-              </div>
+    <section className="chat">
+      <div className="thread">
+        {showEmpty ? (
+          <div className="empty">
+            <span className="badge">
+              <Icon name="sparkles" size={26} />
+            </span>
+            <h2>무엇을 도와드릴까요?</h2>
+            <p>업무 편람·FAQ에서 근거(출처)와 함께 답변합니다. 아래 예시로 시작해 보세요.</p>
+            <div className="suggests">
+              {SUGGESTIONS.map((s) => (
+                <button key={s} className="suggest" onClick={() => send(s)}>
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
-        )}
+        ) : (
+          <div className="thread-inner">
+            {messages.map((msg, i) =>
+              msg.role === "user" ? (
+                <div key={i} className="row user">
+                  <div className="bubble me">{msg.content}</div>
+                </div>
+              ) : (
+                <div key={i}>
+                  <div className="row">
+                    <span className="avatar">
+                      <Icon name="sparkles" size={18} />
+                    </span>
+                    <div className="bubble ai">
+                      <Markdown content={msg.content} />
+                    </div>
+                  </div>
+                  {msg.sources && msg.sources.length > 0 && <Sources sources={msg.sources} />}
+                  <div className="answer-meta">
+                    {msg.confidence && CONFIDENCE_STYLE[msg.confidence] && (
+                      <span className={`chip conf-${msg.confidence}`}>
+                        <Icon name="shield" size={13} />
+                        신뢰도 {CONFIDENCE_STYLE[msg.confidence].label}
+                      </span>
+                    )}
+                    <button
+                      className="feedback-link"
+                      onClick={() =>
+                        setReportTarget({
+                          question: messages[i - 1]?.content ?? "",
+                          answer: msg.content,
+                          sources: msg.sources ?? [],
+                          confidence: msg.confidence ?? "low",
+                        })
+                      }
+                    >
+                      <Icon name="flag" size={13} /> 오답 제보
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
 
-        {/* 에러 표시 */}
-        {error && (
-          <div
-            style={{
-              padding: 12,
-              background: "#fef2f2",
-              color: "#b91c1c",
-              borderRadius: 8,
-              fontSize: 14,
-            }}
-          >
-            {error}
+            {/* 스트리밍 중 */}
+            {isStreaming && (
+              <div>
+                {currentSources && currentSources.length > 0 && <Sources sources={currentSources} />}
+                <div className="row">
+                  <span className="avatar">
+                    <Icon name="sparkles" size={18} />
+                  </span>
+                  <div className="bubble ai" aria-live="polite">
+                    {streamingText ? (
+                      <>
+                        <Markdown content={streamingText} />
+                        <span className="caret">▏</span>
+                      </>
+                    ) : (
+                      <span className="typing">
+                        <i /><i /><i />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 에러 — 답변이 와야 할 자리에 명확히 표시. 받은 출처가 있으면 함께 유지해
+                "출처만 주고 침묵"하는 혼란을 없앤다. 원인 문구는 백엔드 friendly_error_message 그대로. */}
+            {error && (
+              <div>
+                {errorSources && errorSources.length > 0 && <Sources sources={errorSources} />}
+                <div className="row">
+                  <span className="avatar">
+                    <Icon name="sparkles" size={18} />
+                  </span>
+                  <div className="bubble ai">
+                    <div className="answer-error" role="alert">
+                      <Icon name="shield" size={16} />
+                      <div>
+                        <strong>답변을 생성하지 못했습니다</strong>
+                        <p style={{ margin: "4px 0 0" }}>{error}</p>
+                        <button
+                          className="suggest"
+                          style={{ marginTop: 10 }}
+                          onClick={() => send(messages[messages.length - 1]?.content)}
+                        >
+                          <Icon name="sparkles" size={14} /> 다시 시도
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={endRef} />
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
-      {/* 입력 영역 */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="질문을 입력하세요... (Enter로 전송)"
-          rows={1}
-          disabled={isStreaming}
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: "1px solid #e2e8f0",
-            fontSize: 15,
-            lineHeight: 1.5,
-            resize: "none",
-            outline: "none",
+      {/* 컴포저 */}
+      <div className="composer-wrap">
+        <div className="composer">
+          <div className="composer-box">
+            <button
+              type="button"
+              className="btn btn-icon btn-ghost"
+              disabled
+              aria-label="음성 입력(STT) 준비 중"
+              title="음성 입력(STT) 연동 예정 — 통화 내용을 자동으로 질문에 입력"
+            >
+              <Icon name="mic" size={19} />
+            </button>
+            <textarea
+              ref={taRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                autosize();
+              }}
+              onKeyDown={onKey}
+              placeholder="업무 편람에 대해 질문하세요. (Enter 전송 · Shift+Enter 줄바꿈)"
+              rows={1}
+              aria-label="질문 입력"
+            />
+            {isStreaming ? (
+              <button className="btn btn-icon" onClick={stop} aria-label="생성 중지" title="생성 중지">
+                <Icon name="stop" size={16} />
+              </button>
+            ) : (
+              <button
+                className="btn btn-icon btn-primary"
+                onClick={() => send()}
+                disabled={!input.trim()}
+                aria-label="전송"
+                title="전송"
+              >
+                <Icon name="send" size={18} />
+              </button>
+            )}
+          </div>
+          <div className="composer-hint">
+            답변은 업무 편람을 근거로 생성되며, 출처로 확인할 수 있습니다.
+          </div>
+        </div>
+      </div>
+
+      {reportToast && (
+        <div className="toast">
+          <Icon name="check" size={16} /> {reportToast}
+        </div>
+      )}
+      {reportTarget && (
+        <ReportModal
+          target={reportTarget}
+          onClose={() => setReportTarget(null)}
+          onSubmitted={(id) => {
+            setReportTarget(null);
+            setReportToast(`제보가 접수되었습니다 (#${id}). 감사합니다.`);
+            setTimeout(() => setReportToast(null), 3000);
           }}
         />
-        <button
-          onClick={handleSubmit}
-          disabled={isStreaming || !input.trim()}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "none",
-            background: isStreaming || !input.trim() ? "#cbd5e1" : "#2563eb",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: isStreaming || !input.trim() ? "not-allowed" : "pointer",
-          }}
-        >
-          전송
-        </button>
-      </div>
+      )}
     </section>
   );
 }
 
-/**
- * 마크다운 렌더링 컴포넌트.
- * AI 답변의 **굵게**, *기울임*, 목록, 헤딩 등을 HTML로 변환.
- * react-markdown 사용 + 인라인 스타일로 기본 시각 표현.
- */
-function MarkdownContent({ content }) {
+/* 출처 카드 목록 */
+function Sources({ sources }) {
   return (
-    <ReactMarkdown
-      components={{
-        // 단락
-        p: ({ children }) => (
-          <p style={{ margin: "4px 0", lineHeight: 1.7 }}>{children}</p>
-        ),
-        // 굵게
-        strong: ({ children }) => (
-          <strong style={{ fontWeight: 700 }}>{children}</strong>
-        ),
-        // 기울임
-        em: ({ children }) => (
-          <em style={{ fontStyle: "italic" }}>{children}</em>
-        ),
-        // 비순서 목록 (*, -, +)
-        ul: ({ children }) => (
-          <ul style={{ margin: "6px 0", paddingLeft: 20 }}>{children}</ul>
-        ),
-        // 순서 목록
-        ol: ({ children }) => (
-          <ol style={{ margin: "6px 0", paddingLeft: 20 }}>{children}</ol>
-        ),
-        // 목록 항목
-        li: ({ children }) => (
-          <li style={{ margin: "3px 0", lineHeight: 1.6 }}>{children}</li>
-        ),
-        // 헤딩 H1~H3
-        h1: ({ children }) => (
-          <h1 style={{ fontSize: 18, fontWeight: 700, margin: "10px 0 4px" }}>{children}</h1>
-        ),
-        h2: ({ children }) => (
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "8px 0 4px" }}>{children}</h2>
-        ),
-        h3: ({ children }) => (
-          <h3 style={{ fontSize: 15, fontWeight: 600, margin: "6px 0 4px" }}>{children}</h3>
-        ),
-        // 인라인 코드
-        code: ({ children }) => (
-          <code style={{ background: "#e2e8f0", borderRadius: 4, padding: "1px 5px", fontSize: 13 }}>
-            {children}
-          </code>
-        ),
-        // 구분선
-        hr: () => <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "8px 0" }} />,
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+    <div className="sources">
+      <span className="sources-head">출처 {sources.length}건</span>
+      {sources.map((s, i) => {
+        const inner = (
+          <>
+            <span className="src-idx">{i + 1}</span>
+            <span className="src-title">{s.title}</span>
+            {typeof s.relevance_score === "number" && (
+              <span className="src-score">{(s.relevance_score * 100).toFixed(0)}%</span>
+            )}
+            {s.url && <Icon name="external" size={14} style={{ color: "var(--gray-400)" }} />}
+          </>
+        );
+        return s.url ? (
+          <a key={i} className="src-card" href={s.url} target="_blank" rel="noopener noreferrer">
+            {inner}
+          </a>
+        ) : (
+          <div key={i} className="src-card">
+            {inner}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
-/**
- * 출처 패널 컴포넌트 — 기본 접힌 상태, 클릭 시 토글.
- * 신뢰도 정보는 미표시, 출처 목록만 표시.
- */
-function SourcePanel({ sources }) {
-  const [open, setOpen] = useState(false);
+/* 오답 제보 모달 */
+function ReportModal({ target, onClose, onSubmitted }) {
+  const [reason, setReason] = useState("");
+  const [suggested, setSuggested] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const submit = async () => {
+    if (!reason.trim()) {
+      setErr("제보 사유를 입력해 주세요.");
+      return;
+    }
+    setSubmitting(true);
+    setErr(null);
+    try {
+      const res = await submitFeedback({
+        question: target.question,
+        answer: target.answer,
+        reason: reason.trim(),
+        suggested: suggested.trim() || null,
+        sources: target.sources,
+        confidence: target.confidence,
+      });
+      onSubmitted(res.id);
+    } catch (e) {
+      setErr(e.message || "제보 전송에 실패했습니다.");
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div style={{ marginTop: 4, marginBottom: 2, marginLeft: 8 }}>
-      {/* 토글 버튼 */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 5,
-          padding: "3px 10px 3px 8px",
-          borderRadius: 6,
-          border: "1px solid #e2e8f0",
-          background: "#f8fafc",
-          cursor: "pointer",
-          fontSize: 12,
-          color: "#64748b",
-        }}
-      >
-        <span>출처 {sources.length}건</span>
-        <span
-          style={{
-            fontSize: 10,
-            display: "inline-block",
-            transition: "transform 0.2s",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        >
-          ▼
-        </span>
-      </button>
-
-      {/* 펼쳐진 출처 목록 */}
-      {open && (
-        <div
-          style={{
-            marginTop: 6,
-            padding: "8px 12px",
-            background: "#f8fafc",
-            borderRadius: 8,
-            border: "1px solid #e2e8f0",
-            fontSize: 12,
-            color: "#64748b",
-          }}
-        >
-          {sources.map((src, i) => (
-            <div key={i} style={{ marginTop: i > 0 ? 6 : 0, lineHeight: 1.5 }}>
-              <span style={{ fontWeight: 600, color: "#475569" }}>[{i + 1}]</span>{" "}
-              {/* url이 있으면 위키 페이지로 새 탭 이동, 없으면 일반 텍스트 */}
-              {src.url ? (
-                <a
-                  href={src.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#2563eb", textDecoration: "none" }}
-                  onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
-                  onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
-                >
-                  {src.title} ↗
-                </a>
-              ) : (
-                src.title
-              )}
-              <span style={{ marginLeft: 6, fontSize: 11, color: "#94a3b8" }}>
-                ({(src.relevance_score * 100).toFixed(0)}%)
-              </span>
-            </div>
-          ))}
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <h3>
+            <Icon name="flag" size={18} style={{ color: "var(--orange)" }} /> 오답 제보
+          </h3>
+          <button className="btn btn-icon btn-ghost" onClick={onClose} aria-label="닫기">
+            <Icon name="close" size={18} />
+          </button>
         </div>
-      )}
+        <div className="modal-body">
+          <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--gray-500)" }}>
+            답변의 정합성 문제를 알려주세요. 검토 후 편람·답변 개선에 반영됩니다.
+          </p>
+
+          <div
+            style={{
+              background: "var(--surface-2)",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--r-sm)",
+              padding: 12,
+              marginBottom: 16,
+              fontSize: 13,
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)" }}>질문</div>
+            <div style={{ margin: "2px 0 8px", color: "var(--ink)" }}>{target.question || "(질문 없음)"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)" }}>AI 답변</div>
+            <div style={{ marginTop: 2, color: "var(--gray-700)", maxHeight: 140, overflowY: "auto" }}>
+              <Markdown content={target.answer} />
+            </div>
+          </div>
+
+          <label className="lbl" htmlFor="fb-reason">
+            제보 사유 <span style={{ color: "var(--bad)" }}>*</span>
+          </label>
+          <textarea
+            id="fb-reason"
+            className="field"
+            style={{ width: "100%", marginTop: 6, resize: "vertical" }}
+            rows={3}
+            autoFocus
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="예: 수수료율이 편람과 다릅니다 / 절차 일부가 누락됐습니다"
+          />
+
+          <label className="lbl" htmlFor="fb-sug" style={{ display: "block", marginTop: 14 }}>
+            정답 제안 <span style={{ color: "var(--gray-400)", fontWeight: 400 }}>(선택)</span>
+          </label>
+          <textarea
+            id="fb-sug"
+            className="field"
+            style={{ width: "100%", marginTop: 6, resize: "vertical" }}
+            rows={3}
+            value={suggested}
+            onChange={(e) => setSuggested(e.target.value)}
+            placeholder="올바른 답변/안내가 있다면 적어주세요."
+          />
+
+          {err && (
+            <div className="banner-error" style={{ marginTop: 12 }}>
+              <Icon name="shield" size={15} /> {err}
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 18 }}>
+            <button className="btn" onClick={onClose} disabled={submitting}>
+              취소
+            </button>
+            <button className="btn btn-primary" onClick={submit} disabled={submitting || !reason.trim()}>
+              {submitting ? "전송 중…" : "제보하기"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

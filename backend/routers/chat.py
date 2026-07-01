@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from ..services.embedder import make_llm
 from ..services.rag import RAGService
+from ..utils.errors import friendly_error_message
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +80,9 @@ async def chat(request: ChatRequest):
             yield _sse_event("done", {})
 
         except Exception as e:
-            # 에러 시 클라이언트에 알림 — 프론트에서 onError 콜백으로 처리
+            # 원본 오류는 서버 로그에만 — 사용자에겐 친화적 메시지 (raw 429/503 비노출)
             logger.exception("챗봇 SSE 에러: %s", e)
-            yield _sse_event("error", {"message": str(e)})
+            yield _sse_event("error", {"message": friendly_error_message(e)})
 
     # StreamingResponse — FastAPI 내장, 추가 패키지 불필요
     return StreamingResponse(

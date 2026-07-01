@@ -15,6 +15,10 @@ rawdata/
 data/meta.db
 data/meta.db-*
 
+# 오답 제보 로컬 DB (런타임 데이터)
+data/feedback.db
+data/feedback.db-*
+
 # 위키 배치 조회 산출물 + auth (절대 커밋 금지)
 scripts/wiki_auth.txt
 scripts/wiki_html/
@@ -43,6 +47,15 @@ frontend/build/
 .idea/
 *.swp
 
+# Claude Code 로컬 설정/세션 (커밋 제외)
+.claude/
+
+# 발표자료 임시 복사본(파워포인트 열람 중 생성)
+docs/presentation/*복사본*.pptx
+
 # OS
 .DS_Store
 Thumbs.db
+
+# 위키는 별도 git repo(깃허브 위키) — 메인에서 추적 안 함
+wiki/

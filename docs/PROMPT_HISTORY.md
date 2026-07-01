@@ -31,10 +31,37 @@
 - **영향**: 출처 인용이 [1], [2] 번호로 통일됨. 편람 외 질문 시 명확한 안내 메시지
 - **커밋**: (feature/chatbot 브랜치)
 
+### v3 | 2026-06-20 | chat_system.txt | (가독성 형식)
+- **변경**: "가독성 형식(마크다운)" 섹션 추가 — 핵심 **굵게**, 절차는 번호목록, 병렬은 불릿, 줄바꿈 분리, 길면 소제목으로 묶기.
+- **이유**: 응대 모드 답변이 한 문단으로 길게 나와 가독성이 떨어진다는 피드백. 상담사가 통화 중 빠르게 훑을 수 있게.
+- **영향**: 답변이 구조화된 마크다운으로 출력 → ChatScreen Markdown 렌더(목록/볼드/개행)로 표시. 내용·출처번호 규칙은 불변.
+- **커밋**: (prompt: 별도 커밋 예정)
+
 ## training_customer.txt
 
 > 승구리 담당 — 변경 시 이곳에 기록
 
+### v2 | 2026-06-20 | training_customer.txt | (AI 코치 리포지셔닝)
+- **변경**: `{persona_guide}` 플레이스홀더 추가(난이도 블록 다음, "편람 내용:" 앞). 고객 상황(페르소나) 말투 가이드를 주입. 지침에 "말투/상황 반영하되 핵심 문의는 편람 범위 유지", "구어체 1문장만" 추가.
+- **이유**: AI 코치 모드를 "다양한 실제 응대 상황(말 긴 고객·급한 고객·불만 고객·초보 고객) 시뮬레이션"으로 재포지셔닝. 실환경에서 어떤 고객이 인입될지 모르는 상황 대비 훈련.
+- **영향**: `general`이면 `{persona_guide}`가 빈 문자열 → 기존 출력과 동일(하위호환). 특수 persona는 해당 말투의 질문 생성. 데모 모드(고정 질문)에는 미적용.
+- **연관**: `question_gen.py` `PERSONA_GUIDES`, api-spec.md 섹션 1·11
+- **커밋**: (prompt: 별도 커밋 예정)
+
 ## training_scorer.txt
 
 > 승구리 담당 — 변경 시 이곳에 기록
+
+### v2 | 2026-06-20 | training_scorer.txt | (AI 코치 리포지셔닝)
+- **변경**: `{persona_scoring_note}` 플레이스홀더 추가("채점 기준:" 앞). "고객 친화적 표현(10%)"에 "페르소나 상황 응대 태도·공감·명확한 안내" 평가 관점 명시. feedback 항목에 "페르소나 상황 응대 코칭 포함" 문구 추가.
+- **이유**: 일반 CS 응대 품질(공감·진정·쉬운 설명 등)을 페르소나별로 코칭. 추후 실제 고객지원센터 교육 방식으로 확장 예정.
+- **영향**: **점수 구성(필수60/의미30/친화10)·JSON 스키마·`required_items`/`items_hint` 로직은 불변.** persona는 친화 항목의 평가 관점만 구체화. `general`이면 빈 노트 → 기존 채점과 동일(하위호환).
+- **연관**: `scorer.py` `PERSONA_SCORING_NOTES`, api-spec.md 섹션 1·11
+- **커밋**: (prompt: 별도 커밋 예정)
+
+### v3 | 2026-06-20 | training_scorer.txt | (AI 코치 스코어카드 강화)
+- **변경**: JSON에 `criteria`(루브릭 3축 분해: 필수항목/의미정확/친화·응대, 각 score+weight)와 `coaching_tips`(다음에 적용할 구체 행동) 추가. feedback은 2~3문장으로. "진단이 아니라 다음 행동" 지침 명시.
+- **이유**: 코칭/롤플레이 툴(Second Nature·Hyperbound·Zenarate) 리서치 — 스코어카드 루브릭 분해 + '실행 가능한 다음 단계'가 핵심 차별점. 단일 점수보다 학습 효과↑.
+- **영향**: `criteria`/`coaching_tips`는 옵션 — LLM이 안 주면 빈 리스트(하위호환). 기존 score/included/missing/feedback/model_answer 불변.
+- **연관**: `scorer.py`(파싱+폴백), `routers/training.py` ScoreResponse, TrainingScreen 스코어카드 UI
+- **커밋**: (prompt: 별도 커밋 예정)
