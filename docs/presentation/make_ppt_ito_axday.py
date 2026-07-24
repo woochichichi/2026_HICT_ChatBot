@@ -353,23 +353,24 @@ def s06_plus_alpha():
 
 
 # ── 슬라이드 7~10. [문제점 해결] 벽 N 동일 템플릿 ─────────────
-def wall_slide(n, kicker, title, problem, temp, root, tk):
-    """벽 N 공통 템플릿: 상단 큰 '벽 N' + 제목, 3단 카드(문제/임시/근본).
-    '임시'는 TAUPE 톤, '근본'은 ORANGE 강조."""
+def wall_slide(n, kicker, title, problem, solved, ops, tk):
+    """벽 N 공통 템플릿: 상단 큰 '벽 N' + 제목, 3단 카드.
+    스토리: 문제 → 해결(우리가 실제로 한 것) → 실제 운영 적용 시(이렇게·이런 환경 필요).
+    '해결'을 ORANGE로 강조(우리 역량), '실제 운영 적용 시'는 차분한 톤(미래·필요 환경)."""
     s = slide()
     header(s, kicker, title)
     # 상단 큰 '벽 N' 워터마크 느낌(우측)
     put_text(s, Inches(9.3), Inches(0.5), Inches(3.4), Inches(1.0),
              [(f"벽 {n}", 40, True, LINE, PP_ALIGN.RIGHT, FONT_EN)])
     cols = [("문제", problem, TAUPE, LINE, ESPRESSO),
-            ("임시 해결", temp, TAUPE, LINE, TAUPE),
-            ("근본 해결", root, ORANGED, ORANGE, ESPRESSO)]
+            ("해결", solved, ORANGED, ORANGE, ESPRESSO),
+            ("실제 운영 적용 시", ops, ORANGED, LINE, ESPRESSO)]
     gap = Inches(0.35)
     total = Inches(12.1)
     w = Emu(int((total - gap * 2) / 3))
     x = Inches(0.62)
     for label, body, lab_col, brd, body_col in cols:
-        strong = (label == "근본 해결")
+        strong = (label == "해결")
         c = card(s, x, Inches(2.15), w, Inches(3.5),
                  fill=WHITE, line=brd, line_w=1.75 if strong else 1.0)
         shape_text(c, [
@@ -385,30 +386,30 @@ def wall_slide(n, kicker, title, problem, temp, root, tk):
 def s07_wall1():
     wall_slide(
         1, "문제 돌파 · 벽 1/4", "인터넷이 막힌 폐쇄망",
-        "사내 편람을 밖으로 내보낼 수 없다",
-        "PDF·HTML을 사람이 직접 반입해 넣었다",
-        "서버 도입 시 위키에 직접 연결해 자동으로 받아온다",
-        "지금도 되고, 서버 붙으면 자동이 된다")
+        "사내 편람을 밖으로\n내보낼 수 없다",
+        "사내 인증으로 위키·편람을\n폐쇄망 안에서 직접 수집\n(PDF·HTML 반입도 지원)",
+        "서버를 두고 위키에 상시 연동해\n자동으로 최신화\n필요: 사내 서버 · 위키 접근 권한",
+        "지금도 수집되고, 서버가 붙으면 자동 연동된다")
 
 
 # 근거: docs/adr/0010-wiki-diff-ingest.md, backend/services/ingest.py, meta_sqlite.py
 def s08_wall2():
     wall_slide(
         2, "문제 돌파 · 벽 2/4", "바뀐 건 한 줄인데, 전부 다시?",
-        "편람이 조금만 바뀌어도 전체를 다시 처리하면 느리고 비싸다",
-        "그냥 전량 재처리",
-        "내용 지문(고유값)을 비교해 바뀐 조각만 갱신",
-        "바뀐 1~5%만 손대 재작업 대부분을 없앴다")
+        "조금만 바뀌어도 전체를\n다시 처리하면 느리고 비싸다",
+        "내용 지문을 비교해\n바뀐 조각만 갱신하도록 구현\n변경 1~5%면 재작업 대부분 제거",
+        "위키 변경에 맞춰\n정기 자동 동기화\n필요: 배치 스케줄러 운영",
+        "바뀐 1~5%만 손대 재작업을 없앴다 — 실제로 구현한 방식")
 
 
 # 근거: backend/services/rag.py, docs/adr/0002·0003·0004, docs/ANSWER_QUALITY.md
 def s09_wall3():
     wall_slide(
         3, "문제 돌파 · 벽 3/4", "그럴듯한 답 말고, 맞는 답",
-        "단순 검색은 엉뚱한 근거로 그럴듯하게 틀린다",
-        "비슷한 문서 하나 찾아 답변",
-        "뜻+단어를 함께 찾고 · 조각 크기를 조정하고 · 출처를 붙여 보여준다",
-        "정확도가 눈에 띄게 올랐다 (다음 장 수치)")
+        "단순 검색은 엉뚱한 근거로\n그럴듯하게 틀린다",
+        "뜻+단어 함께 찾기 · 조각 크기 조정 ·\n출처 표시를 구현\n최상위 적중률 62% → 81%",
+        "전체 편람으로 평가 문항 확대 재측정 +\n확신 낮은 답은 상담원 검토\n필요: 정기 평가 체계",
+        "정확도를 실제로 끌어올렸다 (다음 장 수치)")
 
 
 # 근거: docs/adr/0001-llm-service-abstraction.md, backend/services/embedder.py(make_llm),
@@ -417,10 +418,10 @@ def s10_wall4():
     # 정직성: 외부는 '생성 AI 1곳'뿐, 검색·기억(임베딩)은 이미 사내 로컬임을 분명히 한다.
     wall_slide(
         4, "문제 돌파 · 벽 4/4", "지금은 외부 AI, 곧 사내 AI",
-        "폐쇄망에서 바로 쓸 사내 생성 AI가 아직 없다",
-        "외부 생성 AI를 임시로 사용\n(※ 검색·기억은 이미 전부 사내에서 동작)",
-        "갈아끼우기 쉬운 구조로 설계 —\n사내망 모델이 준비되면\n코드 수정 없이 즉시 교체",
-        "임시로 굴리되, 언제든 사내로 갈아끼운다")
+        "폐쇄망에서 바로 쓸\n사내 생성 AI가 아직 없다",
+        "검색·기억은 이미 전부 사내에서 동작\n생성 AI만 갈아끼우기 쉽게 설계\n(외부는 생성 1곳만 임시)",
+        "사내망 모델을 붙여\n코드 변경 없이 즉시 교체 → 완전 사내화\n필요: 사내 GPU 서버 · 사내 LLM",
+        "핵심은 이미 사내에서 돈다 — 생성만 갈아끼우면 완전 사내화")
 
 
 # ── 슬라이드 11. [시연] 영상 ───────────────────────────────────
