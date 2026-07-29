@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;}
+  .page{width:1360px;padding:26px 30px 22px;font-family:"Malgun Gothic","Noto Sans KR",-apple-system,sans-serif;}
+  .hd{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;}
+  .hd .mk{width:14px;height:14px;border-radius:3px;background:#F37321;transform:translateY(2px);}
+  .hd h1{font-size:22px;font-weight:800;color:#13294B;margin:0;}
+  .kicker{color:#F37321;font-weight:800;font-size:12px;letter-spacing:.1em;margin:0 0 2px;}
+  .cap{font-size:13.5px;color:#334155;margin:6px 0 14px;}
+  .cap b{color:#D85C12;}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:12.5px;color:#64748B;}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+  .n-title{font:800 13.5px "Malgun Gothic",sans-serif;}
+  .n-sub{font:600 10.5px "Malgun Gothic",sans-serif;fill:#64748B;}
+  .lane-label{font:800 13px "Malgun Gothic",sans-serif;}
+  .lane-tag{font:800 10px "Malgun Gothic",sans-serif;fill:#fff;}
+  .edge-strong{stroke:#F37321;stroke-width:2.5;fill:none;}
+  .rw{font:800 10px "Malgun Gothic",sans-serif;fill:#7C3AED;}
+  .step{font:800 12px "Malgun Gothic",sans-serif;fill:#fff;}
+</style></head>
+<body>
+<div class="page">
+  <p class="kicker">DATA FLOW — INTEGRATED VIEW</p>
+  <div class="hd"><span class="mk"></span><h1>한화투자증권 AI 상담 어시스턴트 — 전체 데이터 흐름도</h1></div>
+  <p class="cap">세 흐름은 <b>하나의 지식베이스(ChromaDB)</b>를 공유합니다 — <b>①인제스트</b>가 색인해 쓰고(WRITE), <b>②응대</b>와 <b>③AI 코치</b>가 검색해 읽습니다(READ). 별도 AI 재학습 없이 문서만 갱신하면 두 모드에 즉시 반영됩니다.</p>
+
+  <svg viewBox="0 0 1300 570" width="1300" role="img" aria-label="통합 데이터 흐름도">
+    <defs>
+      <marker id="a" markerWidth="10" markerHeight="10" refX="7.5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#F37321"/></marker>
+    </defs>
+
+    <!-- ===== 밴드 배경 ===== -->
+    <rect x="20" y="70" width="1260" height="132" rx="14" fill="#F8FAFC" stroke="#E2E8F0"/>
+    <rect x="20" y="70" width="6" height="132" fill="#64748B"/>
+    <rect x="20" y="226" width="1260" height="132" rx="14" fill="#FFF9F4" stroke="#FCE4D2"/>
+    <rect x="20" y="226" width="6" height="132" fill="#F37321"/>
+    <rect x="20" y="382" width="1260" height="132" rx="14" fill="#FAF8FF" stroke="#EBE3FB"/>
+    <rect x="20" y="382" width="6" height="132" fill="#7C3AED"/>
+
+    <!-- 밴드 라벨 -->
+    <rect x="40" y="84" width="26" height="18" rx="4" fill="#64748B"/><text x="53" y="97" text-anchor="middle" class="lane-tag">A</text>
+    <text x="74" y="98" class="lane-label" fill="#475569">지식 인제스트 · 문서를 검색 가능한 형태로 색인 (배치)</text>
+    <rect x="40" y="240" width="26" height="18" rx="4" fill="#F37321"/><text x="53" y="253" text-anchor="middle" class="lane-tag">B</text>
+    <text x="74" y="254" class="lane-label" fill="#D85C12">응대 모드 · 질문에 근거 기반 답변 (실시간)</text>
+    <rect x="40" y="396" width="26" height="18" rx="4" fill="#7C3AED"/><text x="53" y="409" text-anchor="middle" class="lane-tag">C</text>
+    <text x="74" y="410" class="lane-label" fill="#7C3AED">AI 코치 · 출제·채점으로 신입 훈련 (실시간)</text>
+
+    <!-- ===== 노드 좌표: x=40,290,540,790,1040 (w150) / 라인 cy A152 B308 C464 ===== -->
+
+    <!-- Lane A -->
+    <g>
+      <rect x="40" y="116" width="150" height="72" rx="11" fill="#F1F5F9" stroke="#64748B" stroke-width="1.4"/>
+      <text x="115" y="148" text-anchor="middle" class="n-title" fill="#475569">원본 문서</text>
+      <text x="115" y="168" text-anchor="middle" class="n-sub">PDF · 사내 위키</text>
+      <circle cx="115" cy="110" r="12" fill="#64748B"/><text x="115" y="114" text-anchor="middle" class="step">1</text>
+
+      <rect x="290" y="116" width="150" height="72" rx="11" fill="#fff" stroke="#F37321" stroke-width="1.4"/>
+      <text x="365" y="148" text-anchor="middle" class="n-title" fill="#D85C12">문서 파싱</text>
+      <text x="365" y="168" text-anchor="middle" class="n-sub">제목·본문·표 추출</text>
+      <circle cx="365" cy="110" r="12" fill="#F37321"/><text x="365" y="114" text-anchor="middle" class="step">2</text>
+
+      <rect x="540" y="116" width="150" height="72" rx="11" fill="#fff" stroke="#F37321" stroke-width="1.4"/>
+      <text x="615" y="148" text-anchor="middle" class="n-title" fill="#D85C12">청킹·정제</text>
+      <text x="615" y="168" text-anchor="middle" class="n-sub">의미 단위 분할</text>
+      <circle cx="615" cy="110" r="12" fill="#F37321"/><text x="615" y="114" text-anchor="middle" class="step">3</text>
+
+      <rect x="790" y="116" width="150" height="72" rx="11" fill="#fff" stroke="#F37321" stroke-width="1.4"/>
+      <text x="865" y="148" text-anchor="middle" class="n-title" fill="#D85C12">임베딩 변환</text>
+      <text x="865" y="168" text-anchor="middle" class="n-sub">제목·본문 벡터화</text>
+      <circle cx="865" cy="110" r="12" fill="#F37321"/><text x="865" y="114" text-anchor="middle" class="step">4</text>
+
+      <rect x="1040" y="116" width="150" height="72" rx="11" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+      <text x="1115" y="144" text-anchor="middle" class="n-title" fill="#7C3AED">ChromaDB 적재</text>
+      <text x="1115" y="162" text-anchor="middle" class="n-sub">변경분만 증분 갱신</text>
+      <text x="1115" y="178" text-anchor="middle" class="rw">WRITE · 쓰기</text>
+      <circle cx="1040" cy="110" r="12" fill="#7C3AED"/><text x="1040" y="114" text-anchor="middle" class="step">5</text>
+
+      <path d="M190,152 L288,152" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M440,152 L538,152" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M690,152 L788,152" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M940,152 L1038,152" class="edge-strong" marker-end="url(#a)"/>
+    </g>
+
+    <!-- Lane B -->
+    <g>
+      <rect x="40" y="272" width="150" height="72" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.4"/>
+      <text x="115" y="304" text-anchor="middle" class="n-title" fill="#1E3A5F">상담원 질문</text>
+      <text x="115" y="324" text-anchor="middle" class="n-sub">"양도세 어떻게…"</text>
+      <circle cx="115" cy="266" r="12" fill="#2563EB"/><text x="115" y="270" text-anchor="middle" class="step">1</text>
+
+      <rect x="290" y="272" width="150" height="72" rx="11" fill="#fff" stroke="#F37321" stroke-width="1.4"/>
+      <text x="365" y="304" text-anchor="middle" class="n-title" fill="#D85C12">질문 확장·임베딩</text>
+      <text x="365" y="324" text-anchor="middle" class="n-sub">동의어 확장 후 벡터화</text>
+      <circle cx="365" cy="266" r="12" fill="#F37321"/><text x="365" y="270" text-anchor="middle" class="step">2</text>
+
+      <rect x="540" y="272" width="150" height="72" rx="11" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+      <text x="615" y="298" text-anchor="middle" class="n-title" fill="#7C3AED">ChromaDB 검색</text>
+      <text x="615" y="316" text-anchor="middle" class="n-sub">제목+본문 Hybrid</text>
+      <text x="615" y="334" text-anchor="middle" class="rw">READ · 읽기</text>
+      <circle cx="540" cy="266" r="12" fill="#7C3AED"/><text x="540" y="270" text-anchor="middle" class="step">3</text>
+
+      <rect x="790" y="272" width="150" height="72" rx="11" fill="#FFFBEB" stroke="#B45309" stroke-width="1.4"/>
+      <text x="865" y="304" text-anchor="middle" class="n-title" fill="#B45309">LLM 답변 생성</text>
+      <text x="865" y="324" text-anchor="middle" class="n-sub">근거 기반·출처 인용</text>
+      <circle cx="865" cy="266" r="12" fill="#B45309"/><text x="865" y="270" text-anchor="middle" class="step">4</text>
+
+      <rect x="1040" y="272" width="150" height="72" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.4"/>
+      <text x="1115" y="304" text-anchor="middle" class="n-title" fill="#1E3A5F">상담원 화면</text>
+      <text x="1115" y="324" text-anchor="middle" class="n-sub">출처 + SSE 스트리밍</text>
+      <circle cx="1040" cy="266" r="12" fill="#2563EB"/><text x="1040" y="270" text-anchor="middle" class="step">5</text>
+
+      <path d="M190,308 L288,308" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M440,308 L538,308" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M690,308 L788,308" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M940,308 L1038,308" class="edge-strong" marker-end="url(#a)"/>
+    </g>
+
+    <!-- Lane C -->
+    <g>
+      <rect x="40" y="428" width="150" height="72" rx="11" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+      <text x="115" y="454" text-anchor="middle" class="n-title" fill="#7C3AED">ChromaDB 근거선택</text>
+      <text x="115" y="472" text-anchor="middle" class="n-sub">편람 1건 추출</text>
+      <text x="115" y="490" text-anchor="middle" class="rw">READ · 읽기</text>
+      <circle cx="115" cy="422" r="12" fill="#7C3AED"/><text x="115" y="426" text-anchor="middle" class="step">1</text>
+
+      <rect x="290" y="428" width="150" height="72" rx="11" fill="#FFFBEB" stroke="#B45309" stroke-width="1.4"/>
+      <text x="365" y="460" text-anchor="middle" class="n-title" fill="#B45309">AI 질문 생성</text>
+      <text x="365" y="480" text-anchor="middle" class="n-sub">고객 페르소나</text>
+      <circle cx="365" cy="422" r="12" fill="#B45309"/><text x="365" y="426" text-anchor="middle" class="step">2</text>
+
+      <rect x="540" y="428" width="150" height="72" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.4"/>
+      <text x="615" y="460" text-anchor="middle" class="n-title" fill="#1E3A5F">신입 답변</text>
+      <text x="615" y="480" text-anchor="middle" class="n-sub">직접 작성</text>
+      <circle cx="540" cy="422" r="12" fill="#2563EB"/><text x="540" y="426" text-anchor="middle" class="step">3</text>
+
+      <rect x="790" y="428" width="150" height="72" rx="11" fill="#FFFBEB" stroke="#B45309" stroke-width="1.4"/>
+      <text x="865" y="454" text-anchor="middle" class="n-title" fill="#B45309">LLM 채점</text>
+      <text x="865" y="472" text-anchor="middle" class="n-sub">기준정답 대비</text>
+      <text x="865" y="490" text-anchor="middle" class="n-sub">필수·정확·친화</text>
+      <circle cx="790" cy="422" r="12" fill="#B45309"/><text x="790" y="426" text-anchor="middle" class="step">4</text>
+
+      <rect x="1040" y="428" width="150" height="72" rx="11" fill="#FFF3EC" stroke="#F37321" stroke-width="1.4"/>
+      <text x="1115" y="454" text-anchor="middle" class="n-title" fill="#D85C12">채점 결과</text>
+      <text x="1115" y="472" text-anchor="middle" class="n-sub">점수·누락항목</text>
+      <text x="1115" y="490" text-anchor="middle" class="n-sub">코칭·모범답안</text>
+      <circle cx="1040" cy="422" r="12" fill="#F37321"/><text x="1040" y="426" text-anchor="middle" class="step">5</text>
+
+      <path d="M190,464 L288,464" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M440,464 L538,464" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M690,464 L788,464" class="edge-strong" marker-end="url(#a)"/>
+      <path d="M940,464 L1038,464" class="edge-strong" marker-end="url(#a)"/>
+    </g>
+  </svg>
+
+  <div class="legend">
+    <span><i style="background:#64748B"></i>원본·배치</span>
+    <span><i style="background:#F37321"></i>처리(백엔드)</span>
+    <span><i style="background:#B45309"></i>AI(LLM)</span>
+    <span><i style="background:#7C3AED"></i>지식베이스(ChromaDB)</span>
+    <span><i style="background:#2563EB"></i>사용자</span>
+  </div>
+</div>
+</body></html>

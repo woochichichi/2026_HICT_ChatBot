@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff;}
+  .page{width:1240px;padding:26px 30px 22px;font-family:"Malgun Gothic","Noto Sans KR",-apple-system,sans-serif;}
+  .hd{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .hd .mk{width:14px;height:14px;border-radius:3px;background:#F37321;transform:translateY(2px);}
+  .hd h1{font-size:22px;font-weight:800;color:#13294B;margin:0;}
+  .hd .sub{font-size:13px;color:#64748B;font-weight:600;}
+  .kicker{color:#F37321;font-weight:800;font-size:12px;letter-spacing:.1em;margin:0 0 2px;}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:10px;font-size:13px;color:#64748B;}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;}
+  .note{margin-top:10px;font-size:12px;color:#94A3B8;border-top:1px dashed #E2E8F0;padding-top:8px;}
+  .n-title{font:800 14px "Malgun Gothic",sans-serif;}
+  .n-sub{font:600 11px "Malgun Gothic",sans-serif;fill:#64748B;}
+  .grp-label{font:800 11.5px "Malgun Gothic",sans-serif;letter-spacing:.04em;}
+  .edge{stroke:#94A3B8;stroke-width:2;fill:none;}
+  .edge-strong{stroke:#F37321;stroke-width:2.5;fill:none;}
+  .edge-dash{stroke:#94A3B8;stroke-width:2;fill:none;stroke-dasharray:5 5;}
+  .elabel{font:700 10.5px "Malgun Gothic",sans-serif;fill:#64748B;}
+  .elabel-o{font:700 10.5px "Malgun Gothic",sans-serif;fill:#D85C12;}
+</style></head>
+<body>
+<div class="page">
+  <p class="kicker">SYSTEM ARCHITECTURE</p>
+  <div class="hd"><span class="mk"></span><h1>한화투자증권 AI 상담 어시스턴트 — 전체 시스템 아키텍처</h1></div>
+  <div class="hd" style="margin-bottom:12px;"><span class="sub">사용자 · 프론트엔드 · 백엔드 · 데이터 · AI 엔진의 4계층 분리 구조 (모델·데이터·화면 독립 교체 가능)</span></div>
+  <svg viewBox="0 0 1160 560" width="1180" role="img" aria-label="시스템 아키텍처">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#94A3B8"/></marker>
+      <marker id="aro" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#F37321"/></marker>
+    </defs>
+    <text x="30" y="42" class="grp-label" fill="#2563EB">사용자</text>
+    <rect x="30" y="52" width="180" height="58" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+    <text x="120" y="78" text-anchor="middle" class="n-title" fill="#1E3A5F">상담원</text>
+    <text x="120" y="96" text-anchor="middle" class="n-sub">응대 모드 이용</text>
+    <rect x="230" y="52" width="180" height="58" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+    <text x="320" y="78" text-anchor="middle" class="n-title" fill="#1E3A5F">신입 상담원</text>
+    <text x="320" y="96" text-anchor="middle" class="n-sub">AI 코치 이용</text>
+    <rect x="430" y="52" width="180" height="58" rx="11" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5"/>
+    <text x="520" y="78" text-anchor="middle" class="n-title" fill="#1E3A5F">운영자</text>
+    <text x="520" y="96" text-anchor="middle" class="n-sub">문서 등록·품질 검토</text>
+
+    <rect x="20" y="130" width="700" height="86" rx="13" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+    <text x="34" y="152" class="grp-label" fill="#0F766E">프론트엔드 · React (사내 웹)</text>
+    <rect x="40" y="160" width="205" height="44" rx="9" fill="#fff" stroke="#0F766E" stroke-width="1.2"/>
+    <text x="142" y="187" text-anchor="middle" class="n-title" fill="#0F766E">응대 화면</text>
+    <rect x="258" y="160" width="205" height="44" rx="9" fill="#fff" stroke="#0F766E" stroke-width="1.2"/>
+    <text x="360" y="187" text-anchor="middle" class="n-title" fill="#0F766E">AI 코치 화면</text>
+    <rect x="476" y="160" width="224" height="44" rx="9" fill="#fff" stroke="#0F766E" stroke-width="1.2"/>
+    <text x="588" y="187" text-anchor="middle" class="n-title" fill="#0F766E">제보 검토 화면</text>
+
+    <rect x="20" y="248" width="700" height="150" rx="13" fill="#FFF3EC" stroke="#F37321" stroke-width="1.5"/>
+    <text x="34" y="270" class="grp-label" fill="#D85C12">백엔드 · FastAPI (업무 로직)</text>
+    <rect x="40" y="280" width="310" height="46" rx="9" fill="#fff" stroke="#F37321" stroke-width="1.2"/>
+    <text x="195" y="300" text-anchor="middle" class="n-title" fill="#D85C12">API 계층 (Router)</text>
+    <text x="195" y="316" text-anchor="middle" class="n-sub">/chat · /training · /feedback</text>
+    <rect x="40" y="336" width="150" height="50" rx="9" fill="#fff" stroke="#F37321" stroke-width="1.2"/>
+    <text x="115" y="358" text-anchor="middle" class="n-title" fill="#D85C12">RAG 검색</text>
+    <text x="115" y="374" text-anchor="middle" class="n-sub">검색·답변 생성</text>
+    <rect x="200" y="336" width="150" height="50" rx="9" fill="#fff" stroke="#F37321" stroke-width="1.2"/>
+    <text x="275" y="358" text-anchor="middle" class="n-title" fill="#D85C12">출제·채점</text>
+    <text x="275" y="374" text-anchor="middle" class="n-sub">질문생성·채점</text>
+    <rect x="368" y="280" width="332" height="106" rx="9" fill="#FFE6D3" stroke="#D85C12" stroke-width="1.5"/>
+    <text x="534" y="304" text-anchor="middle" class="n-title" fill="#D85C12">LLM 추상화 계층</text>
+    <text x="534" y="324" text-anchor="middle" class="n-sub">generate() · embed() 표준 인터페이스</text>
+    <text x="534" y="346" text-anchor="middle" class="n-sub">모델 교체 시 이 계층만 변경</text>
+    <text x="534" y="366" text-anchor="middle" class="n-sub">(Gemini ↔ OpenAI ↔ 자체 모델)</text>
+
+    <text x="770" y="152" class="grp-label" fill="#7C3AED">데이터 계층</text>
+    <rect x="760" y="160" width="180" height="90" rx="11" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="850" y="192" text-anchor="middle" class="n-title" fill="#7C3AED">ChromaDB</text>
+    <text x="850" y="212" text-anchor="middle" class="n-sub">벡터 검색 DB</text>
+    <text x="850" y="230" text-anchor="middle" class="n-sub">제목·본문 컬렉션</text>
+    <rect x="760" y="262" width="180" height="82" rx="11" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+    <text x="850" y="292" text-anchor="middle" class="n-title" fill="#7C3AED">SQLite</text>
+    <text x="850" y="312" text-anchor="middle" class="n-sub">기준 정답 · 오답 제보</text>
+    <text x="850" y="330" text-anchor="middle" class="n-sub">인제스트 메타</text>
+
+    <text x="972" y="152" class="grp-label" fill="#B45309">AI 엔진</text>
+    <rect x="962" y="160" width="176" height="90" rx="11" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+    <text x="1050" y="188" text-anchor="middle" class="n-title" fill="#B45309">생성 LLM</text>
+    <text x="1050" y="207" text-anchor="middle" class="n-sub">답변·질문·채점</text>
+    <text x="1050" y="228" text-anchor="middle" class="n-sub">Gemini / 자체 모델</text>
+    <rect x="962" y="262" width="176" height="82" rx="11" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+    <text x="1050" y="290" text-anchor="middle" class="n-title" fill="#B45309">임베딩 모델</text>
+    <text x="1050" y="309" text-anchor="middle" class="n-sub">텍스트→벡터 변환</text>
+    <text x="1050" y="328" text-anchor="middle" class="n-sub">bge-m3 / Gemini</text>
+
+    <rect x="20" y="430" width="700" height="110" rx="13" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="34" y="452" class="grp-label" fill="#475569">지식 인제스트 파이프라인 (배치 · 문서 등록 시)</text>
+    <rect x="40" y="462" width="150" height="60" rx="9" fill="#fff" stroke="#64748B" stroke-width="1.2"/>
+    <text x="115" y="488" text-anchor="middle" class="n-title" fill="#475569">문서 파싱</text>
+    <text x="115" y="506" text-anchor="middle" class="n-sub">PDF · 사내 위키</text>
+    <rect x="205" y="462" width="150" height="60" rx="9" fill="#fff" stroke="#64748B" stroke-width="1.2"/>
+    <text x="280" y="488" text-anchor="middle" class="n-title" fill="#475569">청킹·정제</text>
+    <text x="280" y="506" text-anchor="middle" class="n-sub">의미 단위 분할</text>
+    <rect x="370" y="462" width="150" height="60" rx="9" fill="#fff" stroke="#64748B" stroke-width="1.2"/>
+    <text x="445" y="488" text-anchor="middle" class="n-title" fill="#475569">임베딩</text>
+    <text x="445" y="506" text-anchor="middle" class="n-sub">벡터 변환</text>
+    <rect x="535" y="462" width="165" height="60" rx="9" fill="#fff" stroke="#64748B" stroke-width="1.2"/>
+    <text x="617" y="488" text-anchor="middle" class="n-title" fill="#475569">DB 적재</text>
+    <text x="617" y="506" text-anchor="middle" class="n-sub">변경분만 갱신</text>
+
+    <path d="M120,110 L120,158" class="edge" marker-end="url(#ar)"/>
+    <path d="M320,110 L340,158" class="edge" marker-end="url(#ar)"/>
+    <path d="M520,110 L560,158" class="edge" marker-end="url(#ar)"/>
+    <path d="M370,216 L370,278" class="edge-strong" marker-end="url(#aro)"/>
+    <text x="380" y="248" class="elabel-o">HTTP / SSE 스트리밍</text>
+    <path d="M150,326 L120,334" class="edge" marker-end="url(#ar)"/>
+    <path d="M240,326 L270,334" class="edge" marker-end="url(#ar)"/>
+    <path d="M190,352 L366,340" class="edge" marker-end="url(#ar)"/>
+    <path d="M350,360 L366,352" class="edge" marker-end="url(#ar)"/>
+    <path d="M350,352 Q560,300 758,240" class="edge" marker-end="url(#ar)"/>
+    <text x="560" y="270" class="elabel">벡터 검색</text>
+    <path d="M700,318 Q740,280 960,220" class="edge-strong" marker-end="url(#aro)"/>
+    <path d="M700,340 Q760,320 960,300" class="edge-strong" marker-end="url(#aro)"/>
+    <path d="M940,300 L960,300" class="edge" marker-end="url(#ar)"/>
+    <path d="M700,478 Q840,420 848,346" class="edge" marker-end="url(#ar)"/>
+    <text x="720" y="430" class="elabel">적재</text>
+    <path d="M445,462 L445,388" class="edge-dash" marker-end="url(#ar)"/>
+    <text x="452" y="424" class="elabel">임베딩 호출</text>
+  </svg>
+  <div class="legend">
+    <span><i style="background:#2563EB"></i>사용자</span>
+    <span><i style="background:#0F766E"></i>프론트엔드</span>
+    <span><i style="background:#F37321"></i>백엔드</span>
+    <span><i style="background:#7C3AED"></i>데이터</span>
+    <span><i style="background:#B45309"></i>AI 엔진</span>
+    <span><i style="background:#64748B"></i>배치 인제스트</span>
+  </div>
+  <div class="note">모든 AI 호출은 LLM 추상화 계층을 경유 — 클라우드 API에서 폐쇄망 자체 모델로 전환 시 상위 업무 로직 수정 불필요.</div>
+</div>
+</body></html>

@@ -10,7 +10,10 @@
   cd /home/user/2026_HICT_ChatBot && python3 docs/presentation/make_ppt_ito_axday.py
 
 산출물:
-  docs/presentation/ITO_AX_Day_상담원AI코치.pptx  (본편 17 + 부록 4 = 총 21장)
+  docs/presentation/ITO_AX_Day_상담원AI코치.pptx  (본편 18 + 부록 4 = 총 22장)
+  ※ 본편 18에는 신규 슬라이드 10.5(시스템 아키텍처, s10p5_architecture) 포함.
+  ※ 슬라이드 5(데이터 흐름)·10.5(아키텍처)는 아키텍쳐/*.html 을 headless Chrome으로
+     PNG 렌더링해 삽입한다(html_to_png 헬퍼). Selenium + Chrome 필요.
 
 디자인:
   "에르메스 × 한화" — 웜페이퍼(CREAM) 배경, 오렌지 강조, 세리프(Georgia) 숫자.
@@ -39,6 +42,76 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 import os
+
+# ── 경로/임시폴더 ────────────────────────────────────────────────
+# 스크립트가 있는 폴더의 절대경로. 아키텍처 HTML·임시 PNG 모두 이 기준으로 잡는다.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+# 아키텍처 다이어그램 HTML 폴더 (docs/presentation/아키텍쳐/*.html)
+_ARCH_DIR = os.path.join(_HERE, "아키텍쳐")
+# HTML→PNG 변환 결과를 담는 임시 폴더 (디버깅을 위해 종료 후에도 보관)
+_TMP_DIR = os.path.join(_HERE, "tmp")
+
+
+def ensure_tmp():
+    """스크립트 시작 시 임시 PNG 폴더를 생성한다(절대경로). 이미 있으면 그대로 둔다."""
+    os.makedirs(_TMP_DIR, exist_ok=True)
+    return _TMP_DIR
+
+
+def html_to_png(html_path, output_png_path, width=1360, height=900):
+    """로컬 HTML(SVG 포함)을 headless Chrome으로 렌더링해 PNG로 저장한다.
+
+    - Selenium 4의 내장 Selenium Manager가 chromedriver를 자동 확보하므로
+      별도 드라이버 설치가 필요 없다(환경: selenium 4.29, Chrome 설치됨).
+    - .page 요소의 실제 콘텐츠 크기에 맞춰 창을 키운 뒤 그 요소만 캡처 →
+      여백 없이 다이어그램 전체가 담긴다. force-device-scale-factor=2로 2배 선명도.
+    - 성공 시 output_png_path(절대경로) 반환, 실패 시 None 반환 + 경고 출력.
+      (연관: s05_flow / s10p5_architecture 에서 이 반환값으로 이미지/자리표시 분기)
+
+    width/height 인자는 초기 창 크기 힌트로만 사용하고, 최종 크기는 콘텐츠에 맞춘다.
+    """
+    if not os.path.exists(html_path):
+        print(f"  [경고] HTML 없음 → 자리표시로 대체: {html_path}")
+        return None
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        import time
+
+        url = "file:///" + os.path.abspath(html_path).replace("\\", "/")
+        opts = Options()
+        opts.add_argument("--headless=new")
+        opts.add_argument("--disable-gpu")
+        opts.add_argument("--hide-scrollbars")
+        opts.add_argument("--force-device-scale-factor=2")  # 2배 해상도로 선명하게
+        opts.add_argument(f"--window-size={width},{height}")
+        drv = webdriver.Chrome(options=opts)
+        try:
+            drv.get(url)
+            time.sleep(0.8)  # 웹폰트/SVG 레이아웃 안정화 대기
+            # 콘텐츠 실제 크기 측정 후 창을 그 크기로 맞춘다(.page 없으면 body 기준)
+            sel = ".page" if drv.execute_script(
+                "return !!document.querySelector('.page')") else "body"
+            cw = drv.execute_script(
+                f"return document.querySelector('{sel}').scrollWidth")
+            ch = drv.execute_script(
+                f"return document.querySelector('{sel}').scrollHeight")
+            drv.set_window_size(cw + 40, ch + 40)
+            time.sleep(0.4)
+            os.makedirs(os.path.dirname(os.path.abspath(output_png_path)),
+                        exist_ok=True)
+            drv.find_element("css selector", sel).screenshot(
+                os.path.abspath(output_png_path))
+        finally:
+            drv.quit()
+        if os.path.exists(output_png_path) and os.path.getsize(output_png_path) > 0:
+            return os.path.abspath(output_png_path)
+        print("  [경고] PNG 생성 실패(빈 파일) → 자리표시로 대체")
+        return None
+    except Exception as e:
+        print(f"  [경고] HTML→PNG 변환 실패 → 자리표시로 대체: {e}")
+        return None
+
 
 # ── 디자인 토큰 : 에르메스 × 한화 ────────────────────────────────
 ORANGE = RGBColor(0xF3, 0x73, 0x21)   # 주 강조 (한화 오렌지 = 에르메스 오렌지 톤)
@@ -204,7 +277,7 @@ def s01_cover():
     put_text(s, Inches(1.42), Inches(2.25), Inches(11), Inches(1.6),
              [("상담원 AI 코치", 62, True, ESPRESSO, PP_ALIGN.LEFT)])
     put_text(s, Inches(1.45), Inches(4.05), Inches(11), Inches(0.6),
-             [("물어보면 답하고, 답하면 채점하는 AI", 20, False, ORANGED, PP_ALIGN.LEFT)])
+             [("상담응대를 정확하게, 상담교육을 더 효과적으로", 20, False, ORANGED, PP_ALIGN.LEFT)])
     # 하단 얇은 규칙선
     rect(s, Inches(1.45), Inches(5.55), Inches(10.4), Inches(0.012), LINE, round_=False)
     put_text(s, Inches(1.45), Inches(5.75), Inches(10), Inches(0.5),
@@ -217,7 +290,7 @@ def s01_cover():
 # 근거: 발표 기획안 '배경', 상담 현장 실태
 def s02_scattered():
     s = slide()
-    header(s, "배경 · 지금 상담 현장", "답은 어딘가에 있는데, 흩어져 있다")
+    header(s, "배경 · 지금 상담 현장", "정보 분산 현황")
     put_text(s, Inches(0.9), Inches(1.7), Inches(11.5), Inches(0.5),
              [("상담원이 답 하나를 찾으려면 매번 세 곳을 헤맨다", 14.5, False, TAUPE, PP_ALIGN.LEFT)])
     items = [("사내 위키", "규정·절차가 잠들어 있는 곳"),
@@ -244,7 +317,7 @@ def s02_scattered():
 # 근거: 발표 기획안 '문제 정의', OJT 3~6개월 현업 관행
 def s03_problem():
     s = slide()
-    header(s, "배경 · 문제 정의", "그래서 생기는 세 가지 문제")
+    header(s, "배경 · 문제 정의", "주요 과제")
     rows = [("1", "찾는 데 오래", "질문 1건에 편람 검색 2~5분"),
             ("2", "답이 사람마다 다름", "상담 품질이 들쭉날쭉"),
             ("3", "신입이 익히는 데 오래", "OJT 3~6개월")]
@@ -256,7 +329,7 @@ def s03_problem():
                  anchor=MSO_ANCHOR.MIDDLE)
         put_text(s, Inches(2.2), y + Inches(0.16), Inches(9.8), Inches(1.0),
                  [(head, 20, True, ESPRESSO, PP_ALIGN.LEFT),
-                  (desc, 13.5, False, TAUPE, PP_ALIGN.LEFT)],
+                  (desc, 15, False, TAUPE, PP_ALIGN.LEFT)],
                  anchor=MSO_ANCHOR.MIDDLE, space=3)
         y = Emu(int(y + Inches(1.28) + Inches(0.18)))
     takeaway(s, "느리고, 고르지 않고, 오래 걸린다")
@@ -266,7 +339,7 @@ def s03_problem():
 # 근거: docs/adr/0005-training-direct-fetch.md(훈련 모드), README.md(응대/코치 기능)
 def s04_two_modes():
     s = slide()
-    header(s, "개요 · 한 장 요약", "상담원을 돕는 AI, 두 가지 모드")
+    header(s, "개요 · 한 장 요약", "두 가지 기능")
     cards = [("응대 지원", "상담원이 물으면,\n편람 근거로 답하고\n출처까지 보여준다"),
              ("훈련 코치", "AI가 고객 역할로 질문하고,\n신입 답변을 채점하고\n피드백까지 준다")]
     gap = Inches(0.4)
@@ -289,34 +362,34 @@ def s04_two_modes():
 
 # ── 슬라이드 5. [개요] 데이터 흐름 ─────────────────────────────
 # 근거: backend/services/ingest.py(수집·정리·분할), docs/adr/0002(기억), api-spec.md(검색)
+# 변경: 기존 chevron 5-step 다이어그램을 제거하고 아키텍쳐/_render_flow.html(3-레인
+#       통합 흐름도)을 PNG로 렌더링해 중앙에 삽입한다. HTML 없음·변환 실패 시 자리표시.
+#       (연관: html_to_png 헬퍼로 렌더 → 실패 시 placeholder() 로 폴백)
 def s05_flow():
     s = slide()
-    header(s, "개요 · 데이터가 흐르는 길", "편람이 AI의 기억이 되기까지")
-    steps = [("모아오기", "위키·편람·PDF를\n한곳에"),
-             ("정리하기", "표·제목까지 살려\n깔끔하게"),
-             ("조각내기", "찾기 좋은\n크기로 나눔"),
-             ("기억시키기", "AI가\n뜻으로 기억"),
-             ("찾아쓰기", "질문에 맞는\n조각을 꺼냄")]
-    n = len(steps)
-    gap = Inches(0.22)
-    total = Inches(12.1)
-    w = Emu(int((total - gap * (n - 1)) / n))
-    x = Inches(0.62)
-    yc = Inches(2.75)
-    for i, (name, desc) in enumerate(steps):
-        shp = s.shapes.add_shape(MSO_SHAPE.CHEVRON, x, yc, w, Inches(1.15))
-        shp.adjustments[0] = 0.4
-        shp.fill.solid()
-        shp.fill.fore_color.rgb = ORANGE if i == n - 1 else ESPRESSO
-        shp.line.fill.background()
-        shp.shadow.inherit = False
-        shape_text(shp, [(name, 14, True, WHITE, PP_ALIGN.CENTER)],
-                   anchor=MSO_ANCHOR.MIDDLE, ml=0.05)
-        # 단계 아래 쉬운 설명
-        tb = put_text(s, x, Inches(4.15), w, Inches(1.3),
-                      [(l, 11.5, False, TAUPE, PP_ALIGN.CENTER) for l in desc.split("\n")],
-                      anchor=MSO_ANCHOR.TOP, space=2)
-        x = Emu(int(x + w + gap))
+    header(s, "개요 · 데이터가 흐르는 길", "데이터 파이프라인")
+    # HTML → PNG 변환 (아키텍쳐/_render_flow.html)
+    flow_html = os.path.join(_ARCH_DIR, "_render_flow.html")
+    flow_png = os.path.join(_TMP_DIR, "flow.png")
+    png = html_to_png(flow_html, flow_png, width=1420, height=760)
+    # 이미지 삽입 영역: 약 11인치 × 5.5인치, 슬라이드 가로 중앙
+    iw, ih = Inches(11.6), Inches(5.5)
+    ix = Emu(int((SW - iw) / 2))
+    iy = Inches(1.7)
+    if png:
+        # 실제 비율에 맞춰 폭 기준으로 넣고, 높이는 add_picture가 자동 계산.
+        # 흐름도는 가로로 넓으므로 폭(iw)을 우선 맞춘다.
+        pic = s.shapes.add_picture(png, ix, iy, width=iw)
+        # 세로가 영역보다 크면 세로 기준으로 다시 맞춰 넘침 방지
+        if pic.height > ih:
+            pic._element.getparent().remove(pic._element)
+            pic = s.shapes.add_picture(png, ix, iy, height=ih)
+            pic.left = Emu(int((SW - pic.width) / 2))
+        # 이미지가 위쪽에 붙도록 소폭 상향 정렬(중앙 y 재계산)
+        pic.top = Inches(1.7)
+    else:
+        placeholder(s, ix, iy, iw, ih,
+                    "데이터 흐름도 — 아키텍쳐/_render_flow.html 렌더 실패")
     takeaway(s, "흩어진 편람을 AI가 꺼내 쓸 수 있는 형태로")
 
 
@@ -325,7 +398,7 @@ def s05_flow():
 #        docs/adr/0003-multi-title-max-pooling.md, api-spec.md(하이브리드), 0004(출처 먼저)
 def s06_plus_alpha():
     s = slide()
-    header(s, "개요 · 우리가 더한 것", "기본 위에, 한 걸음 더")
+    header(s, "개요 · 우리가 더한 것", "핵심 기술")
     # 좌: 기본
     c = card(s, Inches(0.62), Inches(2.05), Inches(4.0), Inches(3.5), fill=WHITE, line=LINE)
     shape_text(c, [
@@ -349,7 +422,7 @@ def s06_plus_alpha():
                   (desc, 12.5, False, TAUPE, PP_ALIGN.LEFT)],
                  anchor=MSO_ANCHOR.MIDDLE, space=2)
         y = Emu(int(y + ph + Inches(0.18)))
-    takeaway(s, "남들 하는 기본에, 신뢰를 더했다")
+    takeaway(s, "정보제공(RAG)을 더 정확하게, 신뢰를 더했다")
 
 
 # ── 슬라이드 7~10. [문제점 해결] 벽 N 동일 템플릿 ─────────────
@@ -424,11 +497,41 @@ def s10_wall4():
         "핵심은 이미 사내에서 돈다 — 생성만 갈아끼우면 완전 사내화")
 
 
+# ── 슬라이드 10.5 (신규). [개요] 시스템 구조 ───────────────────
+# 근거: docs/adr/0001-llm-service-abstraction.md(LLM 추상화·모델 교체),
+#        docs/adr/0002-chromadb-dual-collection.md(데이터 계층), api-spec.md(4계층 분리),
+#        아키텍쳐/_render_arch.html(전체 시스템 아키텍처 도해).
+# 위치: 벽 4/4(s10) 다음, 시연(s11) 앞에 삽입 → 시연 전에 "구조가 갈아끼우기 쉽다"를 각인.
+#        (연관: build()에서 s10_wall4() → s10p5_architecture() → s11_demo() 순서로 호출)
+def s10p5_architecture():
+    s = slide()
+    header(s, "개요 · 시스템 구조", "시스템 구조")
+    # HTML → PNG 변환 (아키텍쳐/_render_arch.html)
+    arch_html = os.path.join(_ARCH_DIR, "_render_arch.html")
+    arch_png = os.path.join(_TMP_DIR, "arch.png")
+    png = html_to_png(arch_html, arch_png, width=1300, height=680)
+    # 이미지 삽입 영역: 약 11인치 × 5.2인치, 슬라이드 가로 중앙
+    iw, ih = Inches(11.6), Inches(5.2)
+    ix = Emu(int((SW - iw) / 2))
+    iy = Inches(1.75)
+    if png:
+        pic = s.shapes.add_picture(png, ix, iy, width=iw)
+        if pic.height > ih:
+            pic._element.getparent().remove(pic._element)
+            pic = s.shapes.add_picture(png, ix, iy, height=ih)
+            pic.left = Emu(int((SW - pic.width) / 2))
+        pic.top = Inches(1.75)
+    else:
+        placeholder(s, ix, iy, iw, ih,
+                    "시스템 아키텍처 — 아키텍쳐/_render_arch.html 렌더 실패")
+    takeaway(s, "모델도 바꾸고, 데이터도 바꾸고, 화면도 바꿀 수 있다")
+
+
 # ── 슬라이드 11. [시연] 영상 ───────────────────────────────────
 # 근거: build_hict_customer.py 126~256줄 add_movie + _set_video_autoplay 이식
 def s11_demo():
     s = slide()
-    header(s, "시연", "말보다, 직접 보시죠")
+    header(s, "시연", "시연")
     video_path = os.environ.get(
         "HICT_VIDEO",
         os.path.join(os.path.dirname(__file__), "..", "..",
@@ -532,7 +635,7 @@ def _set_video_autoplay(movie_shape):
 # 근거: 기회 프레임(금액·비용절감 문구 금지). README.md 기대효과, value-framing 원칙.
 def s12_effects():
     s = slide()
-    header(s, "기대효과", "무엇이 좋아지나")
+    header(s, "기대효과", "기대 효과")
     items = [("응대 시간 단축", "편람 헤매던 시간을 줄인다"),
              ("답변 품질 균일화", "누가 받아도 같은 수준의 답"),
              ("신입 교육 지원", "AI 코치로 더 빨리 익힌다")]
@@ -559,7 +662,7 @@ def s12_effects():
 # 근거: docs/ANSWER_QUALITY.md, docs/api-spec.md(하이브리드), tests/test_questions.json(30문항)
 def s13_numbers():
     s = slide()
-    header(s, "기대효과 · 근거", "숫자로 확인한 신뢰도")
+    header(s, "기대효과 · 근거", "성능 지표")
     # 정직성(재조사 확정): 검색 hit@3=100%는 자체 30문항 실측, 개선효과 62→81%는 16문항 실측,
     # 답변 80%는 15문항 의미채점(12/15) 실측. '100문항' 측정은 존재하지 않음 → 재측정 예정(계획)일 뿐.
     kpis = [("100%", "근거 문서를 상위 3개 안에서\n찾는 비율 (자체 30문항)"),
@@ -591,7 +694,7 @@ def s13_numbers():
 # 근거: docs/ONPREM_ROADMAP.md, docs/adr/0002(저장소), api-spec.md
 def s14_blueprint():
     s = slide()
-    header(s, "앞으로 · 도입 청사진", "제대로 도입하려면")
+    header(s, "앞으로 · 도입 청사진", "도입 요건")
     # 정직성: MCP는 현재 코드 미적용 → '향후'로만 표기.
     items = [("서버", "사내 GPU 서버에 올려 폐쇄망에서 운영"),
              ("기업용 지식 저장소", "지금은 시험용, 실도입 땐 기업용으로 교체"),
@@ -616,7 +719,7 @@ def s14_blueprint():
 # 근거: 없음(자료 미확보) → 창작 절대 금지, 자리표시만.
 def s15_others():
     s = slide()
-    header(s, "앞으로 · 도입 근거", "다른 증권사는 어디까지 왔나")
+    header(s, "앞으로 · 도입 근거", "업계 현황")
     placeholder(s, Inches(0.62), Inches(2.35), Inches(12.1), Inches(3.0),
                 "※ 타 증권사 AI 상담 도입 현황 — 자료 반영 예정")
     takeaway(s, "업계 흐름이 도입의 근거가 된다")
@@ -626,7 +729,7 @@ def s15_others():
 # 근거: value-framing 원칙, ONPREM_ROADMAP.md
 def s16_framing():
     s = slide()
-    header(s, "앞으로 · 우리의 제안", "더 개발하겠다가 아니라")
+    header(s, "앞으로 · 우리의 제안", "제안")
     c = card(s, Inches(0.62), Inches(2.1), Inches(12.1), Inches(1.6),
              fill=WHITE, line=ORANGE, line_w=1.75)
     shape_text(c, [("도입하려면 이런 환경과 기술이 필요합니다",
@@ -714,16 +817,19 @@ def a4_security():
 
 # ── 빌드 ────────────────────────────────────────────────────────
 def build():
+    # 시작 시 임시 PNG 폴더 확보(HTML→PNG 변환 결과 저장처). 절대경로.
+    ensure_tmp()
     s01_cover()
     s02_scattered()
     s03_problem()
     s04_two_modes()
-    s05_flow()
+    s05_flow()          # 변경: 흐름도 HTML(_render_flow.html) 이미지 삽입
     s06_plus_alpha()
     s07_wall1()
     s08_wall2()
     s09_wall3()
     s10_wall4()
+    s10p5_architecture()  # 신규: 시스템 아키텍처 HTML(_render_arch.html) 이미지 삽입
     s11_demo()
     s12_effects()
     s13_numbers()
@@ -738,11 +844,11 @@ def build():
     a4_security()
 
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                       "ITO_AX_Day_상담원AI코치.pptx")
+                       "ITO_AX_Day_상담원AI코치_temp.pptx")
     prs.save(out)
     n = len(prs.slides._sldIdLst)
     print(f"[완료] 저장: {out}")
-    print(f"[확인] 총 슬라이드 수: {n} (본편 17 + 부록 4 = 21 기대)")
+    print(f"[확인] 총 슬라이드 수: {n} (본편 18 + 부록 4 = 22 기대)")
 
 
 if __name__ == "__main__":
